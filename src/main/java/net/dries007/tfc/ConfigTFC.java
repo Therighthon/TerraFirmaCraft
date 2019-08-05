@@ -47,11 +47,11 @@ public class ConfigTFC
 
     public static class GeneralCFG
     {
-        @Config.Comment("Various debug options. Activates some extra wand features.")
+        @Config.Comment("Various debug options. Activates some extra wand features. Enables extra item tooltips.")
         @Config.LangKey("config." + MOD_ID + ".general.debug")
         public boolean debug = Launch.blackboard.get("fml.deobfuscatedEnvironment") != null;
 
-        @Config.Comment({"Enable/Disable the vanilla recipe removal spam. False = Those recipes are left in place."})
+        @Config.Comment("Enable/Disable the vanilla recipe removal spam. False = Those recipes are left in place.")
         @Config.LangKey("config." + MOD_ID + ".general.removeVanillaRecipes")
         public boolean removeVanillaRecipes = true;
 
@@ -78,6 +78,11 @@ public class ConfigTFC
         @Config.RangeDouble(min = 0, max = 10)
         @Config.LangKey("config." + MOD_ID + ".general.temperatureModifierHeating")
         public double temperatureModifierHeating = 1;
+
+        @Config.Comment("Modifier for how quickly food will decay. Larger values = faster decay. Set to 0 for infinite expiration time")
+        @Config.RangeDouble(min = 0, max = 10)
+        @Config.LangKey("config." + MOD_ID + ".general.foodDecayModifier")
+        public double foodDecayModifier = 1.0;
 
         @Config.Comment("Number of ticks required for a pit kiln to burn out. (1000 = 1 in game hour = 50 seconds), default is 8 hours.")
         @Config.RangeInt(min = 20)
@@ -124,6 +129,11 @@ public class ConfigTFC
         @Config.LangKey("config." + MOD_ID + ".general.playerThirstModifier")
         public double playerThirstModifier = 8.0;
 
+        @Config.Comment("Modifier for how quickly the player will naturally regenerate.")
+        @Config.LangKey("config." + MOD_ID + ".general.playerNaturalRegenerationModifier")
+        @Config.RangeDouble(min = 0, max = 100)
+        public double playerNaturalRegenerationModifier = 1.0;
+
         @Config.Comment("Chance that mining a raw rock triggers a collapse.")
         @Config.RangeDouble(min = 0, max = 1)
         @Config.LangKey("config." + MOD_ID + ".general.collapseChance")
@@ -157,6 +167,34 @@ public class ConfigTFC
         @Config.Comment("Damage Source Entities that will default to Crushing damage")
         @Config.LangKey("config." + MOD_ID + ".general.crushingDamageEntities")
         public String[] crushingDamageEntities = new String[] {"minecraft:husk", "minecraft:skeleton_horse", "minecraft:zombie_horse", "minecraft:spider", "minecraft:giant", "minecraft:zombie", "minecraft:slime", "minecraft:cave_spider", "minecraft:silverfish", "minecraft:villager_golem", "minecraft:zombie_villager"};
+
+        @Config.Comment("The amount of metal contained in a small ore / nugget")
+        @Config.LangKey("config." + MOD_ID + ".general.smallOreMetalAmount")
+        @Config.RangeInt(min = 1, max = 10_000)
+        public int smallOreMetalAmount = 10;
+
+        @Config.Comment("The amount of metal contained in a poor ore")
+        @Config.LangKey("config." + MOD_ID + ".general.poorOreMetalAmount")
+        @Config.RangeInt(min = 1, max = 10_000)
+        public int poorOreMetalAmount = 15;
+
+        @Config.Comment("The amount of metal contained in a normal ore")
+        @Config.LangKey("config." + MOD_ID + ".general.normalOreMetalAmount")
+        @Config.RangeInt(min = 1, max = 10_000)
+        public int normalOreMetalAmount = 25;
+
+        @Config.Comment("The amount of metal contained in a rich ore")
+        @Config.LangKey("config." + MOD_ID + ".general.richOreMetalAmount")
+        @Config.RangeInt(min = 1, max = 10_000)
+        public int richOreMetalAmount = 35;
+
+        @Config.Comment({"If true, this will force the gamerule naturalRegeneration to be false. ", "Note: this DOES NOT AFFECT TFC's natural regeneration. If you set naturalRegeneration to true, then you will have both TFC regeneration and normal vanilla regeneration (which is much faster)"})
+        @Config.LangKey("config." + MOD_ID + ".general.forceNoVanillaNaturalRegeneration")
+        public boolean forceNoVanillaNaturalRegeneration = true;
+
+        @Config.Comment("Should the player receive passive regeneration of health, food, and thirst, similar to vanilla's peaceful mode?")
+        @Config.LangKey("config." + MOD_ID + ".general.peacefulDifficultyPassiveRegeneration")
+        public boolean peacefulDifficultyPassiveRegeneration = false;
     }
 
     public static class ClientCFG
@@ -201,10 +239,15 @@ public class ConfigTFC
         @Config.RequiresWorldRestart
         public boolean debugMode = false;
 
-        @Config.Comment({"This controls the size of the temperature regions. The size of each temperature zone is determined by a sin wave.",
-            "The equation is roughly sin(pi * zCoord / (16 * zTemperatureModifier)). 2500 gives a total range of 40 km (peaks at +/- 20km)"})
-        @Config.RangeDouble(min = 100, max = 10000)
-        @Config.LangKey("config." + MOD_ID + ".world.zTemperatureModifier")
-        public double zTemperatureModifier = 2500f;
+        @Config.Comment({"This controls the size of the temperature regions. The size of each temperature zone is determined by a sin wave. This represents half the period of the wave = the distance between hot and cold bands, in blocks"})
+        @Config.RangeInt(min = 1_000, max = 1_000_000)
+        @Config.LangKey("config." + MOD_ID + ".world.latitudeTemperatureModifier")
+        public int latitudeTemperatureModifier = 20_000;
+
+
+        @Config.Comment("The rarity for clay pits to occur. On average 1 / N chunks will have a clay deposit, if the chunk in question is valid for clay to spawn.")
+        @Config.RangeInt(min = 1)
+        @Config.LangKey("config." + MOD_ID + ".world.clayRarity")
+        public int clayRarity = 30;
     }
 }

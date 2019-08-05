@@ -24,7 +24,7 @@ import net.minecraftforge.registries.IForgeRegistry;
 
 import net.dries007.tfc.api.registries.TFCRegistries;
 import net.dries007.tfc.api.types.*;
-import net.dries007.tfc.objects.blocks.crops.BlockCropTFC;
+import net.dries007.tfc.objects.blocks.agriculture.*;
 import net.dries007.tfc.objects.blocks.devices.*;
 import net.dries007.tfc.objects.blocks.metal.BlockAnvilTFC;
 import net.dries007.tfc.objects.blocks.metal.BlockIngotPile;
@@ -36,7 +36,9 @@ import net.dries007.tfc.objects.blocks.wood.*;
 import net.dries007.tfc.objects.fluids.FluidsTFC;
 import net.dries007.tfc.objects.items.itemblock.*;
 import net.dries007.tfc.objects.te.*;
+import net.dries007.tfc.util.agriculture.BerryBush;
 import net.dries007.tfc.util.agriculture.Crop;
+import net.dries007.tfc.util.agriculture.FruitTree;
 
 import static net.dries007.tfc.api.types.Rock.Type.*;
 import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
@@ -92,6 +94,8 @@ public final class BlocksTFC
     public static final BlockFluidBase FLUID_MILK_CURDLED = getNull();
     @GameRegistry.ObjectHolder("fluid/milk_vinegar")
     public static final BlockFluidBase FLUID_MILK_VINEGAR = getNull();
+    @GameRegistry.ObjectHolder("ceramics/fired/large_vessel")
+    public static final BlockLargeVessel FIRED_LARGE_VESSEL = getNull();
 
     public static final BlockDebug DEBUG = getNull();
     public static final BlockPeat PEAT = getNull();
@@ -103,6 +107,7 @@ public final class BlocksTFC
     public static final BlockPlacedItem PLACED_ITEM = getNull();
     public static final BlockPlacedHide PLACED_HIDE = getNull();
     public static final BlockCharcoalPile CHARCOAL_PILE = getNull();
+    public static final BlockNestBox NEST_BOX = getNull();
     public static final BlockLogPile LOG_PILE = getNull();
     public static final BlockIngotPile INGOT_PILE = getNull();
     public static final BlockTorchTFC TORCH = getNull();
@@ -140,6 +145,13 @@ public final class BlocksTFC
     private static ImmutableList<BlockPlantTFC> allGrassBlocks;
     private static ImmutableList<BlockLoom> allLoomBlocks;
     private static ImmutableList<BlockSupport> allSupportBlocks;
+
+    private static ImmutableList<BlockFruitTreeSapling> allFruitTreeSaplingBlocks;
+    private static ImmutableList<BlockFruitTreeTrunk> allFruitTreeTrunkBlocks;
+    private static ImmutableList<BlockFruitTreeBranch> allFruitTreeBranchBlocks;
+    private static ImmutableList<BlockFruitTreeLeaves> allFruitTreeLeavesBlocks;
+
+    private static ImmutableList<BlockBerryBush> allBerryBushBlocks;
 
 
     public static ImmutableList<ItemBlock> getAllNormalItemBlocks()
@@ -262,6 +274,31 @@ public final class BlocksTFC
         return allSupportBlocks;
     }
 
+    public static ImmutableList<BlockFruitTreeSapling> getAllFruitTreeSaplingBlocks()
+    {
+        return allFruitTreeSaplingBlocks;
+    }
+
+    public static ImmutableList<BlockFruitTreeTrunk> getAllFruitTreeTrunkBlocks()
+    {
+        return allFruitTreeTrunkBlocks;
+    }
+
+    public static ImmutableList<BlockFruitTreeBranch> getAllFruitTreeBranchBlocks()
+    {
+        return allFruitTreeBranchBlocks;
+    }
+
+    public static ImmutableList<BlockFruitTreeLeaves> getAllFruitTreeLeavesBlocks()
+    {
+        return allFruitTreeLeavesBlocks;
+    }
+
+    public static ImmutableList<BlockBerryBush> getAllBerryBushBlocks()
+    {
+        return allBerryBushBlocks;
+    }
+
     @SubscribeEvent
     @SuppressWarnings("ConstantConditions")
     public static void registerBlocks(RegistryEvent.Register<Block> event)
@@ -287,6 +324,9 @@ public final class BlocksTFC
         normalItemBlocks.add(new ItemBlockTFC(register(r, "blast_furnace", new BlockBlastFurnace(), CT_MISC)));
         inventoryItemBlocks.add(new ItemBlockTFC(register(r, "bellows", new BlockBellows(), CT_MISC)));
         inventoryItemBlocks.add(new ItemBlockTFC(register(r, "bloomery", new BlockBloomery(), CT_MISC)));
+        inventoryItemBlocks.add(new ItemBlockTFC(register(r, "nest_box", new BlockNestBox(), CT_MISC)));
+
+        normalItemBlocks.add(new ItemBlockLargeVessel(register(r, "ceramics/fired/large_vessel", new BlockLargeVessel(), CT_POTTERY)));
 
         {
             Builder<BlockFluidBase> b = ImmutableList.builder();
@@ -473,6 +513,41 @@ public final class BlocksTFC
 
             allCropBlocks = b.build();
         }
+
+        {
+            Builder<BlockFruitTreeSapling> fSaplings = ImmutableList.builder();
+            Builder<BlockFruitTreeTrunk> fTrunks = ImmutableList.builder();
+            Builder<BlockFruitTreeBranch> fBranches = ImmutableList.builder();
+            Builder<BlockFruitTreeLeaves> fLeaves = ImmutableList.builder();
+
+            for (FruitTree tree : FruitTree.values())
+            {
+                fSaplings.add(register(r, "fruit_trees/sapling/" + tree.name().toLowerCase(), new BlockFruitTreeSapling(tree), CT_WOOD));
+                fTrunks.add(register(r, "fruit_trees/trunk/" + tree.name().toLowerCase(), new BlockFruitTreeTrunk(tree)));
+                fBranches.add(register(r, "fruit_trees/branch/" + tree.name().toLowerCase(), new BlockFruitTreeBranch(tree)));
+                fLeaves.add(register(r, "fruit_trees/leaves/" + tree.name().toLowerCase(), new BlockFruitTreeLeaves(tree), CT_WOOD));
+            }
+
+            allFruitTreeSaplingBlocks = fSaplings.build();
+            allFruitTreeTrunkBlocks = fTrunks.build();
+            allFruitTreeBranchBlocks = fBranches.build();
+            allFruitTreeLeavesBlocks = fLeaves.build();
+
+            Builder<BlockBerryBush> fBerry = ImmutableList.builder();
+
+            for (BerryBush bush : BerryBush.values())
+            {
+                fBerry.add(register(r, "berry_bush/" + bush.name().toLowerCase(), new BlockBerryBush(bush), CT_FOOD));
+            }
+
+            allBerryBushBlocks = fBerry.build();
+
+            //Add ItemBlocks
+            allFruitTreeSaplingBlocks.forEach(x -> inventoryItemBlocks.add(new ItemBlockTFC(x)));
+            allFruitTreeLeavesBlocks.forEach(x -> inventoryItemBlocks.add(new ItemBlockTFC(x)));
+            allBerryBushBlocks.forEach(x -> inventoryItemBlocks.add(new ItemBlockTFC(x)));
+        }
+
         {
 
             Builder<BlockPlantTFC> b = ImmutableList.builder();
@@ -541,7 +616,6 @@ public final class BlocksTFC
         // todo: loom
         // todo: bloom/molten blocks
         // todo: large vessels
-        // todo: nestbox
         // todo: leather rack
         // todo: grill
         // todo: metal trap doors
@@ -564,6 +638,7 @@ public final class BlocksTFC
         register(TETorchTFC.class, "torch");
         register(TEPitKiln.class, "pit_kiln");
         register(TEChestTFC.class, "chest");
+        register(TENestBox.class, "nest_box");
         register(TELogPile.class, "log_pile");
         register(TEIngotPile.class, "ingot_pile");
         register(TEFirePit.class, "fire_pit");
@@ -580,6 +655,7 @@ public final class BlocksTFC
         register(TEBloom.class, "bloom");
         register(TEMetalSheet.class, "metal_sheet");
         register(TEQuern.class, "quern");
+        register(TELargeVessel.class, "large_vessel");
     }
 
     public static boolean isWater(IBlockState current)

@@ -43,7 +43,7 @@ import net.dries007.tfc.util.calendar.CalendarTFC;
 
 import static net.minecraftforge.fluids.capability.CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY;
 
-public class ItemMold extends ItemFiredPottery
+public class ItemMold extends ItemPottery
 {
     private static final EnumMap<Metal.ItemType, ItemMold> MAP = new EnumMap<>(Metal.ItemType.class);
 
@@ -104,7 +104,11 @@ public class ItemMold extends ItemFiredPottery
     public int getItemStackLimit(ItemStack stack)
     {
         IMoldHandler moldHandler = (IMoldHandler) stack.getCapability(FLUID_HANDLER_CAPABILITY, null);
-        return (moldHandler.getMetal() == null) ? super.getItemStackLimit(stack) : 1;
+        if (moldHandler != null && moldHandler.getMetal() != null)
+        {
+            return 1;
+        }
+        return super.getItemStackLimit(stack);
     }
 
     // Extends ItemHeatHandler for ease of use
@@ -191,7 +195,9 @@ public class ItemMold extends ItemFiredPottery
             {
                 String desc = TextFormatting.DARK_GREEN + I18n.format(Helpers.getTypeName(metal)) + ": " + I18n.format("tfc.tooltip.units", getAmount());
                 if (isMolten())
+                {
                     desc += " - " + I18n.format("tfc.tooltip.liquid");
+                }
                 text.add(desc);
             }
             IMoldHandler.super.addHeatInfo(stack, text);
@@ -237,7 +243,7 @@ public class ItemMold extends ItemFiredPottery
             }
             else
             {
-                nbt.setLong("ticks", CalendarTFC.INSTANCE.getTotalTime());
+                nbt.setLong("ticks", CalendarTFC.TOTAL_TIME.getTicks());
             }
             return tank.writeToNBT(nbt);
         }

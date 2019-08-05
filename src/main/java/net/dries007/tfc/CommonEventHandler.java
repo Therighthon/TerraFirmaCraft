@@ -14,18 +14,25 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.*;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.FoodStats;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.GameRuleChangeEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.UseHoeEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -33,6 +40,8 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 
 import net.dries007.tfc.api.capability.ItemStickCapability;
 import net.dries007.tfc.api.capability.damage.DamageType;
+import net.dries007.tfc.api.capability.egg.CapabilityEgg;
+import net.dries007.tfc.api.capability.egg.EggHandler;
 import net.dries007.tfc.api.capability.food.CapabilityFood;
 import net.dries007.tfc.api.capability.food.FoodHandler;
 import net.dries007.tfc.api.capability.food.FoodStatsTFC;
@@ -48,8 +57,11 @@ import net.dries007.tfc.network.PacketFoodStatsReplace;
 import net.dries007.tfc.objects.blocks.BlocksTFC;
 import net.dries007.tfc.objects.blocks.stone.BlockRockVariant;
 import net.dries007.tfc.objects.container.CapabilityContainerListener;
+import net.dries007.tfc.objects.entity.animal.IAnimalTFC;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.CalendarTFC;
+import net.dries007.tfc.world.classic.ClimateTFC;
+import net.dries007.tfc.world.classic.chunkdata.ChunkDataTFC;
 
 import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
 
@@ -251,6 +263,10 @@ public final class CommonEventHandler
         {
             event.addCapability(CapabilityFood.KEY, new FoodHandler(stack.getTagCompound(), new float[] {1, 0, 0, 0, 0}, 0, 0, 1));
         }
+        if (stack.getItem() == Items.EGG && !stack.hasCapability(CapabilityEgg.CAPABILITY, null))
+        {
+            event.addCapability(CapabilityEgg.KEY, new EggHandler());
+        }
     }
 
     @SubscribeEvent
@@ -282,7 +298,60 @@ public final class CommonEventHandler
             player.inventoryContainer.addListener(new CapabilityContainerListener(player));
 
             // World Data (Calendar) Sync Handler
-            CalendarTFC.INSTANCE.update(player);
+            CalendarTFC.INSTANCE.updatePlayer(player);
+
+            // Food Stats
+            FoodStats originalStats = player.getFoodStats();
+            if (!(originalStats instanceof FoodStatsTFC))
+            {
+                player.foodStats = new FoodStatsTFC(player, originalStats);
+
+                // Also need to read the food stats from nbt, as they were not present when the player was loaded
+                MinecraftServer server = player.world.getMinecraftServer();
+                if (server != null)
+                {
+                    NBTTagCompound nbt = server.getPlayerList().getPlayerNBT(player);
+                    // This can be null if the server is unable to read the file
+                    //noinspection ConstantConditions
+                    if (nbt != null)
+                    {
+                        player.foodStats.readNBT(nbt);
+                    }
+                }
+
+                TerraFirmaCraft.getNetwork().sendTo(new PacketFoodStatsReplace(), (EntityPlayerMP) event.player);
+            }
+
+            // Check total players and reset calendar time ticking
+            int players = event.player.world.playerEntities.size();
+            CalendarTFC.INSTANCE.setArePlayersLoggedOn(event.player.world, players > 0);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event)
+    {
+        if (event.player instanceof EntityPlayerMP)
+        {
+            // Check total players and reset calendar time ticking
+            int players = event.player.world.playerEntities.size();
+            CalendarTFC.INSTANCE.setArePlayersLoggedOn(event.player.world, players > 0);
+        }
+    }
+
+    /**
+     * Fired on server only when a player dies and respawns, or travels through dimensions
+     *
+     * @param event {@link net.minecraftforge.event.entity.player.PlayerEvent.Clone}
+     */
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event)
+    {
+        if (event.player instanceof EntityPlayerMP)
+        {
+            // Capability Sync Handler
+            final EntityPlayerMP player = (EntityPlayerMP) event.player;
+            player.inventoryContainer.addListener(new CapabilityContainerListener(player));
 
             // Food Stats
             FoodStats originalStats = event.player.getFoodStats();
@@ -290,29 +359,6 @@ public final class CommonEventHandler
             {
                 event.player.foodStats = new FoodStatsTFC(event.player, originalStats);
                 TerraFirmaCraft.getNetwork().sendTo(new PacketFoodStatsReplace(), (EntityPlayerMP) event.player);
-            }
-        }
-    }
-
-    /**
-     * Fired on server only when a player dies and respawns, or is cloned via other means (?)
-     * @param event {@link net.minecraftforge.event.entity.player.PlayerEvent.Clone}
-     */
-    @SubscribeEvent
-    public static void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone event)
-    {
-        if (event.getEntityPlayer() instanceof EntityPlayerMP)
-        {
-            // Capability Sync Handler
-            final EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
-            player.inventoryContainer.addListener(new CapabilityContainerListener(player));
-
-            // Food Stats
-            FoodStats originalStats = event.getEntityPlayer().getFoodStats();
-            if (!(originalStats instanceof FoodStatsTFC))
-            {
-                event.getEntityPlayer().foodStats = new FoodStatsTFC(event.getEntityPlayer(), originalStats);
-                TerraFirmaCraft.getNetwork().sendTo(new PacketFoodStatsReplace(), (EntityPlayerMP) event.getEntityPlayer());
             }
         }
     }
@@ -326,5 +372,66 @@ public final class CommonEventHandler
             final EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
             event.getContainer().addListener(new CapabilityContainerListener(player));
         }
+    }
+
+    @SubscribeEvent
+    public static void onLivingSpawnEvent(LivingSpawnEvent.CheckSpawn event)
+    {
+        // Check creature spawning
+        if (event.getEntity() instanceof IAnimalTFC)
+        {
+            IAnimalTFC animal = (IAnimalTFC) event.getEntity();
+            World world = event.getWorld();
+            BlockPos pos = new BlockPos(event.getX(), event.getY(), event.getZ());
+
+            float rainfall = ChunkDataTFC.getRainfall(world, pos);
+            float temperature = ClimateTFC.getAverageBiomeTemp(world, pos);
+            Biome biome = world.getBiome(pos);
+
+            if (!animal.isValidSpawnConditions(biome, temperature, rainfall))
+            {
+                event.setResult(Event.Result.DENY);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onGameRuleChange(GameRuleChangeEvent event)
+    {
+        GameRules rules = event.getRules();
+        if ("doDaylightCycle".equals(event.getRuleName()))
+        {
+            // This is only called on server, so it needs to sync to client
+            CalendarTFC.INSTANCE.setDoDaylightCycle(event.getServer().getEntityWorld(), rules.getBoolean("doDaylightCycle"));
+        }
+        else if ("naturalRegeneration".equals(event.getRuleName()) && ConfigTFC.GENERAL.forceNoVanillaNaturalRegeneration)
+        {
+            // Natural regeneration should be disabled, allows TFC to have custom regeneration
+            event.getRules().setOrCreateGameRule("naturalRegeneration", "false");
+            TerraFirmaCraft.getLog().warn("Something tried to set natural regeneration to true, reverting!");
+        }
+    }
+
+    @SubscribeEvent
+    public static void onWorldLoad(WorldEvent.Load event)
+    {
+        if (ConfigTFC.GENERAL.forceNoVanillaNaturalRegeneration)
+        {
+            // Natural regeneration should be disabled, allows TFC to have custom regeneration
+            event.getWorld().getGameRules().setOrCreateGameRule("naturalRegeneration", "false");
+            TerraFirmaCraft.getLog().warn("Updating gamerule naturalRegeneration to false!");
+        }
+    }
+
+    /**
+     * This will disable the bonus chest, cheaty cheaty players >:(
+     *
+     * @param event {@link net.minecraftforge.event.world.WorldEvent.CreateSpawnPosition}
+     */
+    @SubscribeEvent
+    public static void onCreateSpawn(WorldEvent.CreateSpawnPosition event)
+    {
+        event.getSettings().bonusChestEnabled = false;
+        TerraFirmaCraft.getLog().info("Disabling bonus chest, you cheaty cheater!");
     }
 }

@@ -17,8 +17,10 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 
+import net.dries007.tfc.ConfigTFC;
 import net.dries007.tfc.util.agriculture.Food;
 import net.dries007.tfc.util.calendar.CalendarTFC;
+import net.dries007.tfc.util.calendar.ICalendar;
 
 public class FoodHandler implements IFood, ICapabilitySerializable<NBTTagCompound>
 {
@@ -53,18 +55,6 @@ public class FoodHandler implements IFood, ICapabilitySerializable<NBTTagCompoun
     }
 
     @Override
-    public long getRottenDate()
-    {
-        return creationDate + (long) (calculateDecayModifier() * CapabilityFood.DEFAULT_ROT_TICKS);
-    }
-
-    @Override
-    public float getWater()
-    {
-        return water;
-    }
-
-    @Override
     public float getNutrient(ItemStack stack, Nutrient nutrient)
     {
         if (isRotten())
@@ -92,9 +82,30 @@ public class FoodHandler implements IFood, ICapabilitySerializable<NBTTagCompoun
     }
 
     @Override
+    public long getRottenDate()
+    {
+        // This avoids overflow which breaks when calculateDecayModifier() returns infinity, which happens if decay modifier = 0
+        float decayMod = calculateDecayModifier();
+        return decayMod == Float.POSITIVE_INFINITY ? Long.MAX_VALUE : creationDate + (long) (decayMod * CapabilityFood.DEFAULT_ROT_TICKS);
+    }
+
+    @Override
+    public float getWater()
+    {
+        return water;
+    }
+
+    @Override
     public float getCalories()
     {
         return calories;
+    }
+
+    @Nonnull
+    @Override
+    public List<IFoodTrait> getTraits()
+    {
+        return foodTraits;
     }
 
     @Override
@@ -131,6 +142,12 @@ public class FoodHandler implements IFood, ICapabilitySerializable<NBTTagCompoun
         if (nbt != null && nbt.hasKey("creationDate"))
         {
             creationDate = nbt.getLong("creationDate");
+            if (creationDate == 0)
+            {
+                // Stop defaulting to zero, in cases where the item stack is cloned or copied from one that was initialized at load (and thus was before the calendar was initialized)
+                creationDate = CalendarTFC.PLAYER_TIME.getTotalHours() * ICalendar.TICKS_IN_HOUR;
+            }
+
             // Read the traits and apply each one (if they exist)
             if (nbt.hasKey("traits"))
             {
@@ -145,24 +162,19 @@ public class FoodHandler implements IFood, ICapabilitySerializable<NBTTagCompoun
         {
             // Don't default to zero
             // Food decay initially is synced with the hour. This allows items grabbed within a minute to stack
-            creationDate = CalendarTFC.INSTANCE.getTotalHours() * CalendarTFC.TICKS_IN_HOUR;
+            creationDate = CalendarTFC.PLAYER_TIME.getTotalHours() * ICalendar.TICKS_IN_HOUR;
         }
     }
 
     private float calculateDecayModifier()
     {
-        float mod = decayModifier;
+        // Decay modifiers are higher = shorter
+        float mod = decayModifier * (float) ConfigTFC.GENERAL.foodDecayModifier;
         for (IFoodTrait trait : foodTraits)
         {
             mod *= trait.getDecayModifier();
         }
-        return mod;
-    }
-
-    @Nonnull
-    @Override
-    public List<IFoodTrait> getTraits()
-    {
-        return foodTraits;
+        // The modifier returned is used to calculate time, so higher = longer
+        return mod == 0 ? Float.POSITIVE_INFINITY : 1 / mod;
     }
 }

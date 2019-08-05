@@ -16,6 +16,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import net.dries007.tfc.api.capability.food.FoodHandler;
+import net.dries007.tfc.api.capability.food.FoodHeatHandler;
 import net.dries007.tfc.api.capability.food.IFoodStatsTFC;
 import net.dries007.tfc.util.OreDictionaryHelper;
 import net.dries007.tfc.util.agriculture.Food;
@@ -45,15 +46,14 @@ public class ItemFoodTFC extends ItemFood
             throw new IllegalStateException("There can only be one.");
         }
 
-        // todo: make this better and work with all foods somehow
-        OreDictionaryHelper.register(this, food.getCategory());
-        switch (food)
+        // Use "category" here as to not conflict with actual items, i.e. grain
+        OreDictionaryHelper.register(this, "category", food.getCategory());
+        if (food.getOreDictNames() != null)
         {
-            case BARLEY_FLOUR:
-                OreDictionaryHelper.register(this, "flour_barley");
-            case GREEN_APPLE:
-            case RED_APPLE:
-                OreDictionaryHelper.register(this, "apple");
+            for (Object name : food.getOreDictNames())
+            {
+                OreDictionaryHelper.register(this, name);
+            }
         }
     }
 
@@ -61,6 +61,6 @@ public class ItemFoodTFC extends ItemFood
     @Override
     public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable NBTTagCompound nbt)
     {
-        return new FoodHandler(nbt, food);
+        return food.isHeatable() ? new FoodHeatHandler(nbt, food) : new FoodHandler(nbt, food);
     }
 }

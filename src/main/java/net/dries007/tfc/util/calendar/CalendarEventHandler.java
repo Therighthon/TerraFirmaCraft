@@ -7,10 +7,8 @@ package net.dries007.tfc.util.calendar;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.TextComponentTranslation;
-import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.event.CommandEvent;
-import net.minecraftforge.event.GameRuleChangeEvent;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -18,6 +16,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import net.dries007.tfc.TerraFirmaCraft;
+import net.dries007.tfc.network.PacketCalendarUpdate;
 
 import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
 
@@ -47,17 +48,6 @@ public class CalendarEventHandler
     }
 
     @SubscribeEvent
-    public static void onGameRuleChange(GameRuleChangeEvent event)
-    {
-        // This is only called on server, so it needs to sync to client
-        GameRules rules = event.getRules();
-        if ("doDaylightCycle".equals(event.getRuleName()))
-        {
-            CalendarTFC.update(event.getServer().getEntityWorld(), CalendarTFC.INSTANCE.getCalendarOffset(), CalendarTFC.INSTANCE.getDaysInMonth(), rules.getBoolean("doDaylightCycle"));
-        }
-    }
-
-    @SubscribeEvent
     public static void onCommandFire(CommandEvent event)
     {
         if ("time".equals(event.getCommand().getName()))
@@ -68,16 +58,21 @@ public class CalendarEventHandler
     }
 
     /**
-     * This allows beds to function correctly with TFC's calendar
+     * This allows beds to function correctly with TFCs calendar
      *
      * @param event {@link PlayerWakeUpEvent}
      */
     @SubscribeEvent
     public static void onPlayerWakeUp(PlayerWakeUpEvent event)
     {
-        // Set the calendar time to time=0. This will implicitly call CalendarTFC#update
-        long newCalendarTime = (CalendarTFC.INSTANCE.getTotalDays() + 1) * CalendarTFC.TICKS_IN_DAY + CalendarTFC.WORLD_TIME_OFFSET;
+        // Calculate time to adjust by
+        long newCalendarTime = (CalendarTFC.CALENDAR_TIME.getTotalDays() + 1) * ICalendar.TICKS_IN_DAY + CalendarTFC.WORLD_TIME_OFFSET;
+        long sleepTimeJump = newCalendarTime - CalendarTFC.CALENDAR_TIME.getTicks();
+        long newPlayerTime = CalendarTFC.PLAYER_TIME.getTicks() + sleepTimeJump;
+
+        // Increment offsets
         CalendarTFC.INSTANCE.setCalendarTime(event.getEntityPlayer().getEntityWorld(), newCalendarTime);
+        CalendarTFC.INSTANCE.setPlayerTime(event.getEntityPlayer().getEntityWorld(), newPlayerTime);
     }
 
     @SubscribeEvent
@@ -87,7 +82,10 @@ public class CalendarEventHandler
         final World world = event.getWorld();
         if (world.provider.getDimension() == 0 && !world.isRemote)
         {
-            CalendarTFC.INSTANCE.update(event.getWorld());
+            // Load calendar from world data
+            CalendarWorldData data = CalendarWorldData.get(world);
+            CalendarTFC.INSTANCE.reset(data.instance);
+            TerraFirmaCraft.getNetwork().sendToAll(new PacketCalendarUpdate(CalendarTFC.INSTANCE));
         }
     }
 }

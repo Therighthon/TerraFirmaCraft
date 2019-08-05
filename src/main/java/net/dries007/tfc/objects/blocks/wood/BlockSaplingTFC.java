@@ -30,13 +30,13 @@ import net.dries007.tfc.api.types.Tree;
 import net.dries007.tfc.objects.te.TETickCounter;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.OreDictionaryHelper;
-import net.dries007.tfc.util.calendar.CalendarTFC;
+import net.dries007.tfc.util.calendar.ICalendar;
 
 @ParametersAreNonnullByDefault
 public class BlockSaplingTFC extends BlockBush implements IGrowable
 {
     public static final PropertyInteger STAGE = PropertyInteger.create("stage", 0, 4);
-    protected static final AxisAlignedBB SAPLING_AABB = new AxisAlignedBB(0.1, 0, 0.1, 0.9, 0., 0.9);
+    protected static final AxisAlignedBB SAPLING_AABB = new AxisAlignedBB(0.1, 0, 0.1, 0.9, 0.9, 0.9);
     private static final Map<Tree, BlockSaplingTFC> MAP = new HashMap<>();
 
     public static BlockSaplingTFC get(Tree wood)
@@ -113,7 +113,7 @@ public class BlockSaplingTFC extends BlockBush implements IGrowable
             TETickCounter te = Helpers.getTE(world, pos, TETickCounter.class);
             if (te != null)
             {
-                long days = te.getTicksSinceUpdate() / CalendarTFC.TICKS_IN_DAY;
+                long days = te.getTicksSinceUpdate() / ICalendar.TICKS_IN_DAY;
                 if (days > wood.getMinGrowthTime())
                 {
                     grow(world, random, pos, state);

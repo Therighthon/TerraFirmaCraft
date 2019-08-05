@@ -30,11 +30,14 @@ import net.dries007.tfc.util.calendar.CalendarTFC;
 @ParametersAreNonnullByDefault
 public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
 {
+    public static final float PASSIVE_HEAL_AMOUNT = 20 * 0.0002f; // On the display: 1 HP / 5 second
+
     private final EntityPlayer sourcePlayer;
     private final FoodStats originalStats;
     private final float[] nutrients;
     private long lastDrinkTick;
     private float thirst;
+    private int healTimer;
 
     public FoodStatsTFC(EntityPlayer sourcePlayer, FoodStats originalStats)
     {
@@ -110,7 +113,35 @@ public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
     {
         EnumDifficulty difficulty = player.world.getDifficulty();
 
-        if (difficulty != EnumDifficulty.PEACEFUL)
+        // Extra-Peaceful Difficulty
+        if (difficulty == EnumDifficulty.PEACEFUL && ConfigTFC.GENERAL.peacefulDifficultyPassiveRegeneration)
+        {
+            // Copied / Modified from EntityPlayer#onLivingUpdate
+            if (player.shouldHeal() && player.ticksExisted % 20 == 0)
+            {
+                player.heal(1.0F);
+            }
+
+            if (player.ticksExisted % 10 == 0)
+            {
+                if (needFood())
+                {
+                    player.foodStats.setFoodLevel(player.foodStats.getFoodLevel() + 1);
+                }
+
+                if (thirst < MAX_PLAYER_THIRST)
+                {
+                    addThirst(5f);
+                }
+
+                // Then, we decrement nutrients
+                for (int i = 0; i < nutrients.length; i++)
+                {
+                    addNutrient(i, 5f);
+                }
+            }
+        }
+        else
         {
             // First, we check exhaustion, to decrement thirst
             if (originalStats.foodExhaustionLevel >= 4.0F)
@@ -127,6 +158,18 @@ public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
 
         // Next, update the original food stats
         originalStats.onUpdate(player);
+
+        // Apply custom TFC regeneration
+        if (player.shouldHeal() && getFoodLevel() >= 16.0f && getThirst() > 60f)
+        {
+            healTimer++;
+
+            if (healTimer > 10)
+            {
+                player.heal(PASSIVE_HEAL_AMOUNT * (float) ConfigTFC.GENERAL.playerNaturalRegenerationModifier);
+                healTimer = 0;
+            }
+        }
 
         // Last, apply negative effects due to thirst
         if (!player.capabilities.isCreativeMode)
@@ -156,13 +199,6 @@ public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
         {
             TerraFirmaCraft.getNetwork().sendTo(new PacketFoodStatsUpdate(nutrients, thirst), (EntityPlayerMP) player);
         }
-    }
-
-    @SideOnly(Side.CLIENT)
-    public void onReceivePacket(float[] nutrients, float thirst)
-    {
-        System.arraycopy(nutrients, 0, this.nutrients, 0, this.nutrients.length);
-        this.thirst = thirst;
     }
 
     @Override
@@ -223,29 +259,18 @@ public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
         originalStats.setFoodLevel(foodLevelIn);
     }
 
-    /**
-     * Sets the nutrient value directly. Used by command nutrients and for debug purposes
-     *
-     * @param nutrient the nutrient to set
-     * @param value    the value to set to, in [0, 100]
-     */
-    @Override
-    public void setNutrient(@Nonnull Nutrient nutrient, float value)
-    {
-        setNutrient(nutrient.ordinal(), value);
-    }
-
-    @Override
-    public float getThirst()
-    {
-        return thirst;
-    }
-
     @SideOnly(Side.CLIENT)
     @Override
     public void setFoodSaturationLevel(float foodSaturationLevelIn)
     {
         originalStats.setFoodSaturationLevel(foodSaturationLevelIn);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void onReceivePacket(float[] nutrients, float thirst)
+    {
+        System.arraycopy(nutrients, 0, this.nutrients, 0, this.nutrients.length);
+        this.thirst = thirst;
     }
 
     @Override
@@ -260,13 +285,19 @@ public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
     }
 
     @Override
+    public float getThirst()
+    {
+        return thirst;
+    }
+
+    @Override
     public boolean attemptDrink(float value)
     {
-        int ticksPassed = (int) (CalendarTFC.INSTANCE.getCalendarTime() - lastDrinkTick);
+        int ticksPassed = (int) (CalendarTFC.TOTAL_TIME.getTicks() - lastDrinkTick);
         if (ticksPassed >= 20 && thirst < MAX_PLAYER_THIRST)
         {
             // One drink every so often
-            lastDrinkTick = CalendarTFC.INSTANCE.getCalendarTime();
+            lastDrinkTick = CalendarTFC.TOTAL_TIME.getTicks();
             addThirst(value);
             return true;
         }
@@ -274,9 +305,35 @@ public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
     }
 
     @Override
+    public void addThirst(float value)
+    {
+        this.thirst += value;
+        if (thirst < 0)
+        {
+            thirst = 0;
+        }
+        if (thirst > MAX_PLAYER_THIRST)
+        {
+            thirst = MAX_PLAYER_THIRST;
+        }
+    }
+
+    @Override
     public float getNutrient(@Nonnull Nutrient nutrient)
     {
         return nutrients[nutrient.ordinal()];
+    }
+
+    /**
+     * Sets the nutrient value directly. Used by command nutrients and for debug purposes
+     *
+     * @param nutrient the nutrient to set
+     * @param value    the value to set to, in [0, 100]
+     */
+    @Override
+    public void setNutrient(@Nonnull Nutrient nutrient, float value)
+    {
+        setNutrient(nutrient.ordinal(), value);
     }
 
     private void addNutrient(int index, float amount)
@@ -294,20 +351,6 @@ public class FoodStatsTFC extends FoodStats implements IFoodStatsTFC
         else if (nutrients[index] > MAX_PLAYER_NUTRIENTS)
         {
             nutrients[index] = MAX_PLAYER_NUTRIENTS;
-        }
-    }
-
-    @Override
-    public void addThirst(float value)
-    {
-        this.thirst += value;
-        if (thirst < 0)
-        {
-            thirst = 0;
-        }
-        if (thirst > MAX_PLAYER_THIRST)
-        {
-            thirst = MAX_PLAYER_THIRST;
         }
     }
 }

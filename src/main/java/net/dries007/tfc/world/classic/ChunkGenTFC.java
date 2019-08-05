@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
@@ -28,6 +29,7 @@ import net.minecraft.world.gen.MapGenBase;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 import net.minecraft.world.gen.layer.IntCache;
+import net.minecraftforge.event.terraingen.TerrainGen;
 import net.minecraftforge.registries.ForgeRegistry;
 
 import mcp.MethodsReturnNonnullByDefault;
@@ -52,6 +54,7 @@ import net.dries007.tfc.world.classic.mapgen.MapGenRiverRavine;
 
 import static net.dries007.tfc.world.classic.WorldTypeTFC.ROCKLAYER2;
 import static net.dries007.tfc.world.classic.WorldTypeTFC.ROCKLAYER3;
+import static net.minecraftforge.event.terraingen.PopulateChunkEvent.Populate.EventType.ANIMALS;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -122,9 +125,6 @@ public class ChunkGenTFC implements IChunkGenerator
     private int[] rockLayer2 = new int[256];
     private int[] rockLayer3 = new int[256];
     private float rainfall;
-    private float floraDensity;
-    private float floraDiversity;
-    private float baseTemp;
     private float averageTemp;
 
     public ChunkGenTFC(World w, String settingsString)
@@ -184,19 +184,15 @@ public class ChunkGenTFC implements IChunkGenerator
         loadLayerGeneratorData(drainageGenLayer, drainageLayer, chunkX * 16, chunkZ * 16, 16, 16);
 
         rainfall = 250f + 250f * 0.09f * (float) noiseGen7.getValue(chunkX * 0.005, chunkZ * 0.005); // Range 0 <> 500
-        floraDiversity = 0.5f + 0.5f * 0.09f * (float) noiseGen9.getValue(chunkX * 0.005, chunkZ * 0.005); // Range 0 <> 1
-        floraDensity = (0.3f + 0.4f * rainfall / 500f) + 0.3f * 0.09f * (float) noiseGen8.getValue(chunkX * 0.005, chunkZ * 0.005); // Range 0 <> 1
+        float floraDiversity = 0.5f + 0.5f * 0.09f * (float) noiseGen9.getValue(chunkX * 0.005, chunkZ * 0.005); // Range 0 <> 1
+        float floraDensity = (0.3f + 0.4f * rainfall / 500f) + 0.3f * 0.09f * (float) noiseGen8.getValue(chunkX * 0.005, chunkZ * 0.005); // Range 0 <> 1
 
         rockLayer1 = rocksGenLayer1.getInts(chunkX * 16, chunkZ * 16, 16, 16);
         rockLayer2 = rocksGenLayer2.getInts(chunkX * 16, chunkZ * 16, 16, 16);
         rockLayer3 = rocksGenLayer3.getInts(chunkX * 16, chunkZ * 16, 16, 16);
 
-        final float latitudeFactor = ClimateTFC.latitudeFactor(chunkZ); // Range 0 - 1
-        final float monthFactor = 41f - 1.1f * Month.AVERAGE_TEMPERATURE_MODIFIER * (1f - 0.8f * latitudeFactor);
-        final float regionalFactor = 15f * 0.09f * (float) noiseGen10.getValue(chunkX * 0.005, chunkZ * 0.005); // Range -15 <> 15
-
-        baseTemp = 45f * latitudeFactor - 25f + regionalFactor; // Latitude + Regional Temp
-        averageTemp = monthFactor + 0.2f * baseTemp;
+        final float regionalFactor = 5f * 0.09f * (float) noiseGen10.getValue(chunkX * 0.05, chunkZ * 0.05); // Range -5 <> 5
+        averageTemp = ClimateTFC.monthTemp(regionalFactor, Month.AVERAGE_TEMPERATURE_MODIFIER, chunkZ << 4);
 
         CustomChunkPrimer chunkPrimerOut = new CustomChunkPrimer();
         replaceBlocksForBiomeHigh(chunkX, chunkZ, chunkPrimerIn, chunkPrimerOut);
@@ -230,8 +226,7 @@ public class ChunkGenTFC implements IChunkGenerator
 
         ChunkDataTFC chunkData = chunk.getCapability(ChunkDataProvider.CHUNK_DATA_CAPABILITY, null);
         if (chunkData == null) throw new IllegalStateException("ChunkData capability is missing.");
-        chunkData.setGenerationData(rockLayer1, rockLayer2, rockLayer3, stabilityLayer, drainageLayer, seaLevelOffsetMap,
-            rainfall, baseTemp, averageTemp, floraDensity, floraDiversity);
+        chunkData.setGenerationData(rockLayer1, rockLayer2, rockLayer3, stabilityLayer, drainageLayer, seaLevelOffsetMap, rainfall, regionalFactor, averageTemp, floraDensity, floraDiversity);
 
         byte[] biomeIds = chunk.getBiomeArray();
         for (int x = 0; x < 16; ++x)
@@ -274,11 +269,10 @@ public class ChunkGenTFC implements IChunkGenerator
 
         biome.decorate(world, rand, blockpos);
 
-        // todo: make this use TFC stuff / quick fix vanilla animals to drop TFC items
-        //if (TerrainGen.populate(this, world, rand, chunkX, chunkZ, false, ANIMALS))
-        //{
-        //    WorldEntitySpawner.performWorldGenSpawning(world, biome, worldX + 8, worldZ + 8, 16, 16, rand);
-        //}
+        if (TerrainGen.populate(this, world, rand, chunkX, chunkZ, false, ANIMALS))
+        {
+            WorldEntitySpawner.performWorldGenSpawning(world, biome, worldX + 8, worldZ + 8, 16, 16, rand);
+        }
 
         blockpos = blockpos.add(8, 0, 8);
         for (int x = 0; x < 16; x++)
@@ -338,7 +332,7 @@ public class ChunkGenTFC implements IChunkGenerator
         if (!world.isAirBlock(pos) && !world.isAirBlock(pos.add(0, -1, 0)) && !SNOW.getBlock().canPlaceBlockAt(world, pos))
             return false;
         if (ClimateTFC.getHeightAdjustedTemp(world, pos) >= 0F) return false;
-        if (world.getLightFor(EnumSkyBlock.BLOCK, pos) < 10 /* todo: why? && CalendarTFC.getTotalMonths() < 1*/)
+        if (world.getLightFor(EnumSkyBlock.BLOCK, pos) < 10 /* todo: why? && Calendar.getTotalMonths() < 1*/)
             return false;
         return world.getBlockState(pos.add(0, -1, 0)).getMaterial().blocksMovement();
     }

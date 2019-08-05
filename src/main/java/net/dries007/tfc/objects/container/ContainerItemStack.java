@@ -6,6 +6,7 @@
 package net.dries007.tfc.objects.container;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -17,6 +18,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
+@ParametersAreNonnullByDefault
 public abstract class ContainerItemStack extends Container
 {
     protected final ItemStack stack;
@@ -107,7 +109,7 @@ public abstract class ContainerItemStack extends Container
     @Nonnull
     public ItemStack slotClick(int slotID, int dragType, ClickType clickType, EntityPlayer player)
     {
-        if ((clickType == ClickType.QUICK_MOVE || clickType == ClickType.PICKUP || clickType == ClickType.SWAP) && slotID == itemIndex)
+        if ((clickType == ClickType.QUICK_MOVE || clickType == ClickType.PICKUP || clickType == ClickType.SWAP || clickType == ClickType.THROW) && slotID == itemIndex)
         {
             return ItemStack.EMPTY;
         }
@@ -129,7 +131,7 @@ public abstract class ContainerItemStack extends Container
     }
 
     @Override
-    public boolean canInteractWith(@Nonnull EntityPlayer player)
+    public boolean canInteractWith(EntityPlayer playerIn)
     {
         return true;
     }

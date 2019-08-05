@@ -18,7 +18,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 import net.dries007.tfc.TerraFirmaCraft;
-import net.dries007.tfc.api.recipes.KnappingRecipe;
+import net.dries007.tfc.api.recipes.knapping.KnappingRecipe;
 import net.dries007.tfc.api.types.Rock;
 import net.dries007.tfc.api.util.IRockObject;
 import net.dries007.tfc.client.gui.*;
@@ -60,6 +60,9 @@ public class TFCGuiHandler implements IGuiHandler
         Type type = Type.valueOf(ID);
         switch (type)
         {
+            case NEST_BOX:
+                TENestBox teNestBox = Helpers.getTE(world, pos, TENestBox.class);
+                return teNestBox == null ? null : new ContainerNestBox(player.inventory, teNestBox);
             case LOG_PILE:
                 TELogPile teLogPile = Helpers.getTE(world, pos, TELogPile.class);
                 return teLogPile == null ? null : new ContainerLogPile(player.inventory, teLogPile);
@@ -91,6 +94,8 @@ public class TFCGuiHandler implements IGuiHandler
                 return new ContainerQuern(player.inventory, Helpers.getTE(world, pos, TEQuern.class));
             case CRUCIBLE:
                 return new ContainerCrucible(player.inventory, Helpers.getTE(world, pos, TECrucible.class));
+            case LARGE_VESSEL:
+                return new ContainerLargeVessel(player.inventory, Helpers.getTE(world, pos, TELargeVessel.class));
             case CALENDAR:
             case SKILLS:
             case NUTRITION:
@@ -113,6 +118,8 @@ public class TFCGuiHandler implements IGuiHandler
         BlockPos pos = new BlockPos(x, y, z);
         switch (type)
         {
+            case NEST_BOX:
+                return new GuiContainerTFC(container, player.inventory, SMALL_INVENTORY_BACKGROUND);
             case LOG_PILE:
                 return new GuiContainerTFC(container, player.inventory, SMALL_INVENTORY_BACKGROUND);
             case SMALL_VESSEL:
@@ -147,6 +154,8 @@ public class TFCGuiHandler implements IGuiHandler
                 return new GuiQuern(container, player.inventory, Helpers.getTE(world, pos, TEQuern.class), world.getBlockState(new BlockPos(x, y, z)).getBlock().getTranslationKey());
             case CRUCIBLE:
                 return new GuiCrucible(container, player.inventory, Helpers.getTE(world, pos, TECrucible.class));
+            case LARGE_VESSEL:
+                return new GuiLargeVessel(container, player.inventory, Helpers.getTE(world, pos, TELargeVessel.class), world.getBlockState(new BlockPos(x, y, z)).getBlock().getTranslationKey());
             case CALENDAR:
                 return new GuiCalendar(container, player.inventory);
             case NUTRITION:
@@ -164,6 +173,7 @@ public class TFCGuiHandler implements IGuiHandler
 
     public enum Type
     {
+        NEST_BOX,
         LOG_PILE,
         SMALL_VESSEL,
         SMALL_VESSEL_LIQUID,
@@ -180,6 +190,7 @@ public class TFCGuiHandler implements IGuiHandler
         ANVIL_PLAN,
         CRUCIBLE,
         BLAST_FURNACE,
+        LARGE_VESSEL,
         CALENDAR,
         NUTRITION,
         SKILLS,

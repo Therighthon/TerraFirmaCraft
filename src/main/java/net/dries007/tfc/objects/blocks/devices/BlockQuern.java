@@ -29,17 +29,15 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
 
-import net.dries007.tfc.api.capability.heat.CapabilityItemHeat;
 import net.dries007.tfc.api.capability.size.IItemSize;
 import net.dries007.tfc.api.capability.size.Size;
 import net.dries007.tfc.api.capability.size.Weight;
 import net.dries007.tfc.client.TFCGuiHandler;
+import net.dries007.tfc.client.TFCSounds;
 import net.dries007.tfc.objects.items.ItemHandstone;
 import net.dries007.tfc.objects.te.TEQuern;
 import net.dries007.tfc.util.Helpers;
-import net.dries007.tfc.util.TFCSoundEvents;
 
 @ParametersAreNonnullByDefault
 public class BlockQuern extends Block implements IItemSize
@@ -178,7 +176,7 @@ public class BlockQuern extends Block implements IItemSize
                     if (playerStack.isEmpty() && facing == EnumFacing.UP && hitX > 0.2f && hitX < 0.4f && hitZ > 0.2f && hitZ < 0.4f && hitY >= 0.875)
                     {
                         teQuern.grind();
-                        world.playSound(null, pos, TFCSoundEvents.QUERN_USE, SoundCategory.BLOCKS, 1, 1 + ((world.rand.nextFloat() - world.rand.nextFloat()) / 16));
+                        world.playSound(null, pos, TFCSounds.QUERN_USE, SoundCategory.BLOCKS, 1, 1 + ((world.rand.nextFloat() - world.rand.nextFloat()) / 16));
                     }
                     else if (!world.isRemote)
                     {
@@ -189,7 +187,7 @@ public class BlockQuern extends Block implements IItemSize
                 else if (!world.isRemote && playerIn.isSneaking())
                 {
                     IItemHandler inventory = teQuern.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-                    if(inventory != null)
+                    if (inventory != null)
                     {
                         ItemStack inputStack = inventory.getStackInSlot(TEQuern.SLOT_INPUT);
                         ItemStack outputStack = inventory.getStackInSlot(TEQuern.SLOT_OUTPUT);

@@ -77,20 +77,20 @@ public class BlockPlacedItem extends Block
         return PLACED_ITEM_AABB;
     }
 
-    @SuppressWarnings("deprecation")
-    @Nullable
-    @Override
-    public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos)
-    {
-        return NULL_AABB;
-    }
-
     @Override
     @Nonnull
     @SuppressWarnings("deprecation")
     public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face)
     {
         return BlockFaceShape.UNDEFINED;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Nullable
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos)
+    {
+        return NULL_AABB;
     }
 
     @Override
@@ -131,7 +131,7 @@ public class BlockPlacedItem extends Block
             // Check for pit kiln conversion
             if (!playerIn.isSneaking() && (OreDictionaryHelper.doesStackMatchOre(stack, "straw") || OreDictionaryHelper.doesStackMatchOre(stack, "blockStraw")))
             {
-                TEPitKiln.convertPlacedItemToPitKiln(worldIn, pos, stack);
+                TEPitKiln.convertPlacedItemToPitKiln(worldIn, pos, stack.splitStack(1));
                 return true;
             }
             return te.onRightClick(playerIn, playerIn.getHeldItem(hand), hitX < 0.5, hitZ < 0.5);

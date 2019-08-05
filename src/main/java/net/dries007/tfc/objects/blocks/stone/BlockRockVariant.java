@@ -30,15 +30,15 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.dries007.tfc.api.types.Rock;
+import net.dries007.tfc.client.TFCSounds;
 import net.dries007.tfc.objects.blocks.BlocksTFC;
-import net.dries007.tfc.objects.blocks.crops.BlockCropTFC;
+import net.dries007.tfc.objects.blocks.agriculture.BlockCropTFC;
 import net.dries007.tfc.objects.blocks.plants.BlockPlantTFC;
 import net.dries007.tfc.objects.items.rock.ItemRock;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.OreDictionaryHelper;
-import net.dries007.tfc.util.TFCSoundEvents;
 
-import static net.dries007.tfc.objects.blocks.crops.BlockCropTFC.WILD;
+import static net.dries007.tfc.objects.blocks.agriculture.BlockCropTFC.WILD;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -108,27 +108,27 @@ public class BlockRockVariant extends Block
                 break;
             case SAND:
                 setSoundType(SoundType.SAND);
-                setHardness(0.5F);
+                setHardness(0.7F);
                 setHarvestLevel("shovel", 0);
                 break;
             case DIRT:
             case PATH:
             case FARMLAND:
                 setSoundType(SoundType.GROUND);
-                setHardness(0.5F);
+                setHardness(1.0F);
                 setHarvestLevel("shovel", 0);
                 break;
             case GRAVEL:
             case CLAY:
                 setSoundType(SoundType.GROUND);
-                setHardness(0.6F);
+                setHardness(0.8F);
                 setHarvestLevel("shovel", 0);
                 break;
             case CLAY_GRASS:
             case GRASS:
             case DRY_GRASS:
                 setSoundType(SoundType.PLANT);
-                setHardness(0.6F);
+                setHardness(1.1F);
                 setHarvestLevel("shovel", 0);
                 break;
         }
@@ -178,24 +178,6 @@ public class BlockRockVariant extends Block
                 }
             default:
                 return super.shouldSideBeRendered(blockState, world, pos, side);
-        }
-    }
-
-    protected void onRockSlide(World world, BlockPos pos)
-    {
-        switch (type)
-        {
-            case CLAY:
-            case DIRT:
-            case GRASS:
-            case CLAY_GRASS:
-            case FARMLAND:
-            case DRY_GRASS:
-                world.playSound(null, pos, TFCSoundEvents.DIRT_SLIDE_SHORT, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                break;
-            case GRAVEL:
-            case COBBLE:
-                world.playSound(null, pos, TFCSoundEvents.ROCK_SLIDE_SHORT, SoundCategory.BLOCKS, 1.0F, 1.0F);
         }
     }
 
@@ -360,5 +342,24 @@ public class BlockRockVariant extends Block
     public Rock getRock()
     {
         return rock;
+    }
+
+    protected void onRockSlide(World world, BlockPos pos)
+    {
+        switch (type)
+        {
+            case SAND:
+            case CLAY:
+            case DIRT:
+            case GRASS:
+            case GRAVEL:
+            case CLAY_GRASS:
+            case FARMLAND:
+            case DRY_GRASS:
+                world.playSound(null, pos, TFCSounds.DIRT_SLIDE_SHORT, SoundCategory.BLOCKS, 1.0F, 1.0F);
+                break;
+            case COBBLE:
+                world.playSound(null, pos, TFCSounds.ROCK_SLIDE_SHORT, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        }
     }
 }
