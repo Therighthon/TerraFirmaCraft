@@ -3,25 +3,21 @@
  * See the project README.md and LICENSE.txt for more information.
  */
 
-package net.dries007.tfc.objects.fluids;
+package net.dries007.tfc.objects.fluids.properties;
 
 import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
 
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.Fluid;
 
 import net.dries007.tfc.api.types.Metal;
 
-@ParametersAreNonnullByDefault
-public class FluidMetal extends Fluid
+public class MetalFluidWrapper extends FluidWrapper
 {
     private final Metal metal;
 
-    public FluidMetal(Metal metal, String fluidName, ResourceLocation still, ResourceLocation flowing, int color)
+    public MetalFluidWrapper(@Nonnull Fluid fluid, boolean isNewFluid, @Nonnull Metal metal)
     {
-        super(fluidName, still, flowing, color);
-
+        super(fluid, isNewFluid);
         this.metal = metal;
     }
 

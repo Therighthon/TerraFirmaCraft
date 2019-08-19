@@ -11,12 +11,14 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.*;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.FoodStats;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
@@ -24,6 +26,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.GameRuleChangeEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -39,6 +42,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 
 import net.dries007.tfc.api.capability.ItemStickCapability;
+import net.dries007.tfc.api.capability.damage.CapabilityDamageResistance;
 import net.dries007.tfc.api.capability.damage.DamageType;
 import net.dries007.tfc.api.capability.egg.CapabilityEgg;
 import net.dries007.tfc.api.capability.egg.EggHandler;
@@ -46,13 +50,17 @@ import net.dries007.tfc.api.capability.food.CapabilityFood;
 import net.dries007.tfc.api.capability.food.FoodHandler;
 import net.dries007.tfc.api.capability.food.FoodStatsTFC;
 import net.dries007.tfc.api.capability.food.IFoodStatsTFC;
+import net.dries007.tfc.api.capability.forge.CapabilityForgeable;
+import net.dries007.tfc.api.capability.heat.CapabilityItemHeat;
 import net.dries007.tfc.api.capability.size.CapabilityItemSize;
+import net.dries007.tfc.api.capability.size.IItemSize;
 import net.dries007.tfc.api.capability.size.Size;
 import net.dries007.tfc.api.capability.size.Weight;
 import net.dries007.tfc.api.capability.skill.CapabilityPlayerSkills;
 import net.dries007.tfc.api.capability.skill.PlayerSkillsHandler;
 import net.dries007.tfc.api.types.Rock;
 import net.dries007.tfc.api.util.IPlaceableItem;
+import net.dries007.tfc.network.PacketCalendarUpdate;
 import net.dries007.tfc.network.PacketFoodStatsReplace;
 import net.dries007.tfc.objects.blocks.BlocksTFC;
 import net.dries007.tfc.objects.blocks.stone.BlockRockVariant;
@@ -60,7 +68,8 @@ import net.dries007.tfc.objects.container.CapabilityContainerListener;
 import net.dries007.tfc.objects.entity.animal.IAnimalTFC;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.CalendarTFC;
-import net.dries007.tfc.world.classic.ClimateTFC;
+import net.dries007.tfc.util.calendar.CalendarWorldData;
+import net.dries007.tfc.util.climate.ClimateTFC;
 import net.dries007.tfc.world.classic.chunkdata.ChunkDataTFC;
 
 import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
@@ -129,7 +138,8 @@ public final class CommonEventHandler
         }
 
         // Try to drink water
-        if (!player.isCreative() && stack.isEmpty() && player.getFoodStats() instanceof IFoodStatsTFC)
+        // Only possible with main hand - fixes attempting to drink even when it doesn't make sense
+        if (!player.isCreative() && stack.isEmpty() && player.getFoodStats() instanceof IFoodStatsTFC && event.getHand() == EnumHand.MAIN_HAND)
         {
             IFoodStatsTFC foodStats = (IFoodStatsTFC) player.getFoodStats();
             RayTraceResult result = Helpers.rayTrace(event.getWorld(), player, true);
@@ -138,11 +148,20 @@ public final class CommonEventHandler
                 BlockPos blockpos = result.getBlockPos();
                 IBlockState state = event.getWorld().getBlockState(blockpos);
                 boolean isFreshWater = BlocksTFC.isFreshWater(state), isSaltWater = BlocksTFC.isSaltWater(state);
-                if ((isFreshWater && foodStats.attemptDrink(10)) || (isSaltWater && foodStats.attemptDrink(-1)))
+                if ((isFreshWater && foodStats.attemptDrink(10, true)) || (isSaltWater && foodStats.attemptDrink(-1, true)))
                 {
+                    //Simulated so client will check if he would drink before updating stats
                     if (!world.isRemote)
                     {
                         player.world.playSound(null, player.getPosition(), SoundEvents.ENTITY_GENERIC_DRINK, SoundCategory.PLAYERS, 1.0f, 1.0f);
+                        if (isFreshWater)
+                        {
+                            foodStats.addThirst(10); //Simulation already proven that i can drink this amount
+                        }
+                        else
+                        {
+                            foodStats.addThirst(-1); //Simulation already proven that i can drink this amount
+                        }
                     }
                     event.setCancellationResult(EnumActionResult.SUCCESS);
                     event.setCanceled(true);
@@ -239,7 +258,16 @@ public final class CommonEventHandler
             boolean canStack = stack.getMaxStackSize() > 1; // This is necessary so it isn't accidentally overridden by a default implementation
 
             // todo: Add more items here
-            if (item == Items.COAL)
+            ICapabilityProvider sizeHandler = CapabilityItemSize.getCustomSize(stack);
+            if (sizeHandler != null)
+            {
+                event.addCapability(CapabilityItemSize.KEY, sizeHandler);
+                if (sizeHandler instanceof IItemSize)
+                {
+                    item.setMaxStackSize(((IItemSize) sizeHandler).getStackSize(stack));
+                }
+            }
+            else if (item == Items.COAL)
                 CapabilityItemSize.add(event, Items.COAL, Size.SMALL, Weight.MEDIUM, canStack);
             else if (item == Items.STICK)
                 event.addCapability(ItemStickCapability.KEY, new ItemStickCapability(event.getObject().getTagCompound()));
@@ -257,11 +285,44 @@ public final class CommonEventHandler
                 CapabilityItemSize.add(event, item, Size.VERY_SMALL, Weight.LIGHT, canStack);
         }
 
-        // todo: create a lookup or something for vanilla items
         // future plans: add via craft tweaker or json (1.14)
         if (stack.getItem() instanceof ItemFood && !stack.hasCapability(CapabilityFood.CAPABILITY, null))
         {
-            event.addCapability(CapabilityFood.KEY, new FoodHandler(stack.getTagCompound(), new float[] {1, 0, 0, 0, 0}, 0, 0, 1));
+            ICapabilityProvider foodHandler = CapabilityFood.getCustomFood(stack);
+            if (foodHandler != null)
+            {
+                event.addCapability(CapabilityFood.KEY, foodHandler);
+            }
+            else
+            {
+                event.addCapability(CapabilityFood.KEY, new FoodHandler(stack.getTagCompound(), new float[] {1, 0, 0, 0, 0}, 0, 0, 1));
+            }
+        }
+
+        if (!stack.hasCapability(CapabilityForgeable.FORGEABLE_CAPABILITY, null) && !stack.hasCapability(CapabilityItemHeat.ITEM_HEAT_CAPABILITY, null))
+        {
+            ICapabilityProvider forgeHandler = CapabilityForgeable.getCustomForgeable(stack);
+            if (forgeHandler != null)
+            {
+                event.addCapability(CapabilityForgeable.KEY, forgeHandler);
+            }
+            else
+            {
+                ICapabilityProvider heatHandler = CapabilityItemHeat.getCustomHeat(stack);
+                if (heatHandler != null)
+                {
+                    event.addCapability(CapabilityItemHeat.KEY, heatHandler);
+                }
+            }
+        }
+
+        if (item instanceof ItemArmor && !stack.hasCapability(CapabilityDamageResistance.CAPABILITY, null))
+        {
+            ICapabilityProvider damageResistance = CapabilityDamageResistance.getCustomDamageResistance(stack);
+            if (damageResistance != null)
+            {
+                event.addCapability(CapabilityDamageResistance.KEY, damageResistance);
+            }
         }
         if (stack.getItem() == Items.EGG && !stack.hasCapability(CapabilityEgg.CAPABILITY, null))
         {
@@ -385,7 +446,7 @@ public final class CommonEventHandler
             BlockPos pos = new BlockPos(event.getX(), event.getY(), event.getZ());
 
             float rainfall = ChunkDataTFC.getRainfall(world, pos);
-            float temperature = ClimateTFC.getAverageBiomeTemp(world, pos);
+            float temperature = ClimateTFC.getAvgTemp(world, pos);
             Biome biome = world.getBiome(pos);
 
             if (!animal.isValidSpawnConditions(biome, temperature, rainfall))
@@ -415,6 +476,16 @@ public final class CommonEventHandler
     @SubscribeEvent
     public static void onWorldLoad(WorldEvent.Load event)
     {
+        final World world = event.getWorld();
+
+        if (world.provider.getDimension() == 0 && !world.isRemote)
+        {
+            // Calendar Sync / Initialization
+            CalendarWorldData data = CalendarWorldData.get(world);
+            CalendarTFC.INSTANCE.reset(data.getCalendar());
+            TerraFirmaCraft.getNetwork().sendToAll(new PacketCalendarUpdate(CalendarTFC.INSTANCE));
+        }
+
         if (ConfigTFC.GENERAL.forceNoVanillaNaturalRegeneration)
         {
             // Natural regeneration should be disabled, allows TFC to have custom regeneration
@@ -433,5 +504,18 @@ public final class CommonEventHandler
     {
         event.getSettings().bonusChestEnabled = false;
         TerraFirmaCraft.getLog().info("Disabling bonus chest, you cheaty cheater!");
+    }
+
+    @SubscribeEvent
+    public static void onFluidPlaceBlock(BlockEvent.FluidPlaceBlockEvent event)
+    {
+        if (event.getNewState().getBlock() == Blocks.STONE)
+        {
+            event.setNewState(BlockRockVariant.get(Rock.BASALT, Rock.Type.RAW).getDefaultState());
+        }
+        else if (event.getNewState().getBlock() == Blocks.COBBLESTONE)
+        {
+            event.setNewState(BlockRockVariant.get(Rock.BASALT, Rock.Type.COBBLE).getDefaultState());
+        }
     }
 }

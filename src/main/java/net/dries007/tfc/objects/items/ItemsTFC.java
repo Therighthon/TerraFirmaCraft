@@ -8,8 +8,10 @@ package net.dries007.tfc.objects.items;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemSnow;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -38,6 +40,7 @@ import net.dries007.tfc.objects.items.rock.ItemRock;
 import net.dries007.tfc.objects.items.rock.ItemRockToolHead;
 import net.dries007.tfc.objects.items.wood.ItemDoorTFC;
 import net.dries007.tfc.objects.items.wood.ItemLumberTFC;
+import net.dries007.tfc.objects.items.wood.ItemWoodenBucket;
 import net.dries007.tfc.util.agriculture.Crop;
 import net.dries007.tfc.util.agriculture.Food;
 
@@ -111,8 +114,14 @@ public final class ItemsTFC
     @GameRegistry.ObjectHolder("bloom/refined")
     public static final ItemBloom REFINED_BLOOM = getNull();
 
+    public static final ItemTFC MORTAR = getNull();
+
+    public static final ItemSnow SNOW = getNull();
+
     @GameRegistry.ObjectHolder("powder/salt")
     public static final ItemPowder SALT = getNull();
+
+    public static final ItemWoodenBucket WOODEN_BUCKET = getNull();
 
     private static ImmutableList<Item> allSimpleItems;
     private static ImmutableList<ItemOreTFC> allOreItems;
@@ -141,6 +150,10 @@ public final class ItemsTFC
         Builder<Item> simpleItems = ImmutableList.builder();
 
         simpleItems.add(register(r, "wand", new ItemDebug(), CT_MISC));
+        simpleItems.add(register(r, "mortar", new ItemMisc(Size.TINY, Weight.LIGHT), CT_MISC));
+        register(r, "wooden_bucket", new ItemWoodenBucket(), CT_WOOD); //not a simple item, use a custom model
+
+        r.register(new ItemSnow(Blocks.SNOW_LAYER).setRegistryName("minecraft", "snow_layer"));
 
         {
             for (Rock rock : TFCRegistries.ROCKS.getValuesCollection())
@@ -152,12 +165,15 @@ public final class ItemsTFC
         {
             Builder<ItemOreTFC> b = new Builder<>();
             for (Ore ore : TFCRegistries.ORES.getValuesCollection())
+            {
                 b.add(register(r, "ore/" + ore.getRegistryName().getPath(), new ItemOreTFC(ore), CT_ROCK_ITEMS));
+                if (ore.isGraded())
+                {
+                    simpleItems.add(register(r, "ore/small/" + ore.getRegistryName().getPath(), new ItemSmallOre(ore), CT_ROCK_ITEMS));
+                }
+            }
             allOreItems = b.build();
 
-            for (Ore ore : TFCRegistries.ORES.getValuesCollection())
-                if (ore.isGraded())
-                    simpleItems.add(register(r, "ore/small/" + ore.getRegistryName().getPath(), new ItemSmallOre(ore), CT_ROCK_ITEMS));
         }
 
         {
@@ -225,11 +241,13 @@ public final class ItemsTFC
 
             registerPottery(simpleItems, r, "ceramics/unfired/spindle", "ceramics/fired/spindle");
             registerPottery(simpleItems, r, "ceramics/unfired/pot", "ceramics/fired/pot");
-            registerPottery(simpleItems, r, "ceramics/unfired/jug", "ceramics/fired/jug");
             registerPottery(simpleItems, r, "ceramics/unfired/bowl", "ceramics/fired/bowl");
             registerPottery(simpleItems, r, "ceramics/unfired/fire_brick", "ceramics/fired/fire_brick");
 
             simpleItems.add(register(r, "ceramics/fire_clay", new ItemFireClay(), CT_MISC));
+
+            simpleItems.add(register(r, "ceramics/unfired/jug", new ItemPottery(), CT_POTTERY));
+            register(r, "ceramics/fired/jug", new ItemJug(), CT_POTTERY);
 
         }
 
@@ -259,8 +277,8 @@ public final class ItemsTFC
 
         simpleItems.add(register(r, "spindle", new ItemCraftingTool(40, Size.NORMAL, Weight.MEDIUM, "spindle"), CT_MISC));
 
-        simpleItems.add(register(r, "bloom/unrefined", new ItemBloom(), CT_MISC));
-        simpleItems.add(register(r, "bloom/refined", new ItemBloom(), CT_MISC));
+        simpleItems.add(register(r, "bloom/unrefined", new ItemBloom(false), CT_MISC));
+        simpleItems.add(register(r, "bloom/refined", new ItemBloom(true), CT_MISC));
 
         // Animal Hides
         for (ItemAnimalHide.HideSize size : ItemAnimalHide.HideSize.values())
@@ -288,28 +306,14 @@ public final class ItemsTFC
         // Note: if you add items you don't need to put them in this list of todos. Feel free to add them where they make sense :)
         // todo: Bow? Arrows?
         // todo: Fishing rod?
-        // todo: (white) dye? (so white dye isn't bonemeal)
         // todo: ink?
-        // todo: clay? (or catch rightclick with event, that should work too)
-        // todo: rope? (could just keep vanilla version)
-        // todo: shears? Higher durability versions for different metals (iron/streels/others?)?
         // todo: flint & steel? Higher durability versions for different metals (iron/steels)?
         // todo: fluid glass bottles? (alcohols/water/vinegar/brine)
-
-        // todo: water jug (make this have durability/multiple rounds of water?)
-
         // todo: minecart with chest (so the chest dropped is the right kind of wood)
-        // todo: custom buckets: Wood (finite) & steel (infinite/classic/source)
-        // todo: wool, yarn, cloth (wool, silk & burlap)
+        // todo: custom buckets: steel (infinite/classic/source)
         // todo: mortar
-        // todo: hides (raw, soaked, scraped, prepared)
-        // todo: straw
 
-        // todo: jute & jute fiber
         // todo: quiver
-        // todo: millstone (quern)
-
-        // todo: foods & plants & seeds & fruits & fruit tree saplings & berries & berry bushes
 
         allSimpleItems = simpleItems.build();
     }

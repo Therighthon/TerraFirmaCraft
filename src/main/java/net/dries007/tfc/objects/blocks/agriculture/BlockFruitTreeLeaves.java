@@ -39,7 +39,7 @@ import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.OreDictionaryHelper;
 import net.dries007.tfc.util.calendar.CalendarTFC;
 import net.dries007.tfc.util.calendar.ICalendar;
-import net.dries007.tfc.world.classic.ClimateTFC;
+import net.dries007.tfc.util.climate.ClimateTFC;
 import net.dries007.tfc.world.classic.chunkdata.ChunkDataTFC;
 
 @MethodsReturnNonnullByDefault
@@ -100,7 +100,7 @@ public class BlockFruitTreeLeaves extends BlockLeaves
                 TETickCounter te = Helpers.getTE(world, pos, TETickCounter.class);
                 if (te != null)
                 {
-                    float temp = ClimateTFC.getTemp(world, pos);
+                    float temp = ClimateTFC.getActualTemp(world, pos);
                     float rainfall = ChunkDataTFC.getRainfall(world, pos);
                     long hours = te.getTicksSinceUpdate() / ICalendar.TICKS_IN_HOUR;
                     if (hours > tree.getGrowthTime() && tree.isValidForGrowth(temp, rainfall))
@@ -129,12 +129,6 @@ public class BlockFruitTreeLeaves extends BlockLeaves
     }
 
     @Override
-    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand)
-    {
-        doLeafDecay(worldIn, pos, state);
-    }
-
-    @Override
     @SuppressWarnings("deprecation")
     public void neighborChanged(IBlockState state, World world, BlockPos pos, @Nullable Block blockIn, @Nullable BlockPos fromPos)
     {
@@ -154,9 +148,9 @@ public class BlockFruitTreeLeaves extends BlockLeaves
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-        if (!worldIn.isRemote)
+        if (worldIn.getBlockState(pos).getValue(LEAF_STATE) == EnumLeafState.FRUIT)
         {
-            if (worldIn.getBlockState(pos).getValue(LEAF_STATE) == EnumLeafState.FRUIT)
+            if (!worldIn.isRemote)
             {
                 Helpers.spawnItemStack(worldIn, pos, tree.getFoodDrop());
                 worldIn.setBlockState(pos, worldIn.getBlockState(pos).withProperty(LEAF_STATE, EnumLeafState.NORMAL));
@@ -166,8 +160,9 @@ public class BlockFruitTreeLeaves extends BlockLeaves
                     te.resetCounter();
                 }
             }
+            return true;
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -207,9 +202,9 @@ public class BlockFruitTreeLeaves extends BlockLeaves
     }
 
     @Override
-    public List<ItemStack> onSheared(ItemStack item, IBlockAccess world, BlockPos pos, int fortune)
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand)
     {
-        return ImmutableList.of(new ItemStack(this));
+        doLeafDecay(worldIn, pos, state);
     }
 
     @SideOnly(Side.CLIENT)
@@ -255,6 +250,12 @@ public class BlockFruitTreeLeaves extends BlockLeaves
          */
         leavesFancy = Minecraft.getMinecraft().gameSettings.fancyGraphics;
         return true;// super.shouldSideBeRendered(blockState, blockAccess, pos, side);
+    }
+
+    @Override
+    public List<ItemStack> onSheared(ItemStack item, IBlockAccess world, BlockPos pos, int fortune)
+    {
+        return ImmutableList.of(new ItemStack(this));
     }
 
     private void doLeafDecay(World world, BlockPos pos, IBlockState state)

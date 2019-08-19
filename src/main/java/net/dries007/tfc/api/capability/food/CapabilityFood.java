@@ -7,13 +7,20 @@ package net.dries007.tfc.api.capability.food;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import net.dries007.tfc.api.capability.DumbStorage;
+import net.dries007.tfc.objects.inventory.ingredient.IIngredient;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.CalendarTFC;
 import net.dries007.tfc.util.calendar.ICalendar;
@@ -25,6 +32,8 @@ public class CapabilityFood
     @CapabilityInject(IFood.class)
     public static final Capability<IFood> CAPABILITY = Helpers.getNull();
     public static final ResourceLocation KEY = new ResourceLocation(MOD_ID, "food");
+
+    public static final Map<IIngredient<ItemStack>, Supplier<ICapabilityProvider>> CUSTOM_FOODS = new HashMap<>(); //Used inside CT, set custom IFood for food items outside TFC
 
     /**
      * Most TFC foods have decay modifiers in the range [1, 4] (high = faster decay)
@@ -53,6 +62,13 @@ public class CapabilityFood
         TRAITS.put("preserved", PRESERVED);
     }
 
+    public static void init()
+    {
+        // Add custom vanilla food instances
+
+        CUSTOM_FOODS.put(IIngredient.of(Items.ROTTEN_FLESH), () -> new FoodHandler(null, new float[] {0, 0, 0, 0, 0}, 0, 0, Float.POSITIVE_INFINITY));
+    }
+
     public static Map<String, IFoodTrait> getTraits()
     {
         return TRAITS;
@@ -71,7 +87,7 @@ public class CapabilityFood
             // Add the trait
             instance.getTraits().add(trait);
             // Re-calculate creation date as to respect remaining decay time
-            instance.setCreationDate(CalendarTFC.PLAYER_TIME.getTicks() - (long) ((CalendarTFC.PLAYER_TIME.getTicks() - instance.getCreationDate()) / CapabilityFood.PRESERVED.getDecayModifier()));
+            instance.setCreationDate(CalendarTFC.PLAYER_TIME.getTicks() - (long) ((CalendarTFC.PLAYER_TIME.getTicks() - instance.getCreationDate()) / trait.getDecayModifier()));
         }
     }
 
@@ -88,8 +104,44 @@ public class CapabilityFood
             if (!instance.isRotten())
             {
                 // If not rotten, re-calculate the creation date as to respect remaining decay time
-                instance.setCreationDate(CalendarTFC.PLAYER_TIME.getTicks() - (long) ((CalendarTFC.PLAYER_TIME.getTicks() - instance.getCreationDate()) * CapabilityFood.PRESERVED.getDecayModifier()));
+                instance.setCreationDate(CalendarTFC.PLAYER_TIME.getTicks() - (long) ((CalendarTFC.PLAYER_TIME.getTicks() - instance.getCreationDate()) * trait.getDecayModifier()));
             }
         }
+    }
+
+    /**
+     * This is used to update a stack from an old stack, in the case where a food is created from another
+     * Any method that creates derivative food should call this, as it avoids extending the decay of the item
+     * If called with non food items, nothing happens
+     *
+     * @param oldStack the old stack
+     * @param newStack the new stack
+     * @return the modified stack, for chaining
+     */
+    public static ItemStack updateFoodDecay(ItemStack oldStack, ItemStack newStack)
+    {
+        IFood oldCap = oldStack.getCapability(CapabilityFood.CAPABILITY, null);
+        IFood newCap = newStack.getCapability(CapabilityFood.CAPABILITY, null);
+        if (oldCap != null && newCap != null)
+        {
+            // This is similar to the trait applied, except it's the inverse, since decay mod performs a 1 / x
+            float decayDelta = oldCap.getDecayModifier() / newCap.getDecayModifier();
+            newCap.setCreationDate(CalendarTFC.PLAYER_TIME.getTicks() - (long) ((CalendarTFC.PLAYER_TIME.getTicks() - oldCap.getCreationDate()) / decayDelta));
+        }
+        return newStack;
+    }
+
+    @Nullable
+    public static ICapabilityProvider getCustomFood(ItemStack stack)
+    {
+        Set<IIngredient<ItemStack>> itemFoodSet = CUSTOM_FOODS.keySet();
+        for (IIngredient<ItemStack> ingredient : itemFoodSet)
+        {
+            if (ingredient.testIgnoreCount(stack))
+            {
+                return CUSTOM_FOODS.get(ingredient).get();
+            }
+        }
+        return null;
     }
 }

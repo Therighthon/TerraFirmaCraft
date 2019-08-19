@@ -40,7 +40,7 @@ import net.dries007.tfc.objects.te.TETickCounter;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.CalendarTFC;
 import net.dries007.tfc.util.calendar.ICalendar;
-import net.dries007.tfc.world.classic.ClimateTFC;
+import net.dries007.tfc.util.climate.ClimateTFC;
 import net.dries007.tfc.world.classic.chunkdata.ChunkDataTFC;
 
 @ParametersAreNonnullByDefault
@@ -73,16 +73,6 @@ public class BlockBerryBush extends Block
         setDefaultState(blockState.getBaseState().withProperty(FRUITING, false));
     }
 
-    @Override
-    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state)
-    {
-        TETickCounter tile = Helpers.getTE(worldIn, pos, TETickCounter.class);
-        if (tile != null)
-        {
-            tile.resetCounter();
-        }
-    }
-
     @SuppressWarnings("deprecation")
     @Override
     @Nonnull
@@ -102,13 +92,6 @@ public class BlockBerryBush extends Block
     public boolean isFullCube(IBlockState state)
     {
         return bush.getSize() == IBerryBush.Size.LARGE;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos)
-    {
-        return NULL_AABB;
     }
 
     @Override
@@ -135,6 +118,20 @@ public class BlockBerryBush extends Block
         return bush.getSize() == IBerryBush.Size.LARGE ? BlockFaceShape.SOLID : BlockFaceShape.UNDEFINED;
     }
 
+    @SuppressWarnings("deprecation")
+    @Override
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos)
+    {
+        return NULL_AABB;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean isOpaqueCube(IBlockState state)
+    {
+        return false;
+    }
+
     @Override
     public void randomTick(World world, BlockPos pos, IBlockState state, Random random)
     {
@@ -143,7 +140,7 @@ public class BlockBerryBush extends Block
             TETickCounter te = Helpers.getTE(world, pos, TETickCounter.class);
             if (te != null)
             {
-                float temp = ClimateTFC.getTemp(world, pos);
+                float temp = ClimateTFC.getActualTemp(world, pos);
                 float rainfall = ChunkDataTFC.getRainfall(world, pos);
                 long hours = te.getTicksSinceUpdate() / ICalendar.TICKS_IN_HOUR;
                 if (hours > bush.getGrowthTime() && bush.isValidForGrowth(temp, rainfall))
@@ -157,6 +154,35 @@ public class BlockBerryBush extends Block
                 }
             }
         }
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state)
+    {
+        TETickCounter tile = Helpers.getTE(worldIn, pos, TETickCounter.class);
+        if (tile != null)
+        {
+            tile.resetCounter();
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    @Nonnull
+    public BlockRenderLayer getRenderLayer()
+    {
+        return BlockRenderLayer.CUTOUT_MIPPED;
+    }
+
+    @Override
+    public boolean canPlaceBlockAt(World worldIn, @Nonnull BlockPos pos)
+    {
+        if (super.canPlaceBlockAt(worldIn, pos))
+        {
+            IBlockState state = worldIn.getBlockState(pos.down());
+            return state.getBlock().canPlaceTorchOnTop(state, worldIn, pos);
+        }
+        return false;
     }
 
     @Override
@@ -180,24 +206,6 @@ public class BlockBerryBush extends Block
     }
 
     @Override
-    public boolean canPlaceBlockAt(World worldIn, @Nonnull BlockPos pos)
-    {
-        if (super.canPlaceBlockAt(worldIn, pos))
-        {
-            IBlockState state = worldIn.getBlockState(pos.down());
-            return state.getBlock().canPlaceTorchOnTop(state, worldIn, pos);
-        }
-        return false;
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public boolean isOpaqueCube(IBlockState state)
-    {
-        return false;
-    }
-
-    @Override
     public void onEntityCollision(World worldIn, BlockPos pos, IBlockState state, Entity entityIn)
     {
         //Entity motion is reduced (like leaves).
@@ -211,14 +219,6 @@ public class BlockBerryBush extends Block
         {
             entityIn.attackEntityFrom(DamageSource.CACTUS, 1.0F);
         }
-    }
-
-    @SideOnly(Side.CLIENT)
-    @Override
-    @Nonnull
-    public BlockRenderLayer getRenderLayer()
-    {
-        return BlockRenderLayer.CUTOUT_MIPPED;
     }
 
     @Override

@@ -7,15 +7,17 @@ package net.dries007.tfc.world.classic.biomes;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeDecorator;
 
 import net.dries007.tfc.objects.entity.animal.*;
+import net.dries007.tfc.util.climate.ClimateTFC;
 
 public class BiomeTFC extends Biome
 {
-    public final int waterPlantsPerChunk;
-    public final int lilyPadPerChunk;
+    private final int waterPlantsPerChunk;
+    private final int lilyPadPerChunk;
     private boolean spawnBiome;
 
     public BiomeTFC(BiomeProperties properties)
@@ -40,6 +42,10 @@ public class BiomeTFC extends Biome
         this.spawnableCreatureList.add(new Biome.SpawnListEntry(EntityDeerTFC.class, 14, 2, 4));
         this.spawnableCreatureList.add(new Biome.SpawnListEntry(EntityPheasantTFC.class, 14, 2, 4));
         this.spawnableCreatureList.add(new Biome.SpawnListEntry(EntityBearTFC.class, 4, 1, 2));
+        this.spawnableCreatureList.add(new Biome.SpawnListEntry(EntityRabbitTFC.class, 15, 3, 4));
+        this.spawnableCreatureList.add(new Biome.SpawnListEntry(EntityWolfTFC.class, 6, 2, 3));
+        this.spawnableCreatureList.add(new Biome.SpawnListEntry(EntityHorseTFC.class, 8, 1, 3));
+        this.spawnableCreatureList.add(new Biome.SpawnListEntry(EntityDonkeyTFC.class, 5, 1, 1));
         spawnBiome = false;
     }
 
@@ -57,15 +63,21 @@ public class BiomeTFC extends Biome
         return new BiomeDecoratorTFC(lilyPadPerChunk, waterPlantsPerChunk);
     }
 
-    public Biome setSpawnBiome()
+    @Override
+    public float getTemperature(BlockPos pos)
     {
-        spawnBiome = true;
-        return this;
+        return ClimateTFC.getActualTemp(pos);
     }
 
     @Override
     public boolean ignorePlayerSpawnSuitability()
     {
         return spawnBiome;
+    }
+
+    public Biome setSpawnBiome()
+    {
+        spawnBiome = true;
+        return this;
     }
 }

@@ -33,6 +33,8 @@ public class HeatRecipeMetalMelting extends HeatRecipe
         return null;
     }
 
+    private final Metal metal; //Used only in JEI to determine the metal registered in this recipe.
+
     public HeatRecipeMetalMelting(Metal metal)
     {
         super(input -> {
@@ -43,6 +45,7 @@ public class HeatRecipeMetalMelting extends HeatRecipe
             }
             return false;
         }, metal.getMeltTemp(), metal.getTier());
+        this.metal = metal;
     }
 
     @Nullable
@@ -55,9 +58,15 @@ public class HeatRecipeMetalMelting extends HeatRecipe
             Metal metal = metalObject.getMetal(input);
             if (metal != null && metalObject.canMelt(input))
             {
-                return new FluidStack(FluidsTFC.getMetalFluid(metal), metalObject.getSmeltAmount(input));
+                return new FluidStack(FluidsTFC.getFluidFromMetal(metal), metalObject.getSmeltAmount(input));
             }
         }
         return null;
+    }
+
+    //Used by JEI to determine valid inputs and the output
+    public Metal getMetal()
+    {
+        return metal;
     }
 }

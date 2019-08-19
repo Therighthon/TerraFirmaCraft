@@ -14,7 +14,6 @@ import net.minecraftforge.fml.common.*;
 import net.minecraftforge.fml.common.event.*;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 
 import net.dries007.tfc.api.capability.damage.CapabilityDamageResistance;
@@ -32,6 +31,7 @@ import net.dries007.tfc.client.gui.overlay.PlayerDataOverlay;
 import net.dries007.tfc.client.render.animal.RenderAnimalTFCFamiliarity;
 import net.dries007.tfc.command.*;
 import net.dries007.tfc.network.*;
+import net.dries007.tfc.objects.LootTablesTFC;
 import net.dries007.tfc.objects.entity.EntitiesTFC;
 import net.dries007.tfc.objects.items.ItemsTFC;
 import net.dries007.tfc.proxy.IProxy;
@@ -39,8 +39,6 @@ import net.dries007.tfc.util.OreDictionaryHelper;
 import net.dries007.tfc.util.fuel.FuelManager;
 import net.dries007.tfc.world.classic.WorldTypeTFC;
 import net.dries007.tfc.world.classic.chunkdata.CapabilityChunkData;
-import net.dries007.tfc.world.classic.worldgen.*;
-import net.dries007.tfc.world.classic.worldgen.fissure.WorldGenFissure;
 import net.dries007.tfc.world.classic.worldgen.vein.VeinRegistry;
 
 import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
@@ -170,6 +168,8 @@ public final class TerraFirmaCraft
 
         OreDictionaryHelper.init();
         ItemsTFC.init();
+        LootTablesTFC.init();
+        CapabilityFood.init();
 
         if (event.getSide().isClient())
         {
@@ -184,20 +184,6 @@ public final class TerraFirmaCraft
         }
 
         worldTypeTFC = new WorldTypeTFC();
-
-        GameRegistry.registerWorldGenerator(new RarityBasedWorldGen(x -> x.lavaFissureRarity, new WorldGenFissure(true, 20)), 0);
-        GameRegistry.registerWorldGenerator(new RarityBasedWorldGen(x -> x.waterFissureRarity, new WorldGenFissure(false, -1)), 0);
-        // todo: fix these. They are commented out due to significant cascading lag problems. They need to be rewritten
-        //GameRegistry.registerWorldGenerator(new RarityBasedWorldGen(x -> x.lavaFissureClusterRarity, new WorldGenSurfaceFissureCluster(true)), 1);
-        //GameRegistry.registerWorldGenerator(new RarityBasedWorldGen(x -> x.waterFissureClusterRarity, new WorldGenSurfaceFissureCluster(false)), 1);
-        GameRegistry.registerWorldGenerator(new WorldGenOreVeins(), 2);
-        GameRegistry.registerWorldGenerator(new WorldGenSoilPits(), 3);
-        GameRegistry.registerWorldGenerator(new RarityBasedWorldGen(x -> x.largeRockRarity, new WorldGenLargeRocks()), 4);
-        //todo: add cave decorator
-        GameRegistry.registerWorldGenerator(new WorldGenTrees(), 5);
-        GameRegistry.registerWorldGenerator(new WorldGenBerryBushes(), 6);
-        GameRegistry.registerWorldGenerator(new WorldGenFruitTrees(), 7);
-        GameRegistry.registerWorldGenerator(new WorldGenLooseRocks(), 8);
     }
 
     @Mod.EventHandler

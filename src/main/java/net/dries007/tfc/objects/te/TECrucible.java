@@ -105,9 +105,7 @@ public class TECrucible extends TEInventory implements ITickable, ITileFields
             {
                 if (mold.isMolten())
                 {
-                    // At this point we assume that ((FluidMetal) fluidStack.getFluid()).getMetal() == mold.getMetal()
-                    // Anything that breaks this contract is a bug and should be reported
-                    // This also happens here to avoid off-by-one errors as it will report null after the mold has been emptied
+                    // Use mold.getMetal() to avoid off by one errors during draining
                     Metal metal = mold.getMetal();
                     FluidStack fluidStack = mold.drain(1, true);
                     if (fluidStack != null && fluidStack.amount > 0)
@@ -159,7 +157,7 @@ public class TECrucible extends TEInventory implements ITickable, ITileFields
                 if (amountToFill > 0)
                 {
                     // Do fill of the mold
-                    Fluid metalFluid = FluidsTFC.getMetalFluid(alloyMetal);
+                    Fluid metalFluid = FluidsTFC.getFluidFromMetal(alloyMetal);
                     FluidStack fluidStack = new FluidStack(metalFluid, amountToFill);
                     int amountFilled = mold.fill(fluidStack, true);
 
@@ -183,6 +181,12 @@ public class TECrucible extends TEInventory implements ITickable, ITileFields
     }
 
     @Override
+    public int getSlotLimit(int slot)
+    {
+        return slot == SLOT_INPUT ? 64 : 1;
+    }
+
+    @Override
     public boolean isItemValid(int slot, ItemStack stack)
     {
         if (!stack.hasCapability(CapabilityItemHeat.ITEM_HEAT_CAPABILITY, null))
@@ -193,27 +197,11 @@ public class TECrucible extends TEInventory implements ITickable, ITileFields
     }
 
     @Override
-    public int getSlotLimit(int slot)
-    {
-        return 1;
-    }
-
-    @Override
     public void setAndUpdateSlots(int slot)
     {
         super.setAndUpdateSlots(slot);
 
         cachedRecipe = HeatRecipe.get(inventory.getStackInSlot(SLOT_INPUT));
-    }
-
-    @Override
-    @Nonnull
-    public NBTTagCompound writeToNBT(NBTTagCompound nbt)
-    {
-        nbt.setTag("alloy", alloy.serializeNBT());
-        nbt.setFloat("temp", temperature);
-
-        return super.writeToNBT(nbt);
     }
 
     @Override
@@ -229,6 +217,16 @@ public class TECrucible extends TEInventory implements ITickable, ITileFields
 
         // Update the recipe cache
         cachedRecipe = HeatRecipe.get(inventory.getStackInSlot(SLOT_INPUT));
+    }
+
+    @Override
+    @Nonnull
+    public NBTTagCompound writeToNBT(NBTTagCompound nbt)
+    {
+        nbt.setTag("alloy", alloy.serializeNBT());
+        nbt.setFloat("temp", temperature);
+
+        return super.writeToNBT(nbt);
     }
 
     @Override
