@@ -12,10 +12,10 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import net.dries007.tfc.api.capability.heat.Heat;
 import net.dries007.tfc.objects.te.TEBlastFurnace;
 
-import static net.dries007.tfc.api.capability.heat.CapabilityItemHeat.MAX_TEMPERATURE;
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 
 @SideOnly(Side.CLIENT)
 public class GuiBlastFurnace extends GuiContainerTE<TEBlastFurnace>
@@ -32,9 +32,13 @@ public class GuiBlastFurnace extends GuiContainerTE<TEBlastFurnace>
     {
         super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
 
-        int temperature = (int) (51 * tile.getField(TEBlastFurnace.FIELD_TEMPERATURE) / MAX_TEMPERATURE);
+        int temperature = (int) (51 * tile.getField(TEBlastFurnace.FIELD_TEMPERATURE) / Heat.maxVisibleTemperature());
         if (temperature > 0)
         {
+            if (temperature > 51)
+            {
+                temperature = 51;
+            }
             drawTexturedModalRect(guiLeft + 8, guiTop + 66 - temperature, 185, 32, 15, 5);
         }
 
@@ -61,6 +65,11 @@ public class GuiBlastFurnace extends GuiContainerTE<TEBlastFurnace>
         fontRenderer.drawString(I18n.format(MOD_ID + ".tooltip.blast_furnace_ore_amount"), guiLeft + 40, guiTop + 17, 0x000000);
         fontRenderer.drawString(I18n.format(MOD_ID + ".tooltip.blast_furnace_fuel_amount"), guiLeft + 40, guiTop + 35, 0x000000);
         fontRenderer.drawString(I18n.format(MOD_ID + ".tooltip.blast_furnace_melt_amount"), guiLeft + 40, guiTop + 53, 0x000000);
+
+        if (tile.getField(TEBlastFurnace.CHIMNEY_LEVELS) < 1)
+        {
+            fontRenderer.drawString(I18n.format(MOD_ID + ".tooltip.blast_furnace_invalid_structure"), guiLeft + 40, guiTop + 71, 0xDC2400);
+        }
     }
 
     @Override

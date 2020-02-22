@@ -20,9 +20,10 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 
+import net.dries007.tfc.api.capability.food.CapabilityFood;
 import net.dries007.tfc.api.recipes.quern.QuernRecipe;
-import net.dries007.tfc.objects.items.ItemHandstone;
 import net.dries007.tfc.objects.items.ItemsTFC;
+import net.dries007.tfc.util.OreDictionaryHelper;
 
 import static net.minecraft.init.SoundEvents.*;
 
@@ -66,7 +67,7 @@ public class TEQuern extends TEInventory implements ITickable
         switch (slot)
         {
             case SLOT_HANDSTONE:
-                return stack.getItem() instanceof ItemHandstone;
+                return OreDictionaryHelper.doesStackMatchOre(stack, "handstone");
             case SLOT_INPUT:
                 return QuernRecipe.get(stack) != null;
             default:
@@ -80,7 +81,7 @@ public class TEQuern extends TEInventory implements ITickable
         updateBlock();
         if (slot == SLOT_HANDSTONE)
         {
-            hasHandstone = inventory.getStackInSlot(SLOT_HANDSTONE).getItem() instanceof ItemHandstone;
+            hasHandstone = OreDictionaryHelper.doesStackMatchOre(inventory.getStackInSlot(SLOT_HANDSTONE), "handstone");
         }
         super.setAndUpdateSlots(slot);
     }
@@ -90,7 +91,7 @@ public class TEQuern extends TEInventory implements ITickable
     {
         rotationTimer = nbt.getInteger("rotationTimer");
         super.readFromNBT(nbt);
-        hasHandstone = inventory.getStackInSlot(SLOT_HANDSTONE).getItem() instanceof ItemHandstone;
+        hasHandstone = OreDictionaryHelper.doesStackMatchOre(inventory.getStackInSlot(SLOT_HANDSTONE), "handstone");
     }
 
     @Override
@@ -163,11 +164,6 @@ public class TEQuern extends TEInventory implements ITickable
         return new AxisAlignedBB(getPos(), getPos().add(1, 2, 1));
     }
 
-    public ItemStack takeCraftingResult(ItemStack stack)
-    {
-        return inventory.extractItem(SLOT_OUTPUT, stack.getCount(), false);
-    }
-
     private void updateBlock()
     {
         IBlockState state = world.getBlockState(pos);
@@ -183,12 +179,20 @@ public class TEQuern extends TEInventory implements ITickable
             QuernRecipe recipe = QuernRecipe.get(inputStack);
             if (recipe != null && !world.isRemote)
             {
-                ItemStack leftover = inventory.insertItem(SLOT_OUTPUT, recipe.getOutputItem(inputStack), false);
-                if (!leftover.isEmpty())
-                {
-                    InventoryHelper.spawnItemStack(world, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, leftover);
-                }
                 inputStack.shrink(1);
+                ItemStack remainder = inventory.insertItem(SLOT_OUTPUT, recipe.getOutputItem(inputStack), false);
+                if (!remainder.isEmpty())
+                {
+                    // Failed inserting/merging output directly
+                    ItemStack currentStack = inventory.getStackInSlot(SLOT_OUTPUT);
+                    ItemStack leftover = CapabilityFood.mergeStack(remainder, currentStack);
+                    inventory.setStackInSlot(SLOT_OUTPUT, currentStack);
+                    if (!leftover.isEmpty())
+                    {
+                        // Still having leftover items, dumping in world
+                        InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY() + 1, pos.getZ(), leftover);
+                    }
+                }
             }
         }
     }

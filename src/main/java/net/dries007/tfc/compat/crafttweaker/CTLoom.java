@@ -49,7 +49,8 @@ public class CTLoom
             @Override
             public String describe()
             {
-                return "Adding loom recipe for " + outputStack.getDisplayName();
+                //noinspection ConstantConditions
+                return "Adding loom recipe " + recipe.getRegistryName().toString();
             }
         });
     }
@@ -96,7 +97,7 @@ public class CTLoom
                 @Override
                 public void apply()
                 {
-                    IForgeRegistryModifiable modRegistry = (IForgeRegistryModifiable) TFCRegistries.ANVIL;
+                    IForgeRegistryModifiable modRegistry = (IForgeRegistryModifiable) TFCRegistries.LOOM;
                     modRegistry.remove(recipe.getRegistryName());
                 }
 

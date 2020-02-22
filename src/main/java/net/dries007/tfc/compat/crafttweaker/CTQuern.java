@@ -49,7 +49,8 @@ public class CTQuern
             @Override
             public String describe()
             {
-                return "Adding quern recipe for " + outputStack.getDisplayName();
+                //noinspection ConstantConditions
+                return "Adding quern recipe " + recipe.getRegistryName().toString();
             }
         });
     }
@@ -96,7 +97,7 @@ public class CTQuern
                 @Override
                 public void apply()
                 {
-                    IForgeRegistryModifiable modRegistry = (IForgeRegistryModifiable) TFCRegistries.ANVIL;
+                    IForgeRegistryModifiable modRegistry = (IForgeRegistryModifiable) TFCRegistries.QUERN;
                     modRegistry.remove(recipe.getRegistryName());
                 }
 

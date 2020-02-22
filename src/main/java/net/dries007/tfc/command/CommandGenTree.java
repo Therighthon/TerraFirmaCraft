@@ -15,6 +15,7 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.structure.template.TemplateManager;
@@ -23,7 +24,7 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.dries007.tfc.api.registries.TFCRegistries;
 import net.dries007.tfc.api.types.Tree;
 
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -58,7 +59,10 @@ public class CommandGenTree extends CommandBase
         final BlockPos center = new BlockPos(sender.getCommandSenderEntity());
         final TemplateManager manager = ((WorldServer) world).getStructureTemplateManager();
 
-        tree.makeTreeWithoutChecking(manager, world, center, random);
+        if (!tree.makeTree(manager, world, center, random, false))
+        {
+            sender.sendMessage(new TextComponentString("Conditions not met to make tree here!"));
+        }
     }
 
     @Override

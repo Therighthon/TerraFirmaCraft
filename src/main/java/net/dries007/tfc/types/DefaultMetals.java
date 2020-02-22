@@ -17,8 +17,8 @@ import net.dries007.tfc.api.types.Ore;
 import net.dries007.tfc.objects.ArmorMaterialTFC;
 import net.dries007.tfc.objects.ToolMaterialsTFC;
 
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 import static net.dries007.tfc.api.types.Metal.Tier.*;
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
 
 @SuppressWarnings("WeakerAccess")
 @Mod.EventBusSubscriber(modid = MOD_ID)
@@ -103,15 +103,15 @@ public final class DefaultMetals
             new Ore(NATIVE_COPPER, COPPER, 0.75D, 0.33D),
             new Ore(NATIVE_GOLD, GOLD, 0.25D, 0.15D),
             new Ore(NATIVE_PLATINUM, PLATINUM, 1D, 0.002D),
-            new Ore(HEMATITE, PIG_IRON, false),
+            new Ore(HEMATITE, WROUGHT_IRON, false),
             new Ore(NATIVE_SILVER, SILVER, 0.50D, 0.15D),
             new Ore(CASSITERITE, TIN),
             new Ore(GALENA, LEAD),
             new Ore(BISMUTHINITE, BISMUTH),
             new Ore(GARNIERITE, NICKEL),
             new Ore(MALACHITE, COPPER),
-            new Ore(MAGNETITE, PIG_IRON, false),
-            new Ore(LIMONITE, PIG_IRON, false),
+            new Ore(MAGNETITE, WROUGHT_IRON, false),
+            new Ore(LIMONITE, WROUGHT_IRON, false),
             new Ore(SPHALERITE, ZINC),
             new Ore(TETRAHEDRITE, COPPER),
             new Ore(BITUMINOUS_COAL),
@@ -156,20 +156,20 @@ public final class DefaultMetals
             new Metal(TIN, TIER_I, true, 0.14f, 230, 0xFF90A4BB, null, null),
             new Metal(ZINC, TIER_I, true, 0.21f, 420, 0xFFBBB9C4, null, null),
             new Metal(STERLING_SILVER, TIER_I, true, 0.35f, 900, 0xFFAC927B, null, null),
-            new Metal(WROUGHT_IRON, TIER_III, true, 0.35f, 1535, 0xFF989897, ToolMaterialsTFC.IRON, ArmorMaterialTFC.WROUGHT_IRON),
+            new Metal(WROUGHT_IRON, TIER_III, true, 0.35f, 1535, 0xFF989897, ToolMaterialsTFC.WROUGHT_IRON, ArmorMaterialTFC.WROUGHT_IRON),
             new Metal(PIG_IRON, TIER_III, true, 0.35f, 1535, 0xFF6A595C, null, null),
             new Metal(STEEL, TIER_IV, true, 0.35f, 1540, 0xFF5F5F5F, ToolMaterialsTFC.STEEL, ArmorMaterialTFC.STEEL),
             new Metal(PLATINUM, TIER_V, true, 0.35f, 1730, 0xFF9DADC0, null, null),
             new Metal(BLACK_STEEL, TIER_V, true, 0.35f, 1485, 0xFF111111, ToolMaterialsTFC.BLACK_STEEL, ArmorMaterialTFC.BLACK_STEEL),
             new Metal(BLUE_STEEL, TIER_VI, true, 0.35f, 1540, 0xFF2D5596, ToolMaterialsTFC.BLUE_STEEL, ArmorMaterialTFC.BLUE_STEEL),
             new Metal(RED_STEEL, TIER_VI, true, 0.35f, 1540, 0xFF700503, ToolMaterialsTFC.RED_STEEL, ArmorMaterialTFC.RED_STEEL),
-            new Metal(WEAK_STEEL, TIER_V, false, 0.35f, 1540, 0xFF111111, null, null),
+            new Metal(WEAK_STEEL, TIER_IV, false, 0.35f, 1540, 0xFF111111, null, null),
             new Metal(WEAK_BLUE_STEEL, TIER_V, false, 0.35f, 1540, 0xFF2D5596, null, null),
             new Metal(WEAK_RED_STEEL, TIER_V, false, 0.35f, 1540, 0xFF700503, null, null),
-            new Metal(HIGH_CARBON_STEEL, TIER_IV, false, 0.35f, 1540, 0xFF5F5F5F, null, null),
+            new Metal(HIGH_CARBON_STEEL, TIER_III, false, 0.35f, 1540, 0xFF5F5F5F, null, null),
             new Metal(HIGH_CARBON_BLUE_STEEL, TIER_V, false, 0.35f, 1540, 0xFF2D5596, null, null),
             new Metal(HIGH_CARBON_RED_STEEL, TIER_V, false, 0.35f, 1540, 0xFF700503, null, null),
-            new Metal(HIGH_CARBON_BLACK_STEEL, TIER_V, false, 0.35f, 1540, 0xFF111111, null, null),
+            new Metal(HIGH_CARBON_BLACK_STEEL, TIER_IV, false, 0.35f, 1540, 0xFF111111, null, null),
             new Metal(UNKNOWN, TIER_I, false, 0.5f, 1250, 0xFF2F2B27, null, null)
         );
     }

@@ -38,7 +38,7 @@ import net.dries007.tfc.objects.items.metal.ItemSmallOre;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.world.classic.chunkdata.ChunkDataTFC;
 
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -64,18 +64,6 @@ public class ItemGoldPan extends ItemTFC
         if (player.getHeldItem(hand).getItemDamage() > 0 && !canPan(worldIn, player)) return EnumActionResult.FAIL;
         player.setActiveHand(hand);
         return EnumActionResult.SUCCESS;
-    }
-
-    @Override
-    public String getTranslationKey(ItemStack stack)
-    {
-        return super.getTranslationKey(stack) + "." + TYPES[stack.getItemDamage()];
-    }
-
-    @Override
-    public EnumAction getItemUseAction(ItemStack stack)
-    {
-        return EnumAction.BOW;
     }
 
     @Override
@@ -161,6 +149,18 @@ public class ItemGoldPan extends ItemTFC
             }
         }
         return stack;
+    }
+
+    @Override
+    public String getTranslationKey(ItemStack stack)
+    {
+        return super.getTranslationKey(stack) + "." + TYPES[stack.getItemDamage()];
+    }
+
+    @Override
+    public EnumAction getItemUseAction(ItemStack stack)
+    {
+        return EnumAction.BOW;
     }
 
     @Override

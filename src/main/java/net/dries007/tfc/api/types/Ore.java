@@ -10,16 +10,25 @@ import javax.annotation.Nullable;
 
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import net.dries007.tfc.ConfigTFC;
 import net.dries007.tfc.api.registries.TFCRegistries;
+import net.dries007.tfc.util.Helpers;
+
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 
 /**
  * todo: document API
  */
+@GameRegistry.ObjectHolder(MOD_ID)
 public class Ore extends IForgeRegistryEntry.Impl<Ore>
 {
+    public static final Ore LIMONITE = Helpers.getNull();
+    public static final Ore MALACHITE = Helpers.getNull();
+    public static final Ore HEMATITE = Helpers.getNull();
+
     private final boolean graded;
     private final Metal metal;
     private final boolean canMelt;
@@ -28,11 +37,11 @@ public class Ore extends IForgeRegistryEntry.Impl<Ore>
     /**
      * Creates a registry object for an ore type
      *
-     * @param name    The registry name of the ore
-     * @param metal   The metal, or null if it's a non-metal ore
-     * @param canMelt If the metal can be melted directly from the ore
+     * @param name        The registry name of the ore
+     * @param metal       The metal, or null if it's a non-metal ore
+     * @param canMelt     If the metal can be melted directly from the ore
      * @param chunkChance the chance a chunk contains this ore when gold panning.
-     * @param panChance the chance to drop this ore when gold panning
+     * @param panChance   the chance to drop this ore when gold panning
      */
     public Ore(ResourceLocation name, @Nullable Metal metal, boolean canMelt, double chunkChance, double panChance)
     {
@@ -112,9 +121,12 @@ public class Ore extends IForgeRegistryEntry.Impl<Ore>
     {
         NORMAL, POOR, RICH;
 
-        public static Grade byMetadata(int meta)
+        private static final Grade[] VALUES = values();
+
+        @Nonnull
+        public static Grade valueOf(int value)
         {
-            return Grade.values()[meta];
+            return value < 0 || value >= VALUES.length ? NORMAL : VALUES[value];
         }
 
         public int getSmeltAmount()

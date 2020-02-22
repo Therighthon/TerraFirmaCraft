@@ -9,16 +9,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemSnow;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
 
+import net.dries007.tfc.TerraFirmaCraft;
 import net.dries007.tfc.api.capability.size.Size;
 import net.dries007.tfc.api.capability.size.Weight;
 import net.dries007.tfc.api.registries.TFCRegistries;
@@ -32,19 +35,23 @@ import net.dries007.tfc.objects.blocks.wood.BlockLogTFC;
 import net.dries007.tfc.objects.items.ceramics.*;
 import net.dries007.tfc.objects.items.food.ItemFoodTFC;
 import net.dries007.tfc.objects.items.itemblock.ItemBlockTFC;
+import net.dries007.tfc.objects.items.itemblock.ItemBlockTorch;
 import net.dries007.tfc.objects.items.metal.ItemMetal;
+import net.dries007.tfc.objects.items.metal.ItemMetalBucket;
 import net.dries007.tfc.objects.items.metal.ItemOreTFC;
 import net.dries007.tfc.objects.items.metal.ItemSmallOre;
 import net.dries007.tfc.objects.items.rock.ItemBrickTFC;
 import net.dries007.tfc.objects.items.rock.ItemRock;
 import net.dries007.tfc.objects.items.rock.ItemRockToolHead;
+import net.dries007.tfc.objects.items.wood.ItemBoatTFC;
 import net.dries007.tfc.objects.items.wood.ItemDoorTFC;
 import net.dries007.tfc.objects.items.wood.ItemLumberTFC;
 import net.dries007.tfc.objects.items.wood.ItemWoodenBucket;
+import net.dries007.tfc.util.OreDictionaryHelper;
 import net.dries007.tfc.util.agriculture.Crop;
 import net.dries007.tfc.util.agriculture.Food;
 
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 import static net.dries007.tfc.objects.CreativeTabsTFC.*;
 import static net.dries007.tfc.util.Helpers.getNull;
 
@@ -52,11 +59,9 @@ import static net.dries007.tfc.util.Helpers.getNull;
 @GameRegistry.ObjectHolder(MOD_ID)
 public final class ItemsTFC
 {
-    public static final ItemDebug WAND = getNull();
-    public static final ItemFireStarter FIRESTARTER = getNull();
     public static final ItemGoldPan GOLDPAN = getNull();
     public static final ItemMisc STRAW = getNull();
-    public static final ItemHandstone HANDSTONE = getNull();
+    public static final Item HANDSTONE = getNull();
 
     @GameRegistry.ObjectHolder("crop/product/jute")
     public static final ItemMisc JUTE = getNull();
@@ -76,7 +81,7 @@ public final class ItemsTFC
     public static final Item SUGARCANE = getNull();
 
     @GameRegistry.ObjectHolder("ceramics/fire_clay")
-    public static final ItemFireClay FIRE_CLAY = getNull();
+    public static final ItemMisc FIRE_CLAY = getNull();
 
     @GameRegistry.ObjectHolder("ceramics/unfired/fire_brick")
     public static final ItemPottery UNFIRED_FIRE_BRICK = getNull();
@@ -116,12 +121,15 @@ public final class ItemsTFC
 
     public static final ItemTFC MORTAR = getNull();
 
-    public static final ItemSnow SNOW = getNull();
-
     @GameRegistry.ObjectHolder("powder/salt")
     public static final ItemPowder SALT = getNull();
 
     public static final ItemWoodenBucket WOODEN_BUCKET = getNull();
+
+    @GameRegistry.ObjectHolder("metal/bucket/blue_steel")
+    public static final ItemMetalBucket BLUE_STEEL_BUCKET = getNull();
+    @GameRegistry.ObjectHolder("metal/bucket/red_steel")
+    public static final ItemMetalBucket RED_STEEL_BUCKET = getNull();
 
     private static ImmutableList<Item> allSimpleItems;
     private static ImmutableList<ItemOreTFC> allOreItems;
@@ -150,10 +158,10 @@ public final class ItemsTFC
         Builder<Item> simpleItems = ImmutableList.builder();
 
         simpleItems.add(register(r, "wand", new ItemDebug(), CT_MISC));
-        simpleItems.add(register(r, "mortar", new ItemMisc(Size.TINY, Weight.LIGHT), CT_MISC));
+        simpleItems.add(register(r, "mortar", new ItemMisc(Size.TINY, Weight.LIGHT, "mortar"), CT_MISC));
         register(r, "wooden_bucket", new ItemWoodenBucket(), CT_WOOD); //not a simple item, use a custom model
-
-        r.register(new ItemSnow(Blocks.SNOW_LAYER).setRegistryName("minecraft", "snow_layer"));
+        register(r, "metal/bucket/blue_steel", new ItemMetalBucket(Metal.BLUE_STEEL, Metal.ItemType.BUCKET), CT_METAL); //not a simple item, use a custom model
+        register(r, "metal/bucket/red_steel", new ItemMetalBucket(Metal.RED_STEEL, Metal.ItemType.BUCKET), CT_METAL); //not a simple item, use a custom model
 
         {
             for (Rock rock : TFCRegistries.ROCKS.getValuesCollection())
@@ -187,7 +195,7 @@ public final class ItemsTFC
         {
             for (Metal metal : TFCRegistries.METALS.getValuesCollection())
             {
-                if (type.hasType(metal))
+                if (type != Metal.ItemType.BUCKET && type.hasType(metal)) // buckets registered separately
                 {
                     simpleItems.add(register(r, "metal/" + type.name().toLowerCase() + "/" + metal.getRegistryName().getPath(), Metal.ItemType.create(metal, type), CT_METAL));
                 }
@@ -208,7 +216,10 @@ public final class ItemsTFC
             simpleItems.add(register(r, slab.getRegistryName().getPath(), new ItemSlabTFC(slab, slab, slab.doubleSlab), CT_DECORATIONS));
 
         for (Tree wood : TFCRegistries.TREES.getValuesCollection())
+        {
             simpleItems.add(register(r, "wood/lumber/" + wood.getRegistryName().getPath(), new ItemLumberTFC(wood), CT_WOOD));
+            simpleItems.add(register(r, "wood/boat/" + wood.getRegistryName().getPath(), new ItemBoatTFC(wood), CT_WOOD));
+        }
 
         for (RockCategory cat : TFCRegistries.ROCK_CATEGORIES.getValuesCollection())
         {
@@ -244,7 +255,7 @@ public final class ItemsTFC
             registerPottery(simpleItems, r, "ceramics/unfired/bowl", "ceramics/fired/bowl");
             registerPottery(simpleItems, r, "ceramics/unfired/fire_brick", "ceramics/fired/fire_brick");
 
-            simpleItems.add(register(r, "ceramics/fire_clay", new ItemFireClay(), CT_MISC));
+            simpleItems.add(register(r, "ceramics/fire_clay", new ItemMisc(Size.VERY_SMALL, Weight.MEDIUM, "fire_clay"), CT_MISC));
 
             simpleItems.add(register(r, "ceramics/unfired/jug", new ItemPottery(), CT_POTTERY));
             register(r, "ceramics/fired/jug", new ItemJug(), CT_POTTERY);
@@ -265,15 +276,9 @@ public final class ItemsTFC
             simpleItems.add(register(r, "food/" + food.name().toLowerCase(), new ItemFoodTFC(food), CT_FOOD));
         }
 
-        // FLAT
-        for (Rock rock : TFCRegistries.ROCKS.getValuesCollection())
-        {
-            r.register(new ItemFlat(rock).setRegistryName(MOD_ID, "flat/" + rock.getRegistryName().getPath().toLowerCase()));
-        }
-
         simpleItems.add(register(r, "firestarter", new ItemFireStarter(), CT_MISC));
         simpleItems.add(register(r, "straw", new ItemMisc(Size.SMALL, Weight.LIGHT, "kindling", "straw"), CT_MISC));
-        simpleItems.add(register(r, "handstone", new ItemHandstone(), CT_MISC));
+        simpleItems.add(register(r, "handstone", new ItemCraftingTool(250, Size.NORMAL, Weight.HEAVY, "handstone"), CT_MISC));
 
         simpleItems.add(register(r, "spindle", new ItemCraftingTool(40, Size.NORMAL, Weight.MEDIUM, "spindle"), CT_MISC));
 
@@ -285,14 +290,7 @@ public final class ItemsTFC
         {
             for (ItemAnimalHide.HideType type : ItemAnimalHide.HideType.values())
             {
-                if (type == ItemAnimalHide.HideType.SOAKED)
-                {
-                    simpleItems.add(register(r, ("hide/" + type.name() + "/" + size.name()).toLowerCase(), new ItemAnimalHide.Soaked(type, size), CT_MISC));
-                }
-                else
-                {
-                    simpleItems.add(register(r, ("hide/" + type.name() + "/" + size.name()).toLowerCase(), new ItemAnimalHide(type, size), CT_MISC));
-                }
+                simpleItems.add(register(r, ("hide/" + type.name() + "/" + size.name()).toLowerCase(), new ItemAnimalHide(type, size), CT_MISC));
             }
         }
 
@@ -310,12 +308,26 @@ public final class ItemsTFC
         // todo: flint & steel? Higher durability versions for different metals (iron/steels)?
         // todo: fluid glass bottles? (alcohols/water/vinegar/brine)
         // todo: minecart with chest (so the chest dropped is the right kind of wood)
-        // todo: custom buckets: steel (infinite/classic/source)
         // todo: mortar
 
         // todo: quiver
 
         allSimpleItems = simpleItems.build();
+
+        OreDictionaryHelper.init();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void registerVanillaOverrides(RegistryEvent.Register<Item> event)
+    {
+        // Vanilla Overrides. Used for small tweaks on vanilla items, rather than replacing them outright
+        TerraFirmaCraft.getLog().info("The below warnings about unintended overrides are normal. The override is intended. ;)");
+        event.getRegistry().registerAll(
+            new ItemSnow(Blocks.SNOW_LAYER).setRegistryName("minecraft", "snow_layer"),
+            new ItemBlockTorch(Blocks.TORCH).setRegistryName("minecraft", "torch"),
+            new ItemGlassBottleTFC().setRegistryName(Items.GLASS_BOTTLE.getRegistryName()).setTranslationKey("glassBottle")
+        );
     }
 
     public static void init()

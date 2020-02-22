@@ -37,12 +37,12 @@ import net.minecraft.world.World;
 
 import net.dries007.tfc.api.util.IBellowsConsumerBlock;
 import net.dries007.tfc.client.TFCGuiHandler;
+import net.dries007.tfc.objects.blocks.BlockCharcoalPile;
 import net.dries007.tfc.objects.blocks.BlocksTFC;
 import net.dries007.tfc.objects.blocks.property.ILightableBlock;
 import net.dries007.tfc.objects.items.ItemFireStarter;
 import net.dries007.tfc.objects.te.TEBellows;
 import net.dries007.tfc.objects.te.TECharcoalForge;
-import net.dries007.tfc.objects.te.TEInventory;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.Multiblock;
 
@@ -88,14 +88,9 @@ public class BlockCharcoalForge extends Block implements IBellowsConsumerBlock, 
         return CHARCOAL_FORGE_MULTIBLOCK.test(world, pos);
     }
 
-    public static boolean hasValidChimney(World world, BlockPos pos)
-    {
-        return CHARCOAL_FORGE_MULTIBLOCK.test(world, pos);
-    }
-
     public BlockCharcoalForge()
     {
-        super(Material.GROUND);
+        super(BlockCharcoalPile.CHARCOAL_MATERIAL);
 
         setSoundType(SoundType.GROUND);
         setHarvestLevel("shovel", 0);
@@ -203,6 +198,17 @@ public class BlockCharcoalForge extends Block implements IBellowsConsumerBlock, 
     }
 
     @Override
+    public void breakBlock(World worldIn, BlockPos pos, IBlockState state)
+    {
+        TECharcoalForge te = Helpers.getTE(worldIn, pos, TECharcoalForge.class);
+        if (te != null)
+        {
+            te.onBreakBlock(worldIn, pos, state);
+        }
+        super.breakBlock(worldIn, pos, state);
+    }
+
+    @Override
     public int quantityDropped(Random random)
     {
         return 7;
@@ -229,7 +235,7 @@ public class BlockCharcoalForge extends Block implements IBellowsConsumerBlock, 
             if (!state.getValue(LIT))
             {
                 ItemStack held = player.getHeldItem(hand);
-                if (ItemFireStarter.canIgnite(held) && isValid(world, pos))
+                if (isValid(world, pos) && ItemFireStarter.onIgnition(held))
                 {
                     world.setBlockState(pos, state.withProperty(LIT, true));
                     return true;
@@ -252,16 +258,6 @@ public class BlockCharcoalForge extends Block implements IBellowsConsumerBlock, 
             entityIn.attackEntityFrom(DamageSource.IN_FIRE, 2.0F);
         }
         super.onEntityWalk(worldIn, pos, entityIn);
-    }
-
-    @Override
-    public void harvestBlock(World worldIn, EntityPlayer player, BlockPos pos, IBlockState state, @Nullable TileEntity te, ItemStack stack)
-    {
-        if (!worldIn.isRemote && te instanceof TEInventory)
-        {
-            ((TEInventory) te).onBreakBlock(worldIn, pos);
-        }
-        super.harvestBlock(worldIn, player, pos, state, te, stack);
     }
 
     @Override

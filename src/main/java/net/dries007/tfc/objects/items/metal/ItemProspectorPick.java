@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Random;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -21,20 +22,23 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
 import net.dries007.tfc.ConfigTFC;
+import net.dries007.tfc.TerraFirmaCraft;
+import net.dries007.tfc.api.capability.player.CapabilityPlayerData;
 import net.dries007.tfc.api.types.Metal;
 import net.dries007.tfc.objects.blocks.BlocksTFC;
+import net.dries007.tfc.util.skills.ProspectingSkill;
+import net.dries007.tfc.util.skills.SkillType;
 import net.dries007.tfc.world.classic.worldgen.vein.VeinRegistry;
 import net.dries007.tfc.world.classic.worldgen.vein.VeinType;
 
+@ParametersAreNonnullByDefault
 public class ItemProspectorPick extends ItemMetalTool
 {
     private static final int PROSPECT_RADIUS = 12;
-    // todo: balance. 40 ticks feels really long, especially for the preciseness you want from the propick
     private static final int COOLDOWN = 10;
     private static final Random RANDOM = new Random();
 
@@ -55,6 +59,13 @@ public class ItemProspectorPick extends ItemMetalTool
 
             if (!worldIn.isRemote)
             {
+                float falseNegativeChance = 0.3f; //Classic value was random(100) >= (60 + rank)
+                ProspectingSkill skill = CapabilityPlayerData.getSkill(player, SkillType.PROSPECTING);
+                if (skill != null)
+                {
+                    falseNegativeChance = 0.3f - (0.1f * skill.getTier().ordinal());
+                }
+
                 // Damage item and set cooldown
                 player.getHeldItem(hand).damageItem(1, player);
                 player.getCooldownTracker().setCooldown(this, COOLDOWN);
@@ -65,8 +76,14 @@ public class ItemProspectorPick extends ItemMetalTool
                 {
                     // Just clicked on an ore block
                     player.sendStatusMessage(new TextComponentTranslation("tfc.propick.found").appendText(" " + targetStack.getDisplayName()), ConfigTFC.CLIENT.propickOutputToActionBar);
+
+                    // Increment skill
+                    if (skill != null)
+                    {
+                        skill.addSkill(pos);
+                    }
                 }
-                else if (RANDOM.nextFloat() < 0.4)
+                else if (RANDOM.nextFloat() < falseNegativeChance)
                 {
                     // False negative
                     player.sendStatusMessage(new TextComponentTranslation("tfc.propick.found_nothing"), ConfigTFC.CLIENT.propickOutputToActionBar);
@@ -112,17 +129,17 @@ public class ItemProspectorPick extends ItemMetalTool
                         {
                             for (ProspectResult debugResult : results)
                             {
-                                player.sendStatusMessage(new TextComponentString(debugResult.ore.getDisplayName() + ": " + String.format("%.02f", debugResult.score)), false);
+                                TerraFirmaCraft.getLog().debug(debugResult.ore.getDisplayName() + ": " + String.format("%.02f", debugResult.score));
                             }
                         }
                     }
                 }
             }
-        }
-        else
-        {
-            //client side, add hit particles
-            addHitBlockParticle(worldIn, pos, facing, state);
+            else
+            {
+                //client side, add hit particles
+                addHitBlockParticle(worldIn, pos, facing, state);
+            }
         }
 
         return EnumActionResult.SUCCESS;
@@ -161,22 +178,24 @@ public class ItemProspectorPick extends ItemMetalTool
     @Nullable
     private ItemStack getOreStack(IBlockState blockState, boolean ignoreGrade)
     {
-        if (blockState == null || BlocksTFC.isGround(blockState))
+        if (BlocksTFC.isGround(blockState))
         {
             return null;
         }
         for (VeinType vein : VeinRegistry.INSTANCE.getVeins().values())
+        {
             if (vein.isOreBlock(blockState))
             {
                 Block block = blockState.getBlock();
-                if (vein.ore != null)
-                    if (vein.ore.isGraded() && !ignoreGrade)
+                if (vein.getOre() != null)
+                    if (vein.getOre().isGraded() && !ignoreGrade)
                         return new ItemStack(block.getItemDropped(blockState, null, 0), 1, block.getMetaFromState(blockState));
                     else
                         return new ItemStack(block.getItemDropped(blockState, null, 0), 1, 0);
                 else
                     return new ItemStack(Item.getItemFromBlock(block), 1, block.getMetaFromState(blockState));
             }
+        }
         return null;
     }
 

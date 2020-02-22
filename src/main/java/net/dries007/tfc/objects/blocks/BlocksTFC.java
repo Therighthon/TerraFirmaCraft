@@ -18,6 +18,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -42,8 +43,8 @@ import net.dries007.tfc.util.agriculture.BerryBush;
 import net.dries007.tfc.util.agriculture.Crop;
 import net.dries007.tfc.util.agriculture.FruitTree;
 
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 import static net.dries007.tfc.api.types.Rock.Type.*;
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
 import static net.dries007.tfc.objects.CreativeTabsTFC.*;
 import static net.dries007.tfc.util.Helpers.getNull;
 
@@ -69,7 +70,6 @@ public final class BlocksTFC
     public static final BlockNestBox NEST_BOX = getNull();
     public static final BlockLogPile LOG_PILE = getNull();
     public static final BlockIngotPile INGOT_PILE = getNull();
-    public static final BlockTorchTFC TORCH = getNull();
     public static final BlockCharcoalForge CHARCOAL_FORGE = getNull();
     public static final BlockCrucible CRUCIBLE = getNull();
     public static final BlockMolten MOLTEN = getNull();
@@ -102,6 +102,7 @@ public final class BlocksTFC
     private static ImmutableList<BlockMetalSheet> allSheets;
     private static ImmutableList<BlockToolRack> allToolRackBlocks;
     private static ImmutableList<BlockCropTFC> allCropBlocks;
+    private static ImmutableList<BlockCropDead> allDeadCropBlocks;
     private static ImmutableList<BlockPlantTFC> allPlantBlocks;
     private static ImmutableList<BlockPlantTFC> allGrassBlocks;
     private static ImmutableList<BlockLoom> allLoomBlocks;
@@ -215,6 +216,11 @@ public final class BlocksTFC
         return allCropBlocks;
     }
 
+    public static ImmutableList<BlockCropDead> getAllDeadCropBlocks()
+    {
+        return allDeadCropBlocks;
+    }
+
     public static ImmutableList<BlockPlantTFC> getAllPlantBlocks()
     {
         return allPlantBlocks;
@@ -281,7 +287,7 @@ public final class BlocksTFC
         normalItemBlocks.add(new ItemBlockTFC(register(r, "fire_bricks", new BlockFireBrick(), CT_DECORATIONS)));
 
         normalItemBlocks.add(new ItemBlockTFC(register(r, "quern", new BlockQuern(), CT_MISC)));
-        normalItemBlocks.add(new ItemBlockTFC(register(r, "crucible", new BlockCrucible(), CT_MISC)));
+        normalItemBlocks.add(new ItemBlockCrucible(register(r, "crucible", new BlockCrucible(), CT_MISC)));
         normalItemBlocks.add(new ItemBlockTFC(register(r, "blast_furnace", new BlockBlastFurnace(), CT_MISC)));
         inventoryItemBlocks.add(new ItemBlockTFC(register(r, "bellows", new BlockBellows(), CT_MISC)));
         inventoryItemBlocks.add(new ItemBlockTFC(register(r, "bloomery", new BlockBloomery(), CT_MISC)));
@@ -333,9 +339,13 @@ public final class BlocksTFC
             allBlockRockVariants.forEach(x ->
             {
                 if (x.getType() == Rock.Type.SAND)
+                {
                     normalItemBlocks.add(new ItemBlockHeat(x, 1, 600));
-                else
+                }
+                else if (x.getType() != Rock.Type.SPIKE)
+                {
                     normalItemBlocks.add(new ItemBlockTFC(x));
+                }
             });
         }
 
@@ -491,10 +501,21 @@ public final class BlocksTFC
 
             for (Crop crop : Crop.values())
             {
-                b.add(register(r, "crop/" + crop.name().toLowerCase(), crop.create()));
+                b.add(register(r, "crop/" + crop.name().toLowerCase(), crop.createGrowingBlock()));
             }
 
             allCropBlocks = b.build();
+        }
+
+        {
+            Builder<BlockCropDead> b = ImmutableList.builder();
+
+            for (Crop crop : Crop.values())
+            {
+                b.add(register(r, "dead_crop/" + crop.name().toLowerCase(), crop.createDeadBlock()));
+            }
+
+            allDeadCropBlocks = b.build();
         }
 
         {
@@ -567,13 +588,11 @@ public final class BlocksTFC
             }
         }
 
-        inventoryItemBlocks.add(new ItemBlockTorchTFC(register(r, "torch", new BlockTorchTFC(), CT_MISC)));
-
-
+        // Registering JEI only blocks (for info)
+        inventoryItemBlocks.add(new ItemBlock(register(r, "firepit", new BlockFirePit())));
+        inventoryItemBlocks.add(new ItemBlock(register(r, "charcoal_forge", new BlockCharcoalForge())));
         // technical blocks
         // These have no ItemBlock or Creative Tab
-        register(r, "firepit", new BlockFirePit());
-        register(r, "charcoal_forge", new BlockCharcoalForge());
         register(r, "placed_item_flat", new BlockPlacedItemFlat());
         register(r, "placed_item", new BlockPlacedItem());
         register(r, "placed_hide", new BlockPlacedHide());
@@ -598,13 +617,6 @@ public final class BlocksTFC
         allNormalItemBlocks = normalItemBlocks.build();
         allInventoryItemBlocks = inventoryItemBlocks.build();
 
-        // Vanilla Overrides. Used for small tweaks on vanilla items, rather than replacing them outright
-        TerraFirmaCraft.getLog().info("The below warnings about unintended overrides are intended. The override is intended. ;)");
-        event.getRegistry().registerAll(
-            new BlockIceTFC(FluidsTFC.FRESH_WATER.get()).setRegistryName("minecraft", "ice").setTranslationKey("ice"),
-            new BlockSnowTFC().setRegistryName("minecraft", "snow_layer").setTranslationKey("snow")
-        );
-
         // Register Tile Entities
         // Putting tile entity registration in the respective block can call it multiple times. Just put here to avoid duplicates
 
@@ -612,7 +624,6 @@ public final class BlocksTFC
         register(TEPlacedItem.class, "placed_item");
         register(TEPlacedItemFlat.class, "placed_item_flat");
         register(TEPlacedHide.class, "placed_hide");
-        register(TETorchTFC.class, "torch");
         register(TEPitKiln.class, "pit_kiln");
         register(TEChestTFC.class, "chest");
         register(TENestBox.class, "nest_box");
@@ -626,6 +637,7 @@ public final class BlocksTFC
         register(TECharcoalForge.class, "charcoal_forge");
         register(TEAnvilTFC.class, "anvil");
         register(TECrucible.class, "crucible");
+        register(TECropBase.class, "crop_base");
         register(TECropSpreading.class, "crop_spreading");
         register(TEBlastFurnace.class, "blast_furnace");
         register(TEBloomery.class, "bloomery");
@@ -634,6 +646,18 @@ public final class BlocksTFC
         register(TEQuern.class, "quern");
         register(TELargeVessel.class, "large_vessel");
         register(TESluice.class, "sluice");
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void registerVanillaOverrides(RegistryEvent.Register<Block> event)
+    {
+        // Vanilla Overrides. Used for small tweaks on vanilla items, rather than replacing them outright
+        TerraFirmaCraft.getLog().info("The below warnings about unintended overrides are normal. The override is intended. ;)");
+        event.getRegistry().registerAll(
+            new BlockIceTFC(FluidsTFC.FRESH_WATER.get()).setRegistryName("minecraft", "ice").setTranslationKey("ice"),
+            new BlockSnowTFC().setRegistryName("minecraft", "snow_layer").setTranslationKey("snow"),
+            new BlockTorchTFC().setRegistryName("minecraft", "torch").setTranslationKey("torch")
+        );
     }
 
     public static boolean isWater(IBlockState current)
@@ -689,6 +713,14 @@ public final class BlocksTFC
     public static boolean isSoil(IBlockState current)
     {
         if (current.getBlock() instanceof BlockPeat) return true;
+        if (!(current.getBlock() instanceof BlockRockVariant)) return false;
+        Rock.Type type = ((BlockRockVariant) current.getBlock()).getType();
+        return type == GRASS || type == DRY_GRASS || type == DIRT || type == CLAY || type == CLAY_GRASS;
+    }
+
+    public static boolean isGrowableSoil(IBlockState current)
+    {
+        if (current.getBlock() instanceof BlockPeat) return false;
         if (!(current.getBlock() instanceof BlockRockVariant)) return false;
         Rock.Type type = ((BlockRockVariant) current.getBlock()).getType();
         return type == GRASS || type == DRY_GRASS || type == DIRT || type == CLAY || type == CLAY_GRASS;

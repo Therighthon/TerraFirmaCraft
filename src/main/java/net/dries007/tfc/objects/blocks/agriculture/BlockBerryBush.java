@@ -20,6 +20,7 @@ import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -33,6 +34,7 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.dries007.tfc.api.types.IBerryBush;
@@ -192,7 +194,7 @@ public class BlockBerryBush extends Block
         {
             if (!worldIn.isRemote)
             {
-                Helpers.spawnItemStack(worldIn, pos, bush.getFoodDrop());
+                ItemHandlerHelper.giveItemToPlayer(playerIn, bush.getFoodDrop());
                 worldIn.setBlockState(pos, worldIn.getBlockState(pos).withProperty(FRUITING, false));
                 TETickCounter te = Helpers.getTE(worldIn, pos, TETickCounter.class);
                 if (te != null)
@@ -215,7 +217,7 @@ public class BlockBerryBush extends Block
             entityIn.motionY *= 0.1D;
         }
         entityIn.motionZ *= 0.1D;
-        if (bush.isSpiky())
+        if (bush.isSpiky() && entityIn instanceof EntityLivingBase)
         {
             entityIn.attackEntityFrom(DamageSource.CACTUS, 1.0F);
         }

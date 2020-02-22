@@ -18,7 +18,6 @@ import net.minecraft.world.gen.structure.template.TemplateManager;
 import net.dries007.tfc.TerraFirmaCraft;
 import net.dries007.tfc.api.types.Tree;
 import net.dries007.tfc.api.util.ITreeGenerator;
-import net.dries007.tfc.api.util.TFCConstants;
 import net.dries007.tfc.objects.blocks.wood.BlockLeavesTFC;
 import net.dries007.tfc.objects.blocks.wood.BlockLogTFC;
 import net.dries007.tfc.objects.blocks.wood.BlockSaplingTFC;
@@ -40,10 +39,11 @@ public class TreeGenWillow implements ITreeGenerator
     private Template structureOverlay;
 
     @Override
-    public void generateTree(TemplateManager manager, World world, BlockPos pos, Tree tree, Random rand)
+    public void generateTree(TemplateManager manager, World world, BlockPos pos, Tree tree, Random rand, boolean isWorldGen)
     {
-        ResourceLocation base = new ResourceLocation(TFCConstants.MOD_ID, tree.getRegistryName().getPath() + "/base");
-        ResourceLocation overlay = new ResourceLocation(TFCConstants.MOD_ID, tree.getRegistryName().getPath() + "/overlay");
+        //noinspection ConstantConditions
+        ResourceLocation base = new ResourceLocation(TerraFirmaCraft.MOD_ID, tree.getRegistryName().getPath() + "/base");
+        ResourceLocation overlay = new ResourceLocation(TerraFirmaCraft.MOD_ID, tree.getRegistryName().getPath() + "/overlay");
 
         structureBase = manager.get(world.getMinecraftServer(), base);
         structureOverlay = manager.get(world.getMinecraftServer(), overlay);

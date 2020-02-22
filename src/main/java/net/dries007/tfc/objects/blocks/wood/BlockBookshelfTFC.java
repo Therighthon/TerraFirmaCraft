@@ -7,12 +7,15 @@ package net.dries007.tfc.objects.blocks.wood;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -39,14 +42,22 @@ public class BlockBookshelfTFC extends Block
         setHardness(2.0F).setResistance(5.0F);
         setHarvestLevel("axe", 0);
         OreDictionaryHelper.register(this, "bookshelf");
+        //noinspection ConstantConditions
+        OreDictionaryHelper.register(this, "bookshelf", wood.getRegistryName().getPath());
         Blocks.FIRE.setFireInfo(this, 30, 20);
     }
 
     @SideOnly(Side.CLIENT)
     @Override
+    @Nonnull
     public BlockRenderLayer getRenderLayer()
     {
         return BlockRenderLayer.CUTOUT_MIPPED;
     }
 
+    @Override
+    public float getEnchantPowerBonus(World world, BlockPos pos)
+    {
+        return 1.0F; // Same as vanilla
+    }
 }

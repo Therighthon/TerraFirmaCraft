@@ -20,8 +20,8 @@ import net.dries007.tfc.objects.blocks.stone.*;
 import net.dries007.tfc.objects.items.rock.*;
 import net.dries007.tfc.util.Helpers;
 
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 import static net.dries007.tfc.api.types.Rock.FallingBlockType.*;
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
 
 /**
  * todo: document API
@@ -32,6 +32,8 @@ public class Rock extends IForgeRegistryEntry.Impl<Rock>
     public static final Rock GRANITE = Helpers.getNull();
     @GameRegistry.ObjectHolder("tfc:basalt")
     public static final Rock BASALT = Helpers.getNull();
+    @GameRegistry.ObjectHolder("tfc:rhyolite")
+    public static final Rock RHYOLITE = Helpers.getNull();
 
     private final RockCategory rockCategory;
     private final ResourceLocation textureLocation;
@@ -114,6 +116,7 @@ public class Rock extends IForgeRegistryEntry.Impl<Rock>
     public enum Type
     {
         RAW(Material.ROCK, FALL_VERTICAL, false, BlockRockRaw::new),
+        SPIKE(Material.ROCK, NO_FALL, false, BlockRockSpike::new),
         SMOOTH(Material.ROCK, NO_FALL, false),
         COBBLE(Material.ROCK, FALL_HORIZONTAL, false),
         BRICKS(Material.ROCK, NO_FALL, false),

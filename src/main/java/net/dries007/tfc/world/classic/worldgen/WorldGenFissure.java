@@ -44,7 +44,7 @@ public class WorldGenFissure implements IWorldGenerator
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator, IChunkProvider chunkProvider)
     {
-        BlockPos start = new ChunkPos(chunkX, chunkZ).getBlock(random.nextInt(16) + 8, 0, random.nextInt(16) + 8);
+        BlockPos start = new ChunkPos(chunkX, chunkZ).getBlock(random.nextInt(14) + 9, 0, random.nextInt(14) + 9);
         Biome biome = world.getBiome(start);
 
         if (biome == BiomesTFC.BEACH || biome == BiomesTFC.OCEAN || biome == BiomesTFC.GRAVEL_BEACH || biome == BiomesTFC.LAKE || biome == BiomesTFC.RIVER || biome == BiomesTFC.DEEP_OCEAN)
@@ -54,8 +54,6 @@ public class WorldGenFissure implements IWorldGenerator
 
         start = world.getTopSolidOrLiquidBlock(start).down(3);
 
-        IBlockState block = world.getBlockState(start);
-        if (BlocksTFC.isWater(block) && !BlocksTFC.isGround(block)) return;
         final boolean stable = ChunkDataTFC.isStable(world, start);
         if (checkStability && stable)
         {
@@ -66,8 +64,19 @@ public class WorldGenFissure implements IWorldGenerator
 
         int depth = 2 + random.nextInt(3);
         int radius = 1 + random.nextInt(2);
-        // Clear blocks above the fissure
         List<BlockPos> clearing = getCircle(start, radius + 2);
+
+        // Checks for water bodies above fissure
+        for (int y = 1; y < 4; y++)
+        {
+            for (BlockPos pos : clearing)
+            {
+                IBlockState block = world.getBlockState(pos.up(y));
+                if (BlocksTFC.isWater(block) && !BlocksTFC.isGround(block)) return;
+            }
+        }
+
+        // No water bodies found, let's create a fissure by first clearing blocks on the ground!
         for (int y = 1; y < 4; y++)
         {
             for (BlockPos clear : clearing)
@@ -75,14 +84,15 @@ public class WorldGenFissure implements IWorldGenerator
                 world.setBlockToAir(clear.up(y));
             }
         }
+
         // Actually fills the fissure
-        // This is left here for testing.
         Set<BlockPos> blocks = getCollapseSet(random, start, radius, depth);
         for (BlockPos filling : blocks)
         {
             smartFill(world, filling, blocks, rock, fillBlock);
         }
-        //T his is an experimental way of fixing "missing" rocks
+
+        // This is an experimental way of fixing "missing" rocks
         // I disabled it because the looks is more man-made
         // Replaces the blocks not filled by water/lava
         /*

@@ -8,13 +8,15 @@ package net.dries007.tfc.objects;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.storage.loot.LootPool;
 import net.minecraft.world.storage.loot.LootTableList;
+import net.minecraft.world.storage.loot.functions.LootFunctionManager;
 import net.minecraftforge.event.LootTableLoadEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import net.dries007.tfc.ConfigTFC;
+import net.dries007.tfc.util.loot.ApplySimpleSkill;
 
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 
 @Mod.EventBusSubscriber(modid = MOD_ID)
 public class LootTablesTFC
@@ -42,30 +44,46 @@ public class LootTablesTFC
         ANIMALS_RABBIT = register("animals/rabbit");
         ANIMALS_WOLF = register("animals/wolf");
         ANIMALS_HORSE = register("animals/horse");
+
+        // Loot function for skill drop multiplier
+        LootFunctionManager.registerFunction(new ApplySimpleSkill.Serializer(new ResourceLocation(MOD_ID, "apply_skill")));
     }
 
     @SubscribeEvent
     public static void onLootTableLoad(LootTableLoadEvent event)
     {
-        LootPool pool = event.getTable().getPool("main");
-        //noinspection ConstantConditions - it can be null on non-vanilla pools
-        if (ConfigTFC.GENERAL.removeVanillaLoots && pool != null)
+        if (ConfigTFC.GENERAL.removeVanillaLoots)
         {
-            pool.removeEntry("minecraft:potato");
-            pool.removeEntry("minecraft:carrot");
-            pool.removeEntry("minecraft:wheat");
-            pool.removeEntry("minecraft:gold_nugget");
-            pool.removeEntry("minecraft:gold_ingot");
-            pool.removeEntry("minecraft:iron_ingot");
-            pool.removeEntry("minecraft:iron_nugget");
-            pool.removeEntry("minecraft:leather");
-            pool.removeEntry("minecraft:coal");
-            pool.removeEntry("minecraft:diamond");
+            // The pool with carrots, potatoes, and iron ingots
+            remove(event, "minecraft:entities/zombie_villager", "pool1");
+            remove(event, "minecraft:entities/zombie", "pool1");
+            remove(event, "minecraft:entities/husk", "pool1");
         }
     }
 
     private static ResourceLocation register(String id)
     {
         return LootTableList.register(new ResourceLocation(MOD_ID, id));
+    }
+
+    private static void remove(LootTableLoadEvent event, String tableName, String pool)
+    {
+        if (tableName.equals(event.getName().toString()))
+        {
+            event.getTable().removePool(pool);
+        }
+    }
+
+    private static void remove(LootTableLoadEvent event, String tableName, String poolName, String entry)
+    {
+        if (tableName.equals(event.getName().toString()))
+        {
+            LootPool pool = event.getTable().getPool(poolName);
+            //noinspection ConstantConditions
+            if (pool != null)
+            {
+                pool.removeEntry(entry);
+            }
+        }
     }
 }

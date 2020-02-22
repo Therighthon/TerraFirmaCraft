@@ -14,15 +14,17 @@ import javax.annotation.Nullable;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.common.IRarity;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import net.dries007.tfc.api.capability.forge.ForgeableHandler;
+import net.dries007.tfc.api.capability.metal.IMetalItem;
 import net.dries007.tfc.api.capability.size.IItemSize;
 import net.dries007.tfc.api.types.Metal;
-import net.dries007.tfc.api.util.IMetalObject;
 import net.dries007.tfc.objects.items.ItemArmorTFC;
 
-public class ItemMetalArmor extends ItemArmorTFC implements IMetalObject, IItemSize
+public class ItemMetalArmor extends ItemArmorTFC implements IMetalItem, IItemSize
 {
     private static final Map<Metal, EnumMap<Metal.ItemType, ItemMetalArmor>> TABLE = new HashMap<>();
 
@@ -55,12 +57,14 @@ public class ItemMetalArmor extends ItemArmorTFC implements IMetalObject, IItemS
     @Override
     public int getSmeltAmount(ItemStack stack)
     {
-        return type.getSmeltAmount();
+        if (!isDamageable() || !stack.isItemDamaged()) return type.getSmeltAmount();
+        double d = (stack.getMaxDamage() - stack.getItemDamage()) / (double) stack.getMaxDamage() - .10;
+        return d < 0 ? 0 : MathHelper.floor(type.getSmeltAmount() * d);
     }
 
     @Override
     @Nonnull
-    public EnumRarity getRarity(ItemStack stack)
+    public IRarity getForgeRarity(@Nonnull ItemStack stack)
     {
         switch (metal.getTier())
         {
@@ -74,7 +78,7 @@ public class ItemMetalArmor extends ItemArmorTFC implements IMetalObject, IItemS
             case TIER_V:
                 return EnumRarity.EPIC;
         }
-        return super.getRarity(stack);
+        return super.getForgeRarity(stack);
     }
 
     @Nullable

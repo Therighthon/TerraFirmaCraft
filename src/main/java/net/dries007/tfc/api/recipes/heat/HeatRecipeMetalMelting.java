@@ -8,37 +8,23 @@ package net.dries007.tfc.api.recipes.heat;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import net.dries007.tfc.api.capability.metal.CapabilityMetalItem;
+import net.dries007.tfc.api.capability.metal.IMetalItem;
 import net.dries007.tfc.api.types.Metal;
-import net.dries007.tfc.api.util.IMetalObject;
 import net.dries007.tfc.objects.fluids.FluidsTFC;
 
 @ParametersAreNonnullByDefault
 public class HeatRecipeMetalMelting extends HeatRecipe
 {
-    @Nullable
-    private static IMetalObject getMetalObject(ItemStack stack)
-    {
-        if (stack.getItem() instanceof IMetalObject)
-        {
-            return (IMetalObject) stack.getItem();
-        }
-        else if (stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock() instanceof IMetalObject)
-        {
-            return (IMetalObject) ((ItemBlock) stack.getItem()).getBlock();
-        }
-        return null;
-    }
-
     private final Metal metal; //Used only in JEI to determine the metal registered in this recipe.
 
     public HeatRecipeMetalMelting(Metal metal)
     {
         super(input -> {
-            IMetalObject metalObject = getMetalObject(input);
+            IMetalItem metalObject = CapabilityMetalItem.getMetalItem(input);
             if (metalObject != null)
             {
                 return metalObject.getMetal(input) == metal;
@@ -52,13 +38,21 @@ public class HeatRecipeMetalMelting extends HeatRecipe
     @Override
     public FluidStack getOutputFluid(ItemStack input)
     {
-        IMetalObject metalObject = getMetalObject(input);
+        IMetalItem metalObject = CapabilityMetalItem.getMetalItem(input);
         if (metalObject != null)
         {
             Metal metal = metalObject.getMetal(input);
-            if (metal != null && metalObject.canMelt(input))
+            if (metal != null)
             {
-                return new FluidStack(FluidsTFC.getFluidFromMetal(metal), metalObject.getSmeltAmount(input));
+                if (metalObject.canMelt(input))
+                {
+                    return new FluidStack(FluidsTFC.getFluidFromMetal(metal), metalObject.getSmeltAmount(input));
+                }
+                else
+                {
+                    // Melt into unknown alloy so items aren't simply voided and becomes something
+                    return new FluidStack(FluidsTFC.getFluidFromMetal(Metal.UNKNOWN), metalObject.getSmeltAmount(input));
+                }
             }
         }
         return null;

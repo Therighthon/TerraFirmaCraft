@@ -52,7 +52,8 @@ public class CTWelding
             @Override
             public String describe()
             {
-                return "Adding welding recipe for " + outputStack.getDisplayName();
+                //noinspection ConstantConditions
+                return "Adding welding recipe " + recipe.getRegistryName().toString();
             }
         });
     }
@@ -99,7 +100,7 @@ public class CTWelding
                 @Override
                 public void apply()
                 {
-                    IForgeRegistryModifiable modRegistry = (IForgeRegistryModifiable) TFCRegistries.ANVIL;
+                    IForgeRegistryModifiable modRegistry = (IForgeRegistryModifiable) TFCRegistries.WELDING;
                     modRegistry.remove(recipe.getRegistryName());
                 }
 

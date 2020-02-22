@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 import static net.dries007.tfc.util.Helpers.getNull;
 
 @Mod.EventBusSubscriber(modid = MOD_ID)
@@ -35,6 +35,10 @@ public class TFCSounds
     public static final SoundEvent ANVIL_IMPACT = getNull();
     @GameRegistry.ObjectHolder(MOD_ID + ":item.throw")
     public static final SoundEvent ITEM_THROW = getNull();
+    @GameRegistry.ObjectHolder(MOD_ID + ":item.jug.blow")
+    public static final SoundEvent JUG_BLOW = getNull();
+    @GameRegistry.ObjectHolder(MOD_ID + ":item.firestarter")
+    public static final SoundEvent FIRE_STARTER = getNull();
 
     @GameRegistry.ObjectHolder(MOD_ID + ":animal.bear.say")
     public static final SoundEvent ANIMAL_BEAR_SAY = getNull();
@@ -92,6 +96,8 @@ public class TFCSounds
             createSoundEvent("item.ceramicbreak"),
             createSoundEvent("anvil.metalimpact"),
             createSoundEvent("item.throw"),
+            createSoundEvent("item.jug.blow"),
+            createSoundEvent("item.firestarter"),
             // Animals
             createSoundEvent("animal.bear.cry"),
             createSoundEvent("animal.bear.say"),

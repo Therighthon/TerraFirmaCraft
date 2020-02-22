@@ -5,19 +5,27 @@
 
 package net.dries007.tfc.objects.items.metal;
 
+import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.google.common.collect.Multimap;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnumEnchantmentType;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -25,6 +33,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import mcp.MethodsReturnNonnullByDefault;
 import net.dries007.tfc.api.capability.damage.DamageType;
 import net.dries007.tfc.api.types.Metal;
+import net.dries007.tfc.api.types.Rock;
+import net.dries007.tfc.objects.blocks.stone.BlockRockVariant;
 import net.dries007.tfc.util.OreDictionaryHelper;
 
 @ParametersAreNonnullByDefault
@@ -33,7 +43,7 @@ public class ItemMetalTool extends ItemMetal
 {
     public final ToolMaterial material;
     private final double attackDamage;
-    private final int areaOfEffect; // todo: implement
+    private final int areaOfEffect;
     private final float attackSpeed;
     private float efficiency;
 
@@ -84,13 +94,13 @@ public class ItemMetalTool extends ItemMetal
                 attackSpeed = 0;
                 break;
             case SAW:
+                setHarvestLevel("axe", harvestLevel);
                 setHarvestLevel("saw", harvestLevel);
                 typeDamage = 0.5f;
                 areaOfEffect = 1;
                 attackSpeed = -1;
                 break;
             case PROPICK:
-                setHarvestLevel("pickaxe", harvestLevel);
                 typeDamage = 1f;
                 areaOfEffect = 1;
                 attackSpeed = -3.5f;
@@ -153,6 +163,41 @@ public class ItemMetalTool extends ItemMetal
         }
 
         attackDamage = typeDamage * material.getAttackDamage();
+    }
+
+    @Override
+    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
+    {
+        ItemStack itemstack = player.getHeldItem(hand);
+
+        if (!player.canPlayerEdit(pos.offset(facing), facing, itemstack))
+        {
+            return EnumActionResult.FAIL;
+        }
+        else if (type == Metal.ItemType.SHOVEL)
+        {
+            IBlockState iblockstate = worldIn.getBlockState(pos);
+            Block block = iblockstate.getBlock();
+            if (!(block instanceof BlockRockVariant))
+            {
+                return EnumActionResult.PASS;
+            }
+            BlockRockVariant rockVariant = (BlockRockVariant) block;
+            if (facing != EnumFacing.DOWN && worldIn.getBlockState(pos.up()).getMaterial() == Material.AIR && rockVariant.getType() == Rock.Type.GRASS || rockVariant.getType() == Rock.Type.DRY_GRASS)
+            {
+                IBlockState iblockstate1 = BlockRockVariant.get(rockVariant.getRock(), Rock.Type.PATH).getDefaultState();
+                worldIn.playSound(player, pos, SoundEvents.ITEM_SHOVEL_FLATTEN, SoundCategory.BLOCKS, 1.0F, 1.0F);
+
+                if (!worldIn.isRemote)
+                {
+                    worldIn.setBlockState(pos, iblockstate1, 11);
+                    itemstack.damageItem(1, player);
+                }
+
+                return EnumActionResult.SUCCESS;
+            }
+        }
+        return EnumActionResult.PASS;
     }
 
     @Override
@@ -235,6 +280,8 @@ public class ItemMetalTool extends ItemMetal
                 return material == Material.SNOW || material == Material.CRAFTED_SNOW;
             case SCYTHE:
                 return material == Material.PLANTS || material == Material.VINE || material == Material.LEAVES;
+            case SWORD:
+                return material == Material.WEB;
         }
         return false;
     }
@@ -268,7 +315,15 @@ public class ItemMetalTool extends ItemMetal
     public boolean canDestroyBlockInCreative(World world, BlockPos pos, ItemStack stack, EntityPlayer player)
     {
         //This stops swords and other weapons breaking blocks in creative
-        return canHarvestBlock(world.getBlockState(pos));
+        switch (type)
+        {
+            case SWORD:
+            case JAVELIN:
+            case MACE:
+                return false;
+            default:
+                return true;
+        }
     }
 
     @Override
@@ -285,17 +340,61 @@ public class ItemMetalTool extends ItemMetal
     }
 
     @Override
+    public boolean canApplyAtEnchantingTable(@Nonnull ItemStack stack, @Nonnull Enchantment enchantment)
+    {
+        if (enchantment.type == EnumEnchantmentType.WEAPON)
+        {
+            return isWeapon();
+        }
+        else if (enchantment.type == EnumEnchantmentType.DIGGER)
+        {
+            return isTool();
+        }
+        return super.canApplyAtEnchantingTable(stack, enchantment);
+    }
+
+    @Override
     public boolean canStack(ItemStack stack)
     {
         return false;
     }
 
-    @Override
-    public boolean doesSneakBypassUse(ItemStack stack, IBlockAccess world, BlockPos pos, EntityPlayer player)
+    public double getAttackDamage() { return this.attackDamage; }
+
+    private boolean isWeapon()
     {
-        // Hammers need to activate anvils for welding
-        return this.type == Metal.ItemType.HAMMER || super.doesSneakBypassUse(stack, world, pos, player);
+        switch (type)
+        {
+            case AXE:
+            case SWORD:
+            case MACE:
+            case KNIFE:
+            case HAMMER:
+            case JAVELIN:
+                return true;
+            default:
+                return false;
+        }
     }
 
-    public double getAttackDamage() { return this.attackDamage; }
+    private boolean isTool()
+    {
+        switch (type)
+        {
+            case PICK:
+            case HAMMER:
+            case KNIFE:
+            case AXE:
+            case HOE:
+            case SAW:
+            case CHISEL:
+            case SCYTHE:
+            case SHEARS:
+            case SHOVEL:
+            case PROPICK:
+                return true;
+            default:
+                return false;
+        }
+    }
 }

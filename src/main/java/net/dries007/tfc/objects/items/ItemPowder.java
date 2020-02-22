@@ -11,37 +11,39 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import net.minecraft.item.ItemStack;
 
-import mcp.MethodsReturnNonnullByDefault;
 import net.dries007.tfc.api.capability.size.Size;
 import net.dries007.tfc.api.capability.size.Weight;
 import net.dries007.tfc.objects.Powder;
 import net.dries007.tfc.util.OreDictionaryHelper;
 
-@MethodsReturnNonnullByDefault
+@SuppressWarnings("WeakerAccess")
 @ParametersAreNonnullByDefault
 public class ItemPowder extends ItemTFC
 {
     private static final EnumMap<Powder, ItemPowder> MAP = new EnumMap<>(Powder.class);
 
-    public static ItemPowder get(Powder Powder)
+    public static ItemPowder get(Powder powder)
     {
-        return MAP.get(Powder);
+        return MAP.get(powder);
     }
 
-    public static ItemStack get(Powder Powder, int amount)
+    public static ItemStack get(Powder powder, int amount)
     {
-        return new ItemStack(MAP.get(Powder), amount);
+        return new ItemStack(MAP.get(powder), amount);
     }
 
-    public final Powder Powder;
+    private final Powder powder;
 
-    public ItemPowder(Powder Powder)
+    public ItemPowder(Powder powder)
     {
-        this.Powder = Powder;
-        if (MAP.put(Powder, this) != null) throw new IllegalStateException("There can only be one.");
+        this.powder = powder;
+        if (MAP.put(powder, this) != null) throw new IllegalStateException("There can only be one.");
         setMaxDamage(0);
-        OreDictionaryHelper.register(this, "dust");
-        OreDictionaryHelper.register(this, "dust", Powder);
+        OreDictionaryHelper.register(this, "dust", powder);
+        if (powder == Powder.LAPIS_LAZULI)
+        {
+            OreDictionaryHelper.register(this, "dust", "lapis");
+        }
     }
 
     @Nonnull
@@ -56,5 +58,11 @@ public class ItemPowder extends ItemTFC
     public Weight getWeight(ItemStack stack)
     {
         return Weight.LIGHT;
+    }
+
+    @Nonnull
+    public Powder getPowder()
+    {
+        return powder;
     }
 }

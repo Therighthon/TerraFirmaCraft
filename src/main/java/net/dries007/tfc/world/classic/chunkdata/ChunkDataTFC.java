@@ -13,10 +13,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.collect.ImmutableSet;
 import net.minecraft.nbt.*;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -26,11 +24,13 @@ import net.minecraftforge.registries.ForgeRegistry;
 
 import net.dries007.tfc.ConfigTFC;
 import net.dries007.tfc.api.registries.TFCRegistries;
-import net.dries007.tfc.api.types.Ore;
 import net.dries007.tfc.api.types.Rock;
 import net.dries007.tfc.api.types.Tree;
 import net.dries007.tfc.util.NBTBuilder;
+import net.dries007.tfc.util.calendar.CalendarTFC;
+import net.dries007.tfc.util.calendar.ICalendar;
 import net.dries007.tfc.world.classic.DataLayer;
+import net.dries007.tfc.world.classic.worldgen.vein.Vein;
 
 import static net.dries007.tfc.world.classic.WorldTypeTFC.ROCKLAYER2;
 import static net.dries007.tfc.world.classic.WorldTypeTFC.ROCKLAYER3;
@@ -120,8 +120,10 @@ public final class ChunkDataTFC
     private float avgTemp;
     private float floraDensity;
     private float floraDiversity;
-    private Set<Ore> chunkOres = new HashSet<>();
+    private Set<Vein> generatedVeins = new HashSet<>();
     private int chunkWorkage;
+    private long protectedTicks; // Used for hostile spawn protection. Starts negative, increases by players in the area
+    private long lastUpdateTick, lastUpdateYear; // The last time this chunk was updated by world regen
 
     /**
      * INTERNAL USE ONLY.
@@ -142,28 +144,30 @@ public final class ChunkDataTFC
         this.avgTemp = avgTemp;
         this.floraDensity = floraDensity;
         this.floraDiversity = floraDiversity;
+
         this.chunkWorkage = 0;
+
+        this.lastUpdateTick = CalendarTFC.PLAYER_TIME.getTicks();
+        this.lastUpdateYear = CalendarTFC.CALENDAR_TIME.getTotalYears();
     }
 
     /**
      * Adds generated ores to this chunk list of ores
      * Should be used by ore vein generators to save in this chunk which ores generated here
      *
-     * @param ore the ore added by ore vein generator
+     * @param vein the ore added by ore vein generator
      */
-    public void addGeneratedOre(Ore ore)
+    public void markVeinGenerated(@Nonnull Vein vein)
     {
-        chunkOres.add(ore);
+        generatedVeins.add(vein);
     }
 
     /**
-     * Returns a set of ores that generated in this chunk
-     *
-     * @return the immutable set containing all ores that generated in this chunk
+     * @return the veins generated in this chunk. Note: the veins here are soft (non-functional) copies. They are used for data markers, not for actual world generation
      */
-    public Set<Ore> getChunkOres()
+    public Set<Vein> getGeneratedVeins()
     {
-        return ImmutableSet.copyOf(chunkOres);
+        return generatedVeins;
     }
 
     public boolean canWork(int amount)
@@ -276,6 +280,45 @@ public final class ChunkDataTFC
         return floraDiversity;
     }
 
+    public void addSpawnProtection(int multiplier)
+    {
+        if (protectedTicks < CalendarTFC.PLAYER_TIME.getTicks())
+        {
+            protectedTicks = CalendarTFC.PLAYER_TIME.getTicks();
+        }
+        protectedTicks += multiplier * 600;
+    }
+
+    public long getSpawnProtection()
+    {
+        return protectedTicks - (24 * ICalendar.TICKS_IN_HOUR) - CalendarTFC.PLAYER_TIME.getTicks();
+    }
+
+    public boolean isSpawnProtected()
+    {
+        return getSpawnProtection() > 0;
+    }
+
+    public long getLastUpdateTick()
+    {
+        return lastUpdateTick;
+    }
+
+    public void resetLastUpdateTick()
+    {
+        this.lastUpdateTick = CalendarTFC.PLAYER_TIME.getTicks();
+    }
+
+    public long getLastUpdateYear()
+    {
+        return lastUpdateYear;
+    }
+
+    public void resetLastUpdateYear()
+    {
+        this.lastUpdateYear = CalendarTFC.CALENDAR_TIME.getTotalYears();
+    }
+
     public List<Tree> getValidTrees()
     {
         return TFCRegistries.TREES.getValuesCollection().stream()
@@ -370,19 +413,16 @@ public final class ChunkDataTFC
             root.setFloat("floraDiversity", instance.floraDiversity);
 
             root.setInteger("chunkWorkage", instance.chunkWorkage);
+            root.setLong("protectedTicks", instance.protectedTicks);
+            root.setLong("lastUpdateTick", instance.lastUpdateTick);
+            root.setLong("lastUpdateYear", instance.lastUpdateYear);
 
-            if (instance.chunkOres.size() > 0)
+            NBTTagList veinList = new NBTTagList();
+            for (Vein vein : instance.generatedVeins)
             {
-                NBTTagList oreList = new NBTTagList();
-                for (Ore ore : instance.chunkOres)
-                {
-                    NBTTagCompound nbtOre = new NBTTagCompound();
-                    //noinspection ConstantConditions
-                    nbtOre.setString("oreRegistry", ore.getRegistryName().toString());
-                    oreList.appendTag(nbtOre);
-                }
-                root.setTag("chunkOres", oreList);
+                veinList.appendTag(Vein.serialize(vein));
             }
+            root.setTag("veins", veinList);
 
             return root;
         }
@@ -410,18 +450,16 @@ public final class ChunkDataTFC
                 instance.floraDiversity = root.getFloat("floraDiversity");
 
                 instance.chunkWorkage = root.getInteger("chunkWorkage");
+                instance.protectedTicks = root.getLong("protectedTicks");
+                instance.lastUpdateTick = root.getLong("lastUpdateTick");
+                instance.lastUpdateYear = root.getLong("lastUpdateYear");
 
-                instance.chunkOres = new HashSet<>();
+                instance.generatedVeins = new HashSet<>();
 
-                if (root.hasKey("chunkOres"))
+                NBTTagList veinList = root.getTagList("veins", Constants.NBT.TAG_COMPOUND);
+                for (int i = 0; i < veinList.tagCount(); i++)
                 {
-                    NBTTagList oreList = root.getTagList("chunkOres", Constants.NBT.TAG_COMPOUND);
-                    for (int i = 0; i < oreList.tagCount(); i++)
-                    {
-                        NBTTagCompound nbtOre = oreList.getCompoundTagAt(i);
-                        Ore ore = TFCRegistries.ORES.getValue(new ResourceLocation(nbtOre.getString("oreRegistry")));
-                        instance.chunkOres.add(ore);
-                    }
+                    instance.generatedVeins.add(Vein.deserialize(veinList.getCompoundTagAt(i)));
                 }
 
                 instance.initialized = true;

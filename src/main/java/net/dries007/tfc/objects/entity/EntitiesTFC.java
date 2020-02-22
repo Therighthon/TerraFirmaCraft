@@ -13,7 +13,7 @@ import net.dries007.tfc.TerraFirmaCraft;
 import net.dries007.tfc.objects.entity.animal.*;
 import net.dries007.tfc.objects.entity.projectile.EntityThrownJavelin;
 
-import static net.dries007.tfc.api.util.TFCConstants.MOD_ID;
+import static net.dries007.tfc.TerraFirmaCraft.MOD_ID;
 
 public class EntitiesTFC
 {
@@ -24,6 +24,7 @@ public class EntitiesTFC
         register("sitblock", EntitySeatOn.class);
         register("falling_block", EntityFallingBlockTFC.class);
         register("thrown_javelin", EntityThrownJavelin.class);
+        register("boat", EntityBoatTFC.class);
         registerLiving("sheeptfc", EntitySheepTFC.class, 0xFFFFFF, 0xFF6347);
         registerLiving("cowtfc", EntityCowTFC.class, 0xA52A2A, 0xFFFFFF);
         registerLiving("beartfc", EntityBearTFC.class, 0x557755, 0xF1FFF1);

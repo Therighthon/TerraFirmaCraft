@@ -32,8 +32,11 @@ public class BlockFenceGateTFC extends BlockFenceGate
         if (MAP.put(wood, this) != null) throw new IllegalStateException("There can only be one.");
         this.wood = wood;
         setHarvestLevel("axe", 0);
-        OreDictionaryHelper.register(this, "fence", "gate");
-        OreDictionaryHelper.register(this, "fence", "gate", wood.getRegistryName().getPath());
+        setHardness(2.0F); // match vanilla
+        setResistance(15.0F);
+        OreDictionaryHelper.register(this, "fence", "gate", "wood");
+        //noinspection ConstantConditions
+        OreDictionaryHelper.register(this, "fence", "gate", "wood", wood.getRegistryName().getPath());
         Blocks.FIRE.setFireInfo(this, 5, 20);
     }
 }

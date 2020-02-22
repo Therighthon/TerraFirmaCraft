@@ -29,7 +29,7 @@ public interface ITreeGenerator
      * @param tree    The tree type to spawn
      * @param rand    A random to use in generation
      */
-    void generateTree(TemplateManager manager, World world, BlockPos pos, Tree tree, Random rand);
+    void generateTree(TemplateManager manager, World world, BlockPos pos, Tree tree, Random rand, boolean isWorldGen);
 
     /**
      * Checks if a tree can be generated. This implementation checks height, radius, and light level
@@ -66,17 +66,13 @@ public interface ITreeGenerator
         }
 
         // Check if there is a solid block beneath
-        if (!BlocksTFC.isSoil(world.getBlockState(pos.down())))
+        if (!BlocksTFC.isGrowableSoil(world.getBlockState(pos.down())))
         {
             return false;
         }
 
         // Check the position for liquids, etc.
-        if (world.getBlockState(pos).getMaterial().isLiquid() || !world.getBlockState(pos).getMaterial().isReplaceable())
-        {
-            return world.getBlockState(pos).getBlock() instanceof BlockSaplingTFC;
-        }
-
-        return true;
+        IBlockState stateAt = world.getBlockState(pos);
+        return !stateAt.getMaterial().isLiquid() && (stateAt.getMaterial().isReplaceable() || stateAt.getBlock() instanceof BlockSaplingTFC);
     }
 }

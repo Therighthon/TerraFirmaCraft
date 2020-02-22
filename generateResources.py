@@ -118,14 +118,14 @@ ORE_TYPES = {
 POWDERS = [
     'flux',
     'coke',
-    'kaolinite_powder',
-    'graphite_powder',
-    'sulfur_powder',
-    'saltpeter_powder',
-    'hematite_powder',
-    'lapis_lazuli_powder',
-    'limonite_powder',
-    'malachite_powder',
+    'kaolinite',
+    'graphite',
+    'sulfur',
+    'saltpeter',
+    'hematite',
+    'lapis_lazuli',
+    'limonite',
+    'malachite',
     'salt',
     'fertilizer',
 ]
@@ -291,29 +291,31 @@ FLUIDS = {
     'milk_vinegar': 'milk_vinegar',
 }
 
-# Simple crops (tall / stages)
-SIMPLE_CROPS = {
-    'barley': (False, 8),
-    'maize': (False, 6),
-    'oat': (False, 8),
-    'rice': (False, 8),
-    'rye': (False, 8),
-    'wheat': (False, 8),
-    'beet': (False, 7),
-    'cabbage': (False, 6),
-    'carrot': (False, 5),
-    'garlic': (False, 5),
-    'green_bean': (False, 7),
-    'onion': (False, 7),
-    'potato': (False, 7),
-    'soybean': (False, 7),
-    'sugarcane': (False, 8),
-    'red_bell_pepper': (False, 7),
-    'tomato': (False, 8),
-    'yellow_bell_pepper': (False, 7),
-    'jute': (True, 6)
+# all crops
+CROPS = {
+    'barley': {'model': 'crop', 'texture': 'crop', 'stages': 8},
+    'maize': {'model': 'tfc:crop_tall', 'texture': 'crop', 'stages': 6},
+    'oat': {'model': 'crop', 'texture': 'crop', 'stages': 8},
+    'rice': {'model': 'crop', 'texture': 'crop', 'stages': 8},
+    'rye': {'model': 'crop', 'texture': 'crop', 'stages': 8},
+    'wheat': {'model': 'crop', 'texture': 'crop', 'stages': 8},
+    'beet': {'model': 'cross', 'texture': 'cross', 'stages': 7},
+    'cabbage': {'model': 'cross', 'texture': 'cross', 'stages': 6},
+    'carrot': {'model': 'cross', 'texture': 'cross', 'stages': 5},
+    'garlic': {'model': 'cross', 'texture': 'cross', 'stages': 5},
+    'green_bean': {'model': 'cross', 'texture': 'cross', 'stages': 7},
+    'onion': {'model': 'cross', 'texture': 'cross', 'stages': 7},
+    'potato': {'model': 'cross', 'texture': 'cross', 'stages': 7},
+    'soybean': {'model': 'cross', 'texture': 'cross', 'stages': 7},
+    'sugarcane': {'model': 'tfc:crop_tall', 'texture': 'crop', 'stages': 8},
+    'red_bell_pepper': {'model': 'cross', 'texture': 'cross', 'stages': 7},
+    'tomato': {'model': 'tfc:large_cross', 'texture': 'cross', 'stages': 8},
+    'yellow_bell_pepper': {'model': 'cross', 'texture': 'cross', 'stages': 7},
+    'jute': {'model': 'tfc:crop_tall', 'texture': 'crop', 'stages': 6},
+    'pumpkin': {'model': 'crop', 'texture': 'crop', 'stages': 8},
+    'squash': {'model': 'cross', 'texture': 'cross', 'stages': 8},
+    'melon': {'model': 'crop', 'texture': 'crop', 'stages': 8}
 }
-SPREADING_CROPS = ['pumpkin', 'squash', 'melon']
 
 FOODS = [
     'banana',
@@ -521,7 +523,7 @@ def del_none(d):
     return d
 
 
-def blockstate(filename_parts, model, textures, variants=None):
+def blockstate(filename_parts, model, textures, variants=None, uvlock=None):
     """
     Magic.
     :param filename_parts: Iterable of strings.
@@ -553,8 +555,9 @@ def blockstate(filename_parts, model, textures, variants=None):
             'defaults': {
                 'model': model,
                 'textures': _textures,
+                'uvlock': True if uvlock else None
             },
-            'variants': _variants,
+            'variants': _variants
         }), file, indent=2)
 
 
@@ -723,11 +726,20 @@ for rock_type in ROCK_TYPES:
             'up': {'true': {'submodel': 'wall_post', 'y': 270}, 'false': {}}
         })
 
+    # SPIKES (stalactite and stalagmite)
+    blockstate(('spike', rock_type), 'tfc:spike/top', textures={
+        ('texture', 'particle'): 'tfc:blocks/stonetypes/raw/%s' % rock_type,
+    }, variants={
+        'normal': None,
+        'ceiling': {'true': {'x': 180}, 'false': {}},
+        'base': {'true': {'model': 'tfc:spike/base'}, 'false': {}}
+    })
+
     # (ROCK) STAIRS & SLABS
     for block_type in ['smooth', 'cobble', 'bricks']:
         blockstate(('stairs', block_type, rock_type), None, textures={
             ('top', 'bottom', 'side'): 'tfc:blocks/stonetypes/%s/%s' % (block_type, rock_type),
-        }, variants=STAIR_VARIANTS)
+        }, variants=STAIR_VARIANTS, uvlock=True)
         blockstate(('slab', block_type, rock_type), 'half_slab', textures={
             ('top', 'bottom', 'side'): 'tfc:blocks/stonetypes/%s/%s' % (block_type, rock_type),
         }, variants={
@@ -864,7 +876,7 @@ for wood_type in WOOD_TYPES:
     # (WOOD) STAIRS & SLABS
     blockstate(('stairs', 'wood', wood_type), None, textures={
         ('top', 'bottom', 'side'): 'tfc:blocks/wood/planks/%s' % wood_type,
-    }, variants=STAIR_VARIANTS)
+    }, variants=STAIR_VARIANTS, uvlock=True)
     blockstate(('slab', 'wood', wood_type), 'half_slab', textures={
         ('top', 'bottom', 'side'): 'tfc:blocks/wood/planks/%s' % wood_type,
     }, variants={
@@ -934,7 +946,8 @@ for wood_type in WOOD_TYPES:
         'sealed': {
             'true': {'model': 'tfc:barrel_sealed'},
             'false': {},
-        }
+        },
+        'inventory': [{}]
     })
 
     # LOOM
@@ -969,6 +982,22 @@ for wood_type in WOOD_TYPES:
 # LEATHER / HIDES
 blockstate(('placed_hide',), 'tfc:hide_rack', {})
 
+# AGRICULTURE
+
+for cropName, data in CROPS.items():
+    texture = data['texture']
+    blockstate(
+        ('crop', cropName), data['model'], {texture: "tfc:blocks/crop/%s_0" % cropName},
+        {
+            'stage': dict(
+                (
+                    str(stage),
+                    {'textures': {texture: "tfc:blocks/crop/%s_%d" % (cropName, stage)}}
+                ) for stage in range(data['stages'])
+            )
+        }
+    )
+    blockstate(('dead_crop', cropName), data['model'], {texture: "tfc:blocks/crop/%s_dead" % cropName})
 
 #   _____ _
 #  |_   _| |
@@ -1027,6 +1056,7 @@ item(('metal', 'ingot', 'unknown'), 'tfc:items/metal/ingot/%s' % 'unknown')
 # WOOD STUFF
 for wood_type in WOOD_TYPES:
     item(('wood', 'lumber', wood_type), 'tfc:items/wood/lumber/%s' % wood_type)
+    item(('wood', 'boat', wood_type), 'tfc:items/wood/boat/%s' % wood_type)
 
 # ROCK TOOLS
 for rock_cat in ROCK_CATEGORIES:
@@ -1060,16 +1090,24 @@ for item_type in METAL_ITEMS:
     for metal in ('copper', 'bronze', 'black_bronze', 'bismuth_bronze'):
         item(('ceramics', 'fired', 'mold', item_type, metal),
              'tfc:items/ceramics/fired/mold/%s/%s' % (item_type, metal))
+del _heads
 
 # unfired ingot molds
 item(('ceramics', 'unfired', 'mold', 'ingot'), 'tfc:items/ceramics/unfired/mold/ingot')
 # fired ingot molds for all metals
-item(('ceramics', 'fired', 'mold', 'ingot', 'empty'), 'tfc:items/ceramics/fired/mold/ingot/empty')
-item(('ceramics', 'fired', 'mold', 'ingot', 'unknown'), 'tfc:items/ceramics/fired/mold/ingot/unknown')
+_ingotMetals = {}  # metal name -> texture
 for metal in METAL_TYPES.keys():
-    item(('ceramics', 'fired', 'mold', 'ingot', metal), 'tfc:items/ceramics/fired/mold/ingot/' + metal)
+    _ingotMetals[metal] = metal
+for name in ('empty', 'unknown'):
+    _ingotMetals[name] = name
+for prefix in ('weak', 'high_carbon'):
+    for steel in ('blue_steel', 'red_steel', 'black_steel', 'steel'):
+        if prefix != 'weak' or steel != 'black_steel':
+            _ingotMetals['_'.join((prefix, steel))] = steel
 
-del _heads
+for metal, texture in _ingotMetals.items():
+    item(('ceramics', 'fired', 'mold', 'ingot', metal), 'tfc:items/ceramics/fired/mold/ingot/' + texture)
+del _ingotMetals
 
 item(('ceramics', 'unfired', 'vessel'), 'tfc:items/ceramics/unfired/vessel')
 item(('ceramics', 'fired', 'vessel'), 'tfc:items/ceramics/fired/vessel')
@@ -1087,7 +1125,6 @@ item(('ceramics', 'fired', 'bowl'), 'tfc:items/ceramics/fired/bowl')
 item(('ceramics', 'unfired', 'fire_brick'), 'tfc:items/ceramics/unfired/fire_brick')
 item(('ceramics', 'fired', 'fire_brick'), 'tfc:items/ceramics/fired/fire_brick')
 item(('ceramics', 'unfired', 'jug'), 'tfc:items/ceramics/unfired/jug')
-item(('ceramics', 'fired', 'jug'), 'tfc:items/ceramics/fired/jug')
 
 item(('ceramics', 'fire_clay'), 'tfc:items/ceramics/fire_clay')
 
@@ -1105,8 +1142,5 @@ for size in ('small', 'medium', 'large'):
 for food in FOODS:
     item(('food', food), 'tfc:items/food/%s' % food)
 
-for crop in SIMPLE_CROPS.keys():
-    item(('crop', 'seeds', crop), 'tfc:items/crop/seeds/%s' % crop)
-
-for crop in SPREADING_CROPS:
+for crop in CROPS.keys():
     item(('crop', 'seeds', crop), 'tfc:items/crop/seeds/%s' % crop)

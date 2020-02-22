@@ -41,11 +41,11 @@ import net.dries007.tfc.util.Helpers;
 @ParametersAreNonnullByDefault
 public class BlockFirePit extends Block implements IBellowsConsumerBlock, ILightableBlock
 {
-    private static final AxisAlignedBB AABB = new AxisAlignedBB(0.0625D, 0.0D, 0.0625D, 0.9375D, 0.03125D, 0.9375D);
+    private static final AxisAlignedBB AABB = new AxisAlignedBB(0, 0.0D, 0, 1, 0.125, 1);
 
     public BlockFirePit()
     {
-        super(Material.FIRE);
+        super(Material.WOOD);
         setDefaultState(blockState.getBaseState().withProperty(LIT, false));
         disableStats();
         setTickRandomly(true);
@@ -132,6 +132,17 @@ public class BlockFirePit extends Block implements IBellowsConsumerBlock, ILight
     }
 
     @Override
+    public void breakBlock(World worldIn, BlockPos pos, IBlockState state)
+    {
+        TEFirePit tile = Helpers.getTE(worldIn, pos, TEFirePit.class);
+        if (tile != null)
+        {
+            tile.onBreakBlock(worldIn, pos, state);
+        }
+        super.breakBlock(worldIn, pos, state);
+    }
+
+    @Override
     @Nonnull
     public Item getItemDropped(IBlockState state, Random rand, int fortune)
     {
@@ -162,7 +173,7 @@ public class BlockFirePit extends Block implements IBellowsConsumerBlock, ILight
             if (!state.getValue(LIT))
             {
                 ItemStack held = player.getHeldItem(hand);
-                if (ItemFireStarter.canIgnite(held))
+                if (ItemFireStarter.onIgnition(held))
                 {
                     worldIn.setBlockState(pos, state.withProperty(LIT, true));
                     return true;
@@ -188,12 +199,6 @@ public class BlockFirePit extends Block implements IBellowsConsumerBlock, ILight
     public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos)
     {
         return state.getValue(LIT) ? super.getLightValue(state, world, pos) : 0;
-    }
-
-    @Override
-    public boolean isBurning(IBlockAccess world, BlockPos pos)
-    {
-        return world.getBlockState(pos).getValue(LIT);
     }
 
     @Override

@@ -6,26 +6,35 @@
 package net.dries007.tfc.objects.items.metal;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+import net.dries007.tfc.ConfigTFC;
 import net.dries007.tfc.api.capability.heat.ItemHeatHandler;
+import net.dries007.tfc.api.capability.metal.IMetalItem;
 import net.dries007.tfc.api.capability.size.Size;
 import net.dries007.tfc.api.capability.size.Weight;
 import net.dries007.tfc.api.types.Metal;
 import net.dries007.tfc.api.types.Ore;
-import net.dries007.tfc.api.util.IMetalObject;
 import net.dries007.tfc.objects.items.ItemTFC;
+import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.OreDictionaryHelper;
 
-public class ItemOreTFC extends ItemTFC implements IMetalObject
+@SuppressWarnings("WeakerAccess")
+public class ItemOreTFC extends ItemTFC implements IMetalItem
 {
     private static final Map<Ore, ItemOreTFC> MAP = new HashMap<>();
 
@@ -54,29 +63,42 @@ public class ItemOreTFC extends ItemTFC implements IMetalObject
         if (ore.getMetal() != null)
         {
             setHasSubtypes(true);
-            OreDictionaryHelper.register(this, "ore");
-            //noinspection ConstantConditions
-            OreDictionaryHelper.register(this, "ore", ore.getRegistryName().getPath());
+
             for (Ore.Grade grade : Ore.Grade.values())
             {
-                OreDictionaryHelper.registerMeta(this, grade.getMeta(), "ore", grade);
-                OreDictionaryHelper.registerMeta(this, grade.getMeta(), "ore", ore.getRegistryName().getPath(), grade);
+                //noinspection ConstantConditions
+                OreDictionaryHelper.registerMeta(this, grade.getMeta(), "ore", ore.getMetal().getRegistryName().getPath(), grade);
+                if (ore.getMetal() == Metal.WROUGHT_IRON && ConfigTFC.GENERAL.oreDictIron)
+                {
+                    OreDictionaryHelper.registerMeta(this, grade.getMeta(), "ore", "iron", grade);
+                }
             }
         }
         else // Mineral
         {
-            OreDictionaryHelper.register(this, "gem", ore);
             //noinspection ConstantConditions
-            if (ore.getRegistryName().getPath().equals("lapis_lazuli"))
-                OreDictionaryHelper.register(this, "gem", "lapis");
-            if (ore.getRegistryName().getPath().equals("bituminous_coal"))
-                OreDictionaryHelper.register(this, "gem", "coal");
+            String oreName = ore.getRegistryName().getPath();
+            switch (oreName)
+            {
+                case "lapis_lazuli":
+                    OreDictionaryHelper.register(this, "gem", "lapis");
+                    break;
+                case "bituminous_coal":
+                    OreDictionaryHelper.register(this, "gem", "coal");
+                    break;
+                case "lignite":
+                    OreDictionaryHelper.register(this, "gem", "lignite");
+                    break;
+                default:
+                    OreDictionaryHelper.register(this, "gem", ore);
+            }
         }
     }
 
+    @Nonnull
     public Ore.Grade getGradeFromStack(ItemStack stack)
     {
-        return Ore.Grade.byMetadata(stack.getItemDamage());
+        return Ore.Grade.valueOf(stack.getItemDamage());
     }
 
     @Override
@@ -137,13 +159,26 @@ public class ItemOreTFC extends ItemTFC implements IMetalObject
     @Override
     public Size getSize(@Nonnull ItemStack stack)
     {
-        return Size.SMALL;
+        return Size.NORMAL;
     }
 
     @Nonnull
     @Override
     public Weight getWeight(@Nonnull ItemStack stack)
     {
-        return Weight.HEAVY;
+        return Weight.MEDIUM;
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn)
+    {
+        Metal metal = getMetal(stack);
+        if (metal != null)
+        {
+            // Like classic, "Metal: xx units"
+            String info = String.format("%s: %s", I18n.format(Helpers.getTypeName(metal)), I18n.format("tfc.tooltip.units", getSmeltAmount(stack)));
+            tooltip.add(info);
+        }
     }
 }
