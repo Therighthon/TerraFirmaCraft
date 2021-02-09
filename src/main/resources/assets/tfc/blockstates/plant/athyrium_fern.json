@@ -2,10 +2,12 @@
   "multipart": [
     {
       "apply": [
-        {
-          "model": "tfc:block/plant/athyrium_fern"
-        }
+          { "model": "tfc:block/plant/athyrium_fern" },
+		  { "model": "tfc:block/plant/athyrium_fern", "y": 90 },
+		  { "model": "tfc:block/plant/athyrium_fern", "y": 180 },
+		  { "model": "tfc:block/plant/athyrium_fern", "y": 270 }
       ]
     }
   ]
 }
+

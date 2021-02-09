@@ -18,7 +18,7 @@
         16,
         16
       ],
-      "shade": true,
+      "shade": false,
       "faces": {
         "east": {
           "uv": [
@@ -61,7 +61,7 @@
         32,
         8
       ],
-      "shade": true,
+      "shade": false,
       "faces": {
         "north": {
           "uv": [
@@ -104,7 +104,7 @@
         32,
         8
       ],
-      "shade": true,
+      "shade": false,
       "faces": {
         "north": {
           "uv": [
@@ -147,7 +147,7 @@
         16,
         16
       ],
-      "shade": true,
+      "shade": false,
       "faces": {
         "east": {
           "uv": [

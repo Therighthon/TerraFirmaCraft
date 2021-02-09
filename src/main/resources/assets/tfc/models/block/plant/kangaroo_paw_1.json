@@ -1,7 +1,6 @@
 {
-  "parent": "tfc:block/cross",
+  "parent": "block/tinted_cross",
   "textures": {
-    "cross": "tfc:block/plant/kangaroo_paw/kangaroo_paw_1",
-    "particle": "tfc:block/plant/kangaroo_paw/kangaroo_paw_1"
+    "cross": "tfc:block/plant/kangaroo_paw/kangaroo_paw_1"
   }
 }
