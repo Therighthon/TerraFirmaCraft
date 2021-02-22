@@ -9,9 +9,8 @@
           "type": "minecraft:decorated",
           "config": {
             "feature": {
-              "type": "tfc:thin_spike",
+              "type": "tfc:calcite",
               "config": {
-                "state": "tfc:calcite",
                 "radius": 5,
                 "tries": 20,
                 "min_height": 2,
@@ -23,7 +22,7 @@
               "config": {
                 "bottom_offset": 8,
                 "top_offset": 8,
-                "maximum": 100
+                "maximum": 128
               }
             }
           }

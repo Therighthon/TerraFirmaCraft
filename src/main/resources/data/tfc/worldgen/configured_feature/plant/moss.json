@@ -41,10 +41,11 @@
             "decorator": {
               "type": "tfc:climate",
               "config": {
-                "min_temperature": -7,
-                "max_temperature": 30,
+                "min_temperature": -10,
+                "max_temperature": 32,
                 "min_rainfall": 250,
-                "max_rainfall": 450
+                "max_rainfall": 500,
+                "needs_forest": false
               }
             }
           }
