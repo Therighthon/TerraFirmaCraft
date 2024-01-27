@@ -44,7 +44,8 @@ public class TigerModel extends FelinePredatorModel<FelinePredator>
 
     public TigerModel(ModelPart root)
     {
-        super(root, SabertoothModel.SLEEP, SabertoothModel.WALK, SabertoothModel.RUN, SabertoothModel.ATTACK);
+        //TODO: Check crouch animation works for all animals
+        super(root, SabertoothModel.SLEEP, SabertoothModel.WALK, SabertoothModel.RUN, SabertoothModel.ATTACK, CougarModel.CROUCH);
         this.body = root.getChild("body");
         this.neck = body.getChild("neck");
         this.rear = body.getChild("rear");

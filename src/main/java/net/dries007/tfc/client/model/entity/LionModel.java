@@ -143,7 +143,8 @@ public class LionModel extends FelinePredatorModel<FelinePredator>
 
     public LionModel(ModelPart root)
     {
-        super(root, SLEEP, WALK, RUN, ATTACK);
+        //TODO: Check crouch animation works for all animals
+        super(root, SLEEP, WALK, RUN, ATTACK, CougarModel.CROUCH);
         this.body = root.getChild("body");
         this.neck = body.getChild("neck");
         this.tail = body.getChild("tail");

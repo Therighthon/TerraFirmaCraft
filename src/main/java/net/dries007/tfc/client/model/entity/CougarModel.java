@@ -151,7 +151,7 @@ public class CougarModel extends FelinePredatorModel<FelinePredator>
 
     public CougarModel(ModelPart root)
     {
-        super(root, SLEEP, WALK, RUN, ATTACK);
+        super(root, SLEEP, WALK, RUN, ATTACK, CROUCH);
         this.body = root.getChild("body");
         this.neck = body.getChild("neck");
         this.rear = body.getChild("rear");
