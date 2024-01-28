@@ -42,7 +42,7 @@ public class FelinePredatorAi
     public static final int STALK_START_DIST_SQR = 400;
     public static final int STALK_END_DIST_SQR = 16;
     public static final float CROUCH_SPEED = 0.5f;
-    public static final float SPRINT_SPEED = 0.5f;
+    public static final float SPRINT_SPEED = 1.15f;
 
     public static final ImmutableList<SensorType<? extends Sensor<? super FelinePredator>>> SENSOR_TYPES = Util.make(() -> {
         List<SensorType<? extends Sensor<? super FelinePredator>>> list = Lists.newArrayList(PredatorAi.SENSOR_TYPES);
