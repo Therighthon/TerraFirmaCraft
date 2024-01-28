@@ -52,7 +52,7 @@ public class LeapAtAttackTargetBehavior<E extends LivingEntity> extends Behavior
                     if (newMovement.lengthSqr() > 1.0E-7D)
                     {
                         //Does not take into account mob starting speed like vanilla, rather bases speed entirely on the distance to the target
-                        newMovement = newMovement.scale(0.4D);
+                        newMovement = newMovement.scale(0.25D);
                     }
                     predator.setDeltaMovement(newMovement.x, (double) jumpHeight, newMovement.z);
                 }

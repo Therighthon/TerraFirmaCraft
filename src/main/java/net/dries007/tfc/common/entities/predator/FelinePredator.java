@@ -26,40 +26,31 @@ import net.dries007.tfc.common.entities.ai.predator.FelinePredatorAi;
 
 public class FelinePredator extends Predator
 {
-    //TODO: Incorporate these into behavior properly or remove
-    private final float crouchSpeed;
-    private final float sprintSpeed;
-    private final int pounceDistanceSquared;
-
     public static final EntityDataAccessor<Boolean> DATA_CLIMBING = SynchedEntityData.defineId(FelinePredator.class, EntityDataSerializers.BOOLEAN);
 
     public static FelinePredator createCougar(EntityType<? extends Predator> type, Level level)
     {
-        return new FelinePredator(type, level, false, 36, 0.52f, 1.15f, TFCSounds.COUGAR);
+        return new FelinePredator(type, level, false, TFCSounds.COUGAR);
     }
 
     public static FelinePredator createLion(EntityType<? extends Predator> type, Level level)
     {
-        return new FelinePredator(type, level, false, 36, 0.52f, 1.15f, TFCSounds.LION);
+        return new FelinePredator(type, level, false, TFCSounds.LION);
     }
 
     public static FelinePredator createSabertooth(EntityType<? extends Predator> type, Level level)
     {
-        return new FelinePredator(type, level, false, 36, 0.52f, 1.15f, TFCSounds.SABERTOOTH);
+        return new FelinePredator(type, level, false, TFCSounds.SABERTOOTH);
     }
 
     public static FelinePredator createTiger(EntityType<? extends Predator> type, Level level)
     {
-        return new FelinePredator(type, level, false, 36, 0.52f, 1.15f, TFCSounds.TIGER);
+        return new FelinePredator(type, level, false, TFCSounds.TIGER);
     }
 
-    public FelinePredator(EntityType<? extends Predator> type, Level level, boolean diurnal, int attackDistanceSquared, float crouchSpeed, float sprintSpeed, TFCSounds.EntitySound sounds)
+    public FelinePredator(EntityType<? extends Predator> type, Level level, boolean diurnal, TFCSounds.EntitySound sounds)
     {
         super(type, level, diurnal, sounds);
-
-        this.crouchSpeed = crouchSpeed;
-        this.sprintSpeed = sprintSpeed;
-        this.pounceDistanceSquared = attackDistanceSquared;
     }
 
     @Override
@@ -135,20 +126,5 @@ public class FelinePredator extends Predator
     public boolean onClimbable()
     {
         return isClimbing();
-    }
-
-    public int getPounceDistanceSquared()
-    {
-        return this.pounceDistanceSquared;
-    }
-
-    public float getCrouchSpeed()
-    {
-        return this.crouchSpeed;
-    }
-
-    public float getSprintSpeed()
-    {
-        return this.sprintSpeed;
     }
 }

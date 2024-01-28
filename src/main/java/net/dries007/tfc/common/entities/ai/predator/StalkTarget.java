@@ -37,7 +37,7 @@ public class StalkTarget<E extends LivingEntity> extends Behavior<E>
     protected boolean canStillUse(ServerLevel level, LivingEntity predator, long time)
     {
         Brain<?> brain = predator.getBrain();
-        //Should not sneak up on something that has attacked them
+        //Should not sneak up on something that has already attacked them
         Optional<LivingEntity> targetOpt = brain.getMemory(MemoryModuleType.ATTACK_TARGET);
         if (targetOpt.isPresent())
         {

@@ -40,6 +40,9 @@ import net.dries007.tfc.common.entities.predator.Predator;
 public class FelinePredatorAi
 {
     public static final int STALK_START_DIST_SQR = 400;
+    public static final int STALK_END_DIST_SQR = 16;
+    public static final float CROUCH_SPEED = 0.5f;
+    public static final float SPRINT_SPEED = 0.5f;
 
     public static final ImmutableList<SensorType<? extends Sensor<? super FelinePredator>>> SENSOR_TYPES = Util.make(() -> {
         List<SensorType<? extends Sensor<? super FelinePredator>>> list = Lists.newArrayList(PredatorAi.SENSOR_TYPES);
@@ -57,14 +60,7 @@ public class FelinePredatorAi
         initHuntActivity(brain);
         PredatorAi.initRetreatActivity(brain);
         PredatorAi.initRestActivity(brain);
-        if (predator instanceof FelinePredator)
-        {
-            initFightActivity(brain, ((FelinePredator) predator).getCrouchSpeed(), ((FelinePredator) predator).getSprintSpeed(), ((FelinePredator) predator).getPounceDistanceSquared());
-        }
-        else
-        {
-            initFightActivity(brain, 0.52f, 1.15f, 25);
-        }
+        initFightActivity(brain);
 
         brain.setSchedule(predator.diurnal ? TFCBrain.DIURNAL.get() : TFCBrain.NOCTURNAL.get());
         brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
@@ -98,13 +94,13 @@ public class FelinePredatorAi
         ));
     }
 
-    public static void initFightActivity(Brain<? extends Predator> brain, float crouchSpeed, float sprintSpeed, int stalkEndDistSquared)
+    public static void initFightActivity(Brain<? extends Predator> brain)
     {
         brain.addActivityAndRemoveMemoriesWhenStopped(Activity.FIGHT, ImmutableList.of(
             Pair.of(0, PredatorBehaviors.becomePassiveIf(p -> p.getHealth() < 5f, 200)),
-            Pair.of(1, new StalkTarget<>(STALK_START_DIST_SQR, stalkEndDistSquared, crouchSpeed)),
-            Pair.of(2, new LeapAtAttackTargetBehavior<>(4, stalkEndDistSquared, 0.4f)),
-            Pair.of(3, SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(sprintSpeed)),
+            Pair.of(1, new StalkTarget<>(STALK_START_DIST_SQR, STALK_END_DIST_SQR, CROUCH_SPEED)),
+            Pair.of(2, new LeapAtAttackTargetBehavior<>(4, STALK_END_DIST_SQR, 0.4f)),
+            Pair.of(3, SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(SPRINT_SPEED)),
             Pair.of(4, MeleeAttack.create(40)),
             Pair.of(5, PredatorBehaviors.stopAttackingIfTooFarFromHome())
         ),
