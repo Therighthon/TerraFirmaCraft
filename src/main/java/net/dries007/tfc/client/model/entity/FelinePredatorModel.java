@@ -57,7 +57,6 @@ public class FelinePredatorModel<E extends FelinePredator> extends HierarchicalA
                 final float speed = getAdjustedLandSpeed(predator);
                 if (speed < 0.8f)
                 {
-                    TerraFirmaCraft.LOGGER.debug("I am sneak"); //TODO; remove
                     this.animateWalk(sneak, limbSwing, limbSwingAmount, 1f, 2.5f);
                 }
                 else
