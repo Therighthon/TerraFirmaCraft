@@ -55,7 +55,7 @@ public class FelinePredatorModel<E extends FelinePredator> extends HierarchicalA
             else
             {
                 final float speed = getAdjustedLandSpeed(predator);
-                if (speed < 0.8f)
+                if (speed < 0.9f)
                 {
                     this.animateWalk(sneak, limbSwing, limbSwingAmount, 1f, 2.5f);
                 }

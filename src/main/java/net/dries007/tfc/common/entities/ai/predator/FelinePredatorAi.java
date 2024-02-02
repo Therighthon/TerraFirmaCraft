@@ -98,7 +98,7 @@ public class FelinePredatorAi
     {
         brain.addActivityAndRemoveMemoriesWhenStopped(Activity.FIGHT, ImmutableList.of(
             Pair.of(0, PredatorBehaviors.becomePassiveIf(p -> p.getHealth() < 5f, 200)),
-            Pair.of(1, new StalkTarget<>(STALK_START_DIST_SQR, STALK_END_DIST_SQR, CROUCH_SPEED)),
+            Pair.of(1, new StalkTarget<>(STALK_START_DIST_SQR, STALK_END_DIST_SQR, CROUCH_SPEED, SPRINT_SPEED)),
             Pair.of(2, new LeapAtAttackTargetBehavior<>(4, STALK_END_DIST_SQR, 0.4f)),
             Pair.of(3, SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(SPRINT_SPEED)),
             Pair.of(4, MeleeAttack.create(40)),

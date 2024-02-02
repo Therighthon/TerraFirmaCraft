@@ -25,11 +25,13 @@ public class StalkTarget<E extends LivingEntity> extends Behavior<E>
     private final int startStalkDistanceSqr;
     private final int endStalkDistanceSqr;
     private final float sneakSpeed;
+    private final float sprintSpeed;
 
-    public StalkTarget(int startStalkDistanceSqr, int endStalkDistanceSqr, float sneakSpeed)
+    public StalkTarget(int startStalkDistanceSqr, int endStalkDistanceSqr, float sneakSpeed, float sprintSpeed)
     {
-        super(ImmutableMap.of(MemoryModuleType.ATTACK_TARGET, MemoryStatus.VALUE_PRESENT));
+        super(ImmutableMap.of(MemoryModuleType.ATTACK_TARGET, MemoryStatus.VALUE_PRESENT, MemoryModuleType.HURT_BY_ENTITY, MemoryStatus.VALUE_ABSENT));
         this.sneakSpeed = sneakSpeed;
+        this.sprintSpeed = sprintSpeed;
         this.endStalkDistanceSqr = endStalkDistanceSqr;
         this.startStalkDistanceSqr = startStalkDistanceSqr;
     }
@@ -37,15 +39,10 @@ public class StalkTarget<E extends LivingEntity> extends Behavior<E>
     protected boolean canStillUse(ServerLevel level, LivingEntity predator, long time)
     {
         Brain<?> brain = predator.getBrain();
-        //Should not sneak up on something that has already attacked them
         Optional<LivingEntity> targetOpt = brain.getMemory(MemoryModuleType.ATTACK_TARGET);
         if (targetOpt.isPresent())
         {
             LivingEntity target = targetOpt.get();
-            if (brain.getMemory(MemoryModuleType.HURT_BY_ENTITY).isPresent() && target == brain.getMemory(MemoryModuleType.HURT_BY_ENTITY).get())
-            {
-                return false;
-            }
             int targetDist = (int)predator.distanceToSqr(target);
             return (targetDist >= endStalkDistanceSqr && targetDist <= startStalkDistanceSqr);
         }
@@ -59,7 +56,14 @@ public class StalkTarget<E extends LivingEntity> extends Behavior<E>
         if (targetOpt.isPresent())
         {
             LivingEntity target = targetOpt.get();
-            brain.setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(target.blockPosition(), this.sneakSpeed, 0));
+            if (brain.checkMemory(MemoryModuleType.HURT_BY_ENTITY, MemoryStatus.VALUE_ABSENT))
+            {
+                brain.setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(target.blockPosition(), this.sneakSpeed, 0));
+            }
+            else
+            {
+                brain.setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(target.blockPosition(), this.sprintSpeed, 0));
+            }
         }
     }
 }
