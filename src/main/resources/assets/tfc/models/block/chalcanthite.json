@@ -1,0 +1,8 @@
+{
+  "__comment__": "This file was automatically created by mcresources",
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "0": "tfc:block/chalcanthite",
+    "particle": "tfc:block/chalcanthite"
+  }
+}

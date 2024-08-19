@@ -1017,7 +1017,6 @@ def generate(rm: ResourceManager):
             }), path='deposit', loot_type='minecraft:empty')
 
     rm.item_model(('pan', 'filled'), {'particle': 'tfc:item/pan/interior'}, parent='tfc:item/entity_with_transforms').with_lang(lang('Filled Pan'))
-
     rm.item_model('handstone', parent='tfc:item/handstone_healthy', no_textures=True, overrides=[override('tfc:item/handstone_damaged', 'tfc:damaged')]).with_lang(lang('handstone'))
     rm.item_model('handstone_damaged', {'handstone': 'tfc:block/devices/quern/handstone_top_damaged', 'particle': 'tfc:block/devices/quern/handstone_top_damaged', 'side': 'tfc:block/devices/quern/handstone_side_damaged'}, parent='tfc:item/handstone_healthy')
 
@@ -2152,20 +2151,31 @@ def generate(rm: ResourceManager):
         item.with_lang(lang('molten %s bucket', metal))
 
     # Thin Spikes: Calcite + Icicles
-    for variant, texture in (('calcite', 'tfc:block/calcite'), ('icicle', 'minecraft:block/ice')):
+    for variant, texture in (('calcite', 'tfc:block/calcite'), ('icicle', 'minecraft:block/ice'), ('chalcanthite', 'tfc:block/chalcanthite')):
         block = rm.blockstate(variant, variants={
             'tip=true': {'model': 'tfc:block/%s_tip' % variant},
             'tip=false': {'model': 'tfc:block/%s' % variant}
         })
         rm.item_model(variant)
         block.with_lang(lang(variant))
-
-        rm.block_model(variant, textures={'0': texture, 'particle': texture}, parent='tfc:block/thin_spike')
-        rm.block_model(variant + '_tip', textures={'0': texture, 'particle': texture}, parent='tfc:block/thin_spike_tip')
+        if (variant == 'chalcanthite'):
+            rm.block_model(variant, textures={'0': texture, 'particle': texture}, parent='minecraft:block/cross')
+            rm.block_model(variant + '_tip', textures={'0': texture + '_tip', 'particle': texture}, parent='minecraft:block/cross')
+        else:
+            rm.block_model(variant, textures={'0': texture, 'particle': texture}, parent='tfc:block/thin_spike')
+            rm.block_model(variant + '_tip', textures={'0': texture, 'particle': texture}, parent='tfc:block/thin_spike_tip')
 
     for color in ('tube', 'brain', 'bubble', 'fire', 'horn'):
         corals(rm, color, False)
         corals(rm, color, True)
+
+    # Crystal Clusters
+    for variant in ('amethyst'):
+        name = variant + '_cluster'
+        texture = 'tfc:block/' + name
+        rm.blockstate(name, model='tfc:block/' + name, variants=six_rotations(texture)).with_lang(lang(name)).with_block_loot('tfc:' + name)
+        rm.block_model(name, parent='minecraft:block/cross', textures={'cross': texture})
+        rm.item_model(name)
 
     rm.blockstate('bellows', model='tfc:block/bellows', variants=four_rotations('tfc:block/bellows', (270, 180, None, 90))).with_lang(lang('Bellows')).with_block_loot('tfc:bellows')
 
@@ -2272,6 +2282,16 @@ def four_rotations(model: str, rots: Tuple[Any, Any, Any, Any], suffix: str = ''
         '%sfacing=north%s' % (prefix, suffix): {'model': model, 'y': rots[1]},
         '%sfacing=south%s' % (prefix, suffix): {'model': model, 'y': rots[2]},
         '%sfacing=west%s' % (prefix, suffix): {'model': model, 'y': rots[3]}
+    }
+
+def six_rotations(model: str, suffix: str = '', prefix: str = '') -> Dict[str, Dict[str, Any]]:
+    return {
+        '%sfacing=down%s' % (prefix, suffix): {'model': model, 'x': 180},
+        '%sfacing=east%s' % (prefix, suffix): {'model': model, 'x': 90, 'y': 90},
+        '%sfacing=north%s' % (prefix, suffix): {'model': model, 'x': 90},
+        '%sfacing=south%s' % (prefix, suffix): {'model': model, 'x': 90, 'y': 180},
+        '%sfacing=up%s' % (prefix, suffix): {'model': model},
+        '%sfacing=west%s' % (prefix, suffix): {'model': model, 'x': 90, 'y': 270},
     }
 
 def crop_yield(lo: int, hi: Tuple[int, int]) -> utils.Json:
