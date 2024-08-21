@@ -8,7 +8,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tfc:y_cluster"
+          "name": "tfc:ruby_cluster"
         }
       ],
       "conditions": [

@@ -2156,12 +2156,14 @@ def generate(rm: ResourceManager):
             'tip=true': {'model': 'tfc:block/%s_tip' % variant},
             'tip=false': {'model': 'tfc:block/%s' % variant}
         })
-        rm.item_model(variant)
+
         block.with_lang(lang(variant))
         if (variant == 'chalcanthite'):
-            rm.block_model(variant, textures={'0': texture, 'particle': texture}, parent='minecraft:block/cross')
-            rm.block_model(variant + '_tip', textures={'0': texture + '_tip', 'particle': texture}, parent='minecraft:block/cross')
+            rm.item_model(variant, texture + '_tip')
+            rm.block_model(variant, parent='minecraft:block/cross', textures={'cross': texture})
+            rm.block_model(variant + '_tip', parent='minecraft:block/cross', textures={'cross': texture + '_tip'})
         else:
+            rm.item_model(variant)
             rm.block_model(variant, textures={'0': texture, 'particle': texture}, parent='tfc:block/thin_spike')
             rm.block_model(variant + '_tip', textures={'0': texture, 'particle': texture}, parent='tfc:block/thin_spike_tip')
 
@@ -2170,12 +2172,12 @@ def generate(rm: ResourceManager):
         corals(rm, color, True)
 
     # Crystal Clusters
-    for variant in ('amethyst'):
+    for variant in ('amethyst', 'ruby', 'sapphire', 'emerald', 'topaz', 'pyrite', 'sulfur', 'halite'):
         name = variant + '_cluster'
         texture = 'tfc:block/' + name
         rm.blockstate(name, model='tfc:block/' + name, variants=six_rotations(texture)).with_lang(lang(name)).with_block_loot('tfc:' + name)
         rm.block_model(name, parent='minecraft:block/cross', textures={'cross': texture})
-        rm.item_model(name)
+        rm.item_model(name, texture)
 
     rm.blockstate('bellows', model='tfc:block/bellows', variants=four_rotations('tfc:block/bellows', (270, 180, None, 90))).with_lang(lang('Bellows')).with_block_loot('tfc:bellows')
 

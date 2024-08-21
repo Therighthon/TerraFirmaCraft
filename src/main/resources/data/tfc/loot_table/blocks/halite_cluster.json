@@ -8,7 +8,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tfc:s_cluster"
+          "name": "tfc:halite_cluster"
         }
       ],
       "conditions": [

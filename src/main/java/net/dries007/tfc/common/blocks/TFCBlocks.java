@@ -198,16 +198,17 @@ public final class TFCBlocks
     public static final Id<ThinSpikeBlock> ICICLE = register("icicle", () -> new IcicleBlock(Properties.of().mapColor(MapColor.ICE).pushReaction(PushReaction.DESTROY).noLootTable().strength(0.4f).sound(SoundType.GLASS).noOcclusion().randomTicks()));
 
     public static final Id<ThinSpikeBlock> CALCITE = register("calcite", () -> new ThinSpikeBlock(Properties.of().mapColor(MapColor.ICE).pushReaction(PushReaction.DESTROY).noLootTable().strength(0.2f).sound(TFCSounds.THIN)));
-    public static final Id<ThinSpikeBlock> CHALCANTHITE = register("chalcanthite", () -> new ThinSpikeBlock(Properties.of().mapColor(MapColor.ICE).pushReaction(PushReaction.DESTROY).noLootTable().strength(0.2f).sound(TFCSounds.THIN)));
+    public static final Id<ThinSpikeBlock> CHALCANTHITE = register("chalcanthite", () -> new ThinSpikeBlock(Properties.of().mapColor(MapColor.COLOR_BLUE).pushReaction(PushReaction.DESTROY).noLootTable().strength(0.2f).sound(TFCSounds.THIN)));
 
-    public static final Id<AmethystClusterBlock> AMETHYST_CLUSTER = register("amethyst_cluster", () -> new AmethystClusterBlock(0f, 0f, Blocks.AMETHYST_CLUSTER.properties()));
-    public static final Id<AmethystClusterBlock> PYRITE_CLUSTER = register("pyrite_cluster", () -> new AmethystClusterBlock(0f, 0f, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.GOLD)));
-    public static final Id<AmethystClusterBlock> EMERALD_CLUSTER = register("emerald_cluster", () -> new AmethystClusterBlock(0f, 0f, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.EMERALD)));
-    public static final Id<AmethystClusterBlock> RUBY_CLUSTER = register("ruby_cluster", () -> new AmethystClusterBlock(0f, 0f, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_RED)));
-    public static final Id<AmethystClusterBlock> TOPAZ_CLUSTER = register("topaz_cluster", () -> new AmethystClusterBlock(0f, 0f, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_ORANGE)));
-    public static final Id<AmethystClusterBlock> SAPPHIRE_CLUSTER = register("sapphire_cluster", () -> new AmethystClusterBlock(0f, 0f, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_BLUE)));
+    public static final Id<AmethystClusterBlock> AMETHYST_CLUSTER = register("amethyst_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties()));
+    public static final Id<AmethystClusterBlock> PYRITE_CLUSTER = register("pyrite_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.GOLD)));
+    public static final Id<AmethystClusterBlock> EMERALD_CLUSTER = register("emerald_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.EMERALD)));
+    public static final Id<AmethystClusterBlock> RUBY_CLUSTER = register("ruby_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_RED)));
+    public static final Id<AmethystClusterBlock> TOPAZ_CLUSTER = register("topaz_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_ORANGE)));
+    public static final Id<AmethystClusterBlock> SAPPHIRE_CLUSTER = register("sapphire_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_BLUE)));
 
-    public static final Id<AmethystClusterBlock> SULFUR_CLUSTER = register("sulfur_cluster", () -> new AmethystClusterBlock(0f, 0f, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_YELLOW)));
+    public static final Id<AmethystClusterBlock> SULFUR_CLUSTER = register("sulfur_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.COLOR_YELLOW)));
+    public static final Id<AmethystClusterBlock> HALITE_CLUSTER = register("halite_cluster", () -> new AmethystClusterBlock(7.0F, 3.0F, Blocks.AMETHYST_CLUSTER.properties().mapColor(MapColor.TERRACOTTA_WHITE)));
 
     // Ores
 

@@ -8,7 +8,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tfc:t_cluster"
+          "name": "tfc:pyrite_cluster"
         }
       ],
       "conditions": [

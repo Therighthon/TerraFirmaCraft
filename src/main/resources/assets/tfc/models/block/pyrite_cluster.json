@@ -1,7 +1,7 @@
 {
   "__comment__": "This file was automatically created by mcresources",
-  "parent": "item/generated",
+  "parent": "minecraft:block/cross",
   "textures": {
-    "layer0": "tfc:item/m_cluster"
+    "cross": "tfc:block/pyrite_cluster"
   }
 }

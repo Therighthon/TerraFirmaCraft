@@ -371,6 +371,18 @@ public final class ClientEventHandler
         TFCBlocks.GRADED_ORES.values().forEach(map -> map.values().forEach(inner -> inner.values().forEach(reg -> ItemBlockRenderTypes.setRenderLayer(reg.get(), cutout))));
         TFCBlocks.ORE_DEPOSITS.values().forEach(map -> map.values().forEach(reg -> ItemBlockRenderTypes.setRenderLayer(reg.get(), cutout)));
 
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.CHALCANTHITE.get(), cutout);
+
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.SULFUR_CLUSTER.get(), cutout);
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.HALITE_CLUSTER.get(), cutout);
+
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.AMETHYST_CLUSTER.get(), cutout);
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.EMERALD_CLUSTER.get(), cutout);
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.SAPPHIRE_CLUSTER.get(), cutout);
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.RUBY_CLUSTER.get(), cutout);
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.PYRITE_CLUSTER.get(), cutout);
+        ItemBlockRenderTypes.setRenderLayer(TFCBlocks.TOPAZ_CLUSTER.get(), cutout);
+
         // Wood blocks
         final Predicate<RenderType> leafPredicate = layer -> Minecraft.useFancyGraphics() ? layer == cutoutMipped : layer == solid;
         TFCBlocks.WOODS.values().forEach(map -> {

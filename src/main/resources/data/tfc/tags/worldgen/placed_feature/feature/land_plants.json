@@ -17,7 +17,6 @@
     "#tfc:feature/crops",
     "#tfc:feature/forest_plants",
     "tfc:plant/arundo_forest",
-    "tfc:plant/dry_phragmite_forest",
     "tfc:surface_grasses",
     "tfc:plant/allium_patch",
     "tfc:plant/anthurium_patch",

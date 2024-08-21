@@ -2,28 +2,28 @@
   "__comment__": "This file was automatically created by mcresources",
   "variants": {
     "facing=down": {
-      "model": "tfc:block/y_cluster",
+      "model": "tfc:block/pyrite_cluster",
       "x": 180
     },
     "facing=east": {
-      "model": "tfc:block/y_cluster",
+      "model": "tfc:block/pyrite_cluster",
       "x": 90,
       "y": 90
     },
     "facing=north": {
-      "model": "tfc:block/y_cluster",
+      "model": "tfc:block/pyrite_cluster",
       "x": 90
     },
     "facing=south": {
-      "model": "tfc:block/y_cluster",
+      "model": "tfc:block/pyrite_cluster",
       "x": 90,
       "y": 180
     },
     "facing=up": {
-      "model": "tfc:block/y_cluster"
+      "model": "tfc:block/pyrite_cluster"
     },
     "facing=west": {
-      "model": "tfc:block/y_cluster",
+      "model": "tfc:block/pyrite_cluster",
       "x": 90,
       "y": 270
     }
