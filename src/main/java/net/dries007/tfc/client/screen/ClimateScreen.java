@@ -14,6 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import net.dries007.tfc.client.ClientHelpers;
 import net.dries007.tfc.client.ClimateRenderCache;
 import net.dries007.tfc.client.screen.button.PlayerInventoryTabButton;
 import net.dries007.tfc.common.container.Container;
@@ -57,13 +58,16 @@ public class ClimateScreen extends TFCContainerScreen<Container>
         // Climate at the current player
         final float averageTemp = ClimateRenderCache.INSTANCE.getAverageTemperature();
         final float rainfall = ClimateRenderCache.INSTANCE.getRainfall();
+        final float rainVar = ClimateRenderCache.INSTANCE.getRainVariance();
         final float currentTemp = ClimateRenderCache.INSTANCE.getTemperature();
 
         final TemperatureDisplayStyle style = TFCConfig.CLIENT.climateTooltipStyle.get();
 
-        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_koppen_climate_classification", Helpers.translateEnum(KoppenClimateClassification.classify(averageTemp, rainfall))), 19);
-        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_average_temperature", style.format(averageTemp, true)), 30);
-        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_annual_rainfall", String.format("%.1f", rainfall)), 41);
-        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_current_temp", style.format(currentTemp, true)), 52);
+        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_koppen_climate_classification", Helpers.translateEnum(KoppenClimateClassification.classify(averageTemp, rainfall, rainVar))), 16);
+        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_average_temperature", style.format(averageTemp, true)), 27);
+        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_annual_rainfall", String.format("%.0f", rainfall)), 38);
+        drawCenteredLine(stack, Component.translatable(rainVar > 0 ? "tfc.tooltip.climate_peak_rainfall_summer" : "tfc.tooltip.climate_peak_rainfall_winter", String.format("%.0f", rainfall * (1 + Math.abs(rainVar)))), 49);
+        drawCenteredLine(stack, Component.translatable("tfc.tooltip.climate_current_temp", style.format(currentTemp, true)), 60);
     }
+
 }
