@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import net.dries007.tfc.test.TestSetup;
+import net.dries007.tfc.util.climate.KoppenClimateClassification;
 import net.dries007.tfc.world.region.ChooseRocks;
 import net.dries007.tfc.world.region.Region;
 import net.dries007.tfc.world.region.RegionGenerator;
@@ -129,6 +130,10 @@ public class RegionGeneratorTests implements TestSetup
         {
             return biomeColor(point.biome);
         }
+        if (task == ANNOTATE_KOPPEN)
+        {
+            return koppenColor(point.temperature, point.rainfall, point.rainfallVariance, point.land());
+        }
         if (task == CHOOSE_ROCKS)
         {
             final double value = new Random(point.rock >> 2).nextDouble();
@@ -214,9 +219,59 @@ public class RegionGeneratorTests implements TestSetup
         return Color.BLACK;
     }
 
+    private Color koppenColor(float avgTemp, float avgRain, float rainVar, boolean isLand)
+    {
+        if (!isLand)
+        {
+            return Color.BLACK;
+        }
+        KoppenClimateClassification koppen = KoppenClimateClassification.classify(avgTemp, avgRain, rainVar);
+        if (koppen == KoppenClimateClassification.AF) return new Color(0, 0, 220);
+        if (koppen == KoppenClimateClassification.AS) return new Color(0, 100, 240);
+        if (koppen == KoppenClimateClassification.AW) return new Color(0, 150, 220);
+        if (koppen == KoppenClimateClassification.AM) return new Color(40, 80, 200);
+
+        if (koppen == KoppenClimateClassification.BWH) return new Color(210, 0, 0);
+        if (koppen == KoppenClimateClassification.BSH) return new Color(210, 120, 0);
+        if (koppen == KoppenClimateClassification.BWK) return new Color(200, 80, 80);
+        if (koppen == KoppenClimateClassification.BSK) return new Color(200, 120, 60);
+
+        if (koppen == KoppenClimateClassification.CSA) return new Color(250, 250, 0);
+        if (koppen == KoppenClimateClassification.CSB) return new Color(180, 180, 0);
+        if (koppen == KoppenClimateClassification.CSC) return new Color(120, 120, 0);
+
+        if (koppen == KoppenClimateClassification.CWA) return new Color(100, 240, 130);
+        if (koppen == KoppenClimateClassification.CWB) return new Color(80, 210, 120);
+        if (koppen == KoppenClimateClassification.CWC) return new Color(70, 160, 110);
+
+        if (koppen == KoppenClimateClassification.CFA) return new Color(170, 240, 90);
+        if (koppen == KoppenClimateClassification.CFB) return new Color(140, 200, 80);
+        if (koppen == KoppenClimateClassification.CFC) return new Color(110, 170, 70);
+
+        if (koppen == KoppenClimateClassification.DSA) return new Color(190, 20, 190);
+        if (koppen == KoppenClimateClassification.DSB) return new Color(160, 20, 180);
+        if (koppen == KoppenClimateClassification.DSC) return new Color(130, 20, 170);
+        if (koppen == KoppenClimateClassification.DSD) return new Color(100, 20, 160);
+
+        if (koppen == KoppenClimateClassification.DFA) return new Color(40, 190, 190);
+        if (koppen == KoppenClimateClassification.DFB) return new Color(30, 170, 170);
+        if (koppen == KoppenClimateClassification.DFC) return new Color(20, 150, 140);
+        if (koppen == KoppenClimateClassification.DFD) return new Color(10, 130, 110);
+
+        if (koppen == KoppenClimateClassification.DWA) return new Color(80, 80, 220);
+        if (koppen == KoppenClimateClassification.DWB) return new Color(70, 70, 190);
+        if (koppen == KoppenClimateClassification.DWC) return new Color(60, 60, 160);
+        if (koppen == KoppenClimateClassification.DWD) return new Color(60, 60, 130);
+
+        if (koppen == KoppenClimateClassification.ET) return new Color(190, 190, 190);
+        if (koppen == KoppenClimateClassification.EF) return new Color(80, 80, 80);
+
+        return Color.BLACK;
+    }
+
     //Set startup arguments, including seed, here
     private RegionGenerator newRegionGenerator()
     {
-        return new RegionGenerator(new Settings(false, 0, 0, 0, 20_000, 0, 20_000, 10_000, 0, null, 0.5f, 0.5f), new XoroshiroRandomSource(1798237841231L));
+        return new RegionGenerator(new Settings(false, 0, 0, 0, 20_000, 0, 20_000, 0, null, 0.5f, 0.5f), new XoroshiroRandomSource(1798237841231L));
     }
 }
