@@ -7,6 +7,7 @@
 package net.dries007.tfc.util.climate;
 
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.material.MapColor;
 
 /**
  * This is purely used for decoration
@@ -15,37 +16,56 @@ import net.minecraft.util.Mth;
  */
 public enum KoppenClimateClassification
 {
-    AF,
-    AM,
-    AW,
-    AS,
-    BWH,
-    BWK,
-    BSH,
-    BSK,
-    CSA,
-    CSB,
-    CSC,
-    CWA,
-    CWB,
-    CWC,
-    CFA,
-    CFB,
-    CFC,
-    DSA,
-    DSB,
-    DSC,
-    DSD,
-    DWA,
-    DWB,
-    DWC,
-    DWD,
-    DFA,
-    DFB,
-    DFC,
-    DFD,
-    ET,
-    EF;
+    AF(MapColor.PLANT, MapColor.Brightness.HIGH),
+    AM(MapColor.LAPIS, MapColor.Brightness.LOW),
+    AW(MapColor.LAPIS, MapColor.Brightness.HIGH),
+    AS(MapColor.COLOR_CYAN, MapColor.Brightness.HIGH),
+    BWH(MapColor.FIRE, MapColor.Brightness.NORMAL),
+    BWK(MapColor.CRIMSON_NYLIUM, MapColor.Brightness.NORMAL),
+    BSH(MapColor.COLOR_ORANGE, MapColor.Brightness.HIGH),
+    BSK(MapColor.COLOR_ORANGE, MapColor.Brightness.LOW),
+    CSA(MapColor.COLOR_YELLOW, MapColor.Brightness.NORMAL),
+    CSB(MapColor.COLOR_YELLOW, MapColor.Brightness.LOW),
+    CSC(MapColor.COLOR_YELLOW, MapColor.Brightness.LOWEST),
+    CWA(MapColor.DIAMOND, MapColor.Brightness.HIGH),
+    CWB(MapColor.DIAMOND, MapColor.Brightness.NORMAL),
+    CWC(MapColor.DIAMOND, MapColor.Brightness.LOW),
+    CFA(MapColor.GRASS, MapColor.Brightness.HIGH),
+    CFB(MapColor.GRASS, MapColor.Brightness.NORMAL),
+    CFC(MapColor.GRASS, MapColor.Brightness.LOW),
+    DSA(MapColor.TERRACOTTA_YELLOW, MapColor.Brightness.HIGH),
+    DSB(MapColor.TERRACOTTA_YELLOW, MapColor.Brightness.NORMAL),
+    DSC(MapColor.TERRACOTTA_YELLOW, MapColor.Brightness.LOW),
+    DSD(MapColor.TERRACOTTA_YELLOW, MapColor.Brightness.LOWEST),
+    DWA(MapColor.ICE, MapColor.Brightness.HIGH),
+    DWB(MapColor.ICE, MapColor.Brightness.NORMAL),
+    DWC(MapColor.ICE, MapColor.Brightness.LOW),
+    DWD(MapColor.ICE, MapColor.Brightness.LOWEST),
+    DFA(MapColor.COLOR_GREEN, MapColor.Brightness.HIGH),
+    DFB(MapColor.COLOR_GREEN, MapColor.Brightness.NORMAL),
+    DFC(MapColor.COLOR_GREEN, MapColor.Brightness.LOW),
+    DFD(MapColor.COLOR_GREEN, MapColor.Brightness.LOWEST),
+    ET(MapColor.SNOW, MapColor.Brightness.LOW),
+    EF(MapColor.COLOR_LIGHT_GRAY, MapColor.Brightness.LOW);
+
+    private final MapColor color;
+    private final MapColor.Brightness brightness;
+
+    KoppenClimateClassification(MapColor color, MapColor.Brightness brightness)
+    {
+        this.color = color;
+        this.brightness = brightness;
+    }
+
+    public MapColor getColor()
+    {
+        return this.color;
+    }
+
+    public MapColor.Brightness getBrightness()
+    {
+        return this.brightness;
+    }
 
     public static KoppenClimateClassification classify(float averageTemperature, float rainfall, float rainVar)
     {

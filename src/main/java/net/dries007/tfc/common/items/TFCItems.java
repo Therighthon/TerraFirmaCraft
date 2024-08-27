@@ -10,12 +10,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.EmptyMapItem;
 import net.minecraft.world.item.HangingSignItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
@@ -24,6 +26,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.MobBucketItem;
 import net.minecraft.world.item.SignItem;
 import net.minecraft.world.item.StandingAndWallBlockItem;
+import net.minecraft.world.item.component.MapDecorations;
+import net.minecraft.world.item.component.MapItemColor;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
@@ -170,6 +174,9 @@ public final class TFCItems
     public static final ItemId DEAD_TORCH = register("dead_torch", () -> new StandingAndWallBlockItem(TFCBlocks.DEAD_TORCH.get(), TFCBlocks.DEAD_WALL_TORCH.get(), new Properties(), Direction.DOWN));
 
     // Misc
+
+    public static final ItemId MAP = register((String)"map", () -> new TFCEmptyMapItem(new Item.Properties()));
+    public static final ItemId FILLED_MAP = register("filled_map", () -> new TFCMapItem((new Item.Properties()).component(DataComponents.MAP_COLOR, MapItemColor.DEFAULT).component(DataComponents.MAP_DECORATIONS, MapDecorations.EMPTY)));
 
     public static final Map<HideItemType, Map<HideItemType.Size, ItemId>> HIDES = Helpers.mapOf(HideItemType.class, type ->
         Helpers.mapOf(HideItemType.Size.class, size ->

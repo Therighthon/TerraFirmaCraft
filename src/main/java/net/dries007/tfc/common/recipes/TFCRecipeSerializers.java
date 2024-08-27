@@ -12,6 +12,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -49,6 +50,8 @@ public class TFCRecipeSerializers
     public static final Id<BlastFurnaceRecipe> BLAST_FURNACE = register("blast_furnace", BlastFurnaceRecipe.CODEC, BlastFurnaceRecipe.STREAM_CODEC);
     public static final Id<GlassworkingRecipe> GLASSWORKING = register("glassworking", GlassworkingRecipe.CODEC, GlassworkingRecipe.STREAM_CODEC);
     public static final Id<SewingRecipe> SEWING = register("sewing", SewingRecipe.CODEC, SewingRecipe.STREAM_CODEC);
+    public static final Id<TFCMapExtendingRecipe> MAP_EXTENDING = register("map_extending", new SimpleCraftingRecipeSerializer<>(TFCMapExtendingRecipe::new));
+    public static final Id<TFCMapCloningRecipe> MAP_CLONING = register("map_cloning", new SimpleCraftingRecipeSerializer<>(TFCMapCloningRecipe::new));
 
     // Crafting
 
