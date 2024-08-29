@@ -40,6 +40,8 @@ public record Fauna(
     {
         float minTemperature = Float.NEGATIVE_INFINITY, maxTemperature = Float.POSITIVE_INFINITY;
         float minRainfall = Float.NEGATIVE_INFINITY, maxRainfall = Float.POSITIVE_INFINITY;
+        float minRainVariance = -1f, maxRainVariance = 1f;
+        boolean rainVarianceAbsolute = false;
         int minForest = 0, maxForest = 4;
         List<ForestType> forests = new ArrayList<>();
         boolean fuzzy = false;
@@ -66,6 +68,17 @@ public record Fauna(
             return this;
         }
 
+        public Builder minRainVariance(float min) { return rainVariance(min, 1f, false); }
+        public Builder maxRainVariance(float max) { return rainVariance(-1f, max, false); }
+        public Builder rainVariance(float min, float max, boolean isAbsolute)
+        {
+            minRainfall = min;
+            maxRainfall = max;
+            rainVarianceAbsolute = isAbsolute;
+
+            return this;
+        }
+
         public Builder minForest(int min) { return forest(min, 4); }
         public Builder maxForest(int max) { return forest(0, max); }
         public Builder forest(int min, int max)
@@ -89,7 +102,7 @@ public record Fauna(
 
         public Fauna build()
         {
-            return new Fauna(chance, distanceBelowSeaLevel, new ClimatePlacement(minTemperature, maxTemperature, minRainfall, maxRainfall, minForest, maxForest, forests, fuzzy), solidGround, maxBrightness);
+            return new Fauna(chance, distanceBelowSeaLevel, new ClimatePlacement(minTemperature, maxTemperature, minRainfall, maxRainfall, minRainVariance, maxRainVariance, rainVarianceAbsolute, minForest, maxForest, forests, fuzzy), solidGround, maxBrightness);
         }
     }
 }

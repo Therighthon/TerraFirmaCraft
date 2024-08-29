@@ -1235,7 +1235,7 @@ def decorate_carving_mask(min_y: Optional[VerticalAnchor] = None, max_y: Optiona
     }
 
 
-def decorate_climate(min_temp: Optional[float] = None, max_temp: Optional[float] = None, min_water: Optional[float] = None, max_water: Optional[float] = None, needs_forest: Optional[bool] = False, fuzzy: Optional[bool] = None, min_forest: Optional[str] = None, max_forest: Optional[str] = None, forest_types: Optional[List[str]] = None) -> Json:
+def decorate_climate(min_temp: Optional[float] = None, max_temp: Optional[float] = None, min_water: Optional[float] = None, max_water: Optional[float] = None, min_rain_variance: Optional[float] = None, max_rain_variance: Optional[float] = None, rain_variance_absolute: Optional[bool] = False, needs_forest: Optional[bool] = False, fuzzy: Optional[bool] = None, min_forest: Optional[str] = None, max_forest: Optional[str] = None, forest_types: Optional[List[str]] = None) -> Json:
     minf = None
     if min_forest == 'sparse':
         minf = 1
@@ -1261,6 +1261,9 @@ def decorate_climate(min_temp: Optional[float] = None, max_temp: Optional[float]
         'max_temperature': max_temp,
         'min_groundwater': min_water,
         'max_groundwater': max_water,
+        'min_rain_variance': min_rain_variance,
+        'max_rain_variance': max_rain_variance,
+        'rain_variance_absolute': rain_variance_absolute,
         'min_forest': 3 if needs_forest else minf,
         'max_forest': maxf,
         'forest_types': forest_types,

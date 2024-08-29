@@ -49,14 +49,18 @@ public record ForestConfig(HolderSet<ConfiguredFeature<?, ?>> entries) implement
             ).apply(instance, Entry::new);
         });
 
-        public boolean isValid(float temperature, float groundwater)
+        public boolean isValid(float temperature, float groundwater, float rainVar)
         {
-            return groundwater >= climate.getMinGroundwater() && groundwater <= climate.getMaxGroundwater() && temperature >= climate.getMinTemp() && temperature <= climate.getMaxTemp();
+            final float adjustedRainVar = climate.isRainVarianceAbsolute() ? Math.abs(rainVar) : rainVar;
+            return groundwater >= climate.getMinGroundwater() && groundwater <= climate.getMaxGroundwater()
+                && adjustedRainVar >= climate.getMinRainVariance() && adjustedRainVar <= climate().getMaxRainVariance()
+                && temperature >= climate.getMinTemp() && temperature <= climate.getMaxTemp();
         }
 
-        public float distanceFromMean(float temperature, float groundwater)
+        public float distanceFromMean(float temperature, float groundwater, float rainVar)
         {
-            return (groundwater + temperature - getAverageTemp() - getAverageGroundwater()) / 2;
+            final float adjustedRainVar = climate.isRainVarianceAbsolute() ? Math.abs(rainVar) : rainVar;
+            return (groundwater + 10 * temperature + 250 * adjustedRainVar - 10 * getAverageTemp() - getAverageGroundwater() - 250 * getAverageRainVar()) / 2;
         }
 
         public float getAverageTemp()
@@ -67,6 +71,11 @@ public record ForestConfig(HolderSet<ConfiguredFeature<?, ?>> entries) implement
         public float getAverageGroundwater()
         {
             return (climate.getMaxGroundwater() - climate.getMinGroundwater()) / 2;
+        }
+
+        public float getAverageRainVar()
+        {
+            return (climate.getMaxRainVariance() - climate.getMinRainVariance()) / 2;
         }
 
         public ConfiguredFeature<?, ?> getFeature()
