@@ -367,26 +367,26 @@ def generate(rm: ResourceManager):
     rm.placed_feature('random_active_hot_spring', 'tfc:random_active_hot_spring', decorate_chance(50), decorate_square())
 
     # Trees / Forests
-    forest_config(rm, 90, 275, 8, 38, 'acacia', True)
-    forest_config(rm, 60, 240, -1.1, 13.4, 'ash', True)
-    forest_config(rm, 350, 500, -15.7, -1.1, 'aspen', True, old_growth_chance=1, krum=True)
-    forest_config(rm, 125, 310, -12.1, 6.1, 'birch', False, old_growth_chance=1)
-    forest_config(rm, 35, 180, 8, 38, 'blackwood', True)
-    forest_config(rm, 150, 340, -3, 11.6, 'chestnut', True)
-    forest_config(rm, 305, 500, -15.7, 6.1, 'douglas_fir', True, krum=True)
-    forest_config(rm, 210, 400, 4.3, 15.3, 'hickory', True)
-    forest_config(rm, 320, 500, 17.1, 38, 'kapok', False)
-    forest_config(rm, 200, 500, 15.7, 28.2, 'mangrove', False, floating=True)
-    forest_config(rm, 240, 470, -8.4, 8, 'maple', True)
-    forest_config(rm, 210, 320, -3, 15.3, 'oak', False)
-    forest_config(rm, 200, 405, 15.3, 38, 'palm', False)
-    forest_config(rm, 185, 320, -8.4, 9.8, 'pine', True, old_growth_chance=1, krum=True)
-    forest_config(rm, 210, 400, 9.8, 38, 'rosewood', True)
-    forest_config(rm, 320, 500, 4.3, 11.6, 'sequoia', True, old_growth_chance=3)
-    forest_config(rm, 220, 470, -17.5, -6.6, 'spruce', True, krum=True)
-    forest_config(rm, 330, 480, -6.6, 13.4, 'sycamore', True)
-    forest_config(rm, 100, 285, -15.7, 0.7, 'white_cedar', True, krum=True)
-    forest_config(rm, 330, 500, 6.1, 24.4, 'willow', True)
+    forest_config(rm, 90, 400, 8, 38, 0.4, 1, True, 'acacia', True)
+    forest_config(rm, 60, 380, -1.1, 13.4, -0.2, 1, False, 'ash', True)
+    forest_config(rm, 350, 500, -15.7, 2.5, -0.65, 1, False, 'aspen', True, old_growth_chance=1, krum=True)
+    forest_config(rm, 125, 360, -12.1, 6.1, -0.6, 0.8, False, 'birch', False, old_growth_chance=1)
+    forest_config(rm, 35, 180, 8, 38, -1, 1, False, 'blackwood', True)
+    forest_config(rm, 150, 340, -3, 11.6, -0.2, 1, False, 'chestnut', True)
+    forest_config(rm, 270, 500, -15.7, 6.1, -1, 0.1, False, 'douglas_fir', True, krum=True)
+    forest_config(rm, 210, 500, 4.3, 15.3, -0.4, 0.6, False, 'hickory', True)
+    forest_config(rm, 300, 500, 17.1, 38, -0.55, 0.55, False, 'kapok', False)
+    forest_config(rm, 200, 500, 13.4, 26.2, -1, 1, False, 'mangrove', False, floating=True)
+    forest_config(rm, 200, 450, -8.4, 8, -0.8, 1, False, 'maple', True)
+    forest_config(rm, 210, 500, -3, 15.3, -0.5, 0.75, False, 'oak', False)
+    forest_config(rm, 150, 330, 15.3, 38, -0.7, 0.7, False, 'palm', False)
+    forest_config(rm, 90, 320, -8.4, 9.8, -1, 0.75, False, 'pine', True, old_growth_chance=1, krum=True)
+    forest_config(rm, 210, 500, 9.8, 38, 0.65, 1, True, 'rosewood', True)
+    forest_config(rm, 215, 500, 2.5, 11.6, -1, -0.4, False, 'sequoia', True, old_growth_chance=3)
+    forest_config(rm, 220, 470, -17.5, -6.6, -1, 1, False, 'spruce', True, krum=True)
+    forest_config(rm, 330, 480, -6.6, 15.3, -0.15, 1, False, 'sycamore', True)
+    forest_config(rm, 100, 285, -15.7, 0.7, -0.45, 0.65, False, 'white_cedar', True, krum=True)
+    forest_config(rm, 330, 500, 6.1, 24.4, -0.55, 1, False, 'willow', True)
     # flat: acacia, ash, chestnut, maple, sequoia, spruce, willow
 
     for wood in ('aspen', 'douglas_fir', 'pine', 'spruce', 'white_cedar'):
@@ -1062,13 +1062,16 @@ def vein_density(density: int) -> float:
 
 # Tree Helper Functions
 
-def forest_config(rm: ResourceManager, min_water: float, max_water: float, min_temp: float, max_temp: float, tree: str, old_growth: bool, old_growth_chance: int = None, spoiler_chance: int = None, krum: bool = False, floating: bool = None):
+def forest_config(rm: ResourceManager, min_water: float, max_water: float, min_temp: float, max_temp: float, min_rain_var: float, max_rain_var: float, isAbsolute: bool, tree: str, old_growth: bool, old_growth_chance: int = None, spoiler_chance: int = None, krum: bool = False, floating: bool = None):
     cfg = {
         'climate': {
             'min_temperature': min_temp,
             'max_temperature': max_temp,
             'min_groundwater': min_water,
-            'max_groundwater': max_water
+            'max_groundwater': max_water,
+            'min_rain_variance': min_rain_var,
+            'max_rain_variance': max_rain_var,
+            'rain_variance_absolute': isAbsolute
         },
         'groundcover': [{'block': 'tfc:wood/twig/%s' % tree}],
         'normal_tree': 'tfc:tree/%s' % tree,
@@ -1235,7 +1238,7 @@ def decorate_carving_mask(min_y: Optional[VerticalAnchor] = None, max_y: Optiona
     }
 
 
-def decorate_climate(min_temp: Optional[float] = None, max_temp: Optional[float] = None, min_water: Optional[float] = None, max_water: Optional[float] = None, min_rain_variance: Optional[float] = None, max_rain_variance: Optional[float] = None, rain_variance_absolute: Optional[bool] = False, needs_forest: Optional[bool] = False, fuzzy: Optional[bool] = None, min_forest: Optional[str] = None, max_forest: Optional[str] = None, forest_types: Optional[List[str]] = None) -> Json:
+def decorate_climate(min_temp: Optional[float] = None, max_temp: Optional[float] = None, min_water: Optional[float] = None, max_water: Optional[float] = None, needs_forest: Optional[bool] = False, fuzzy: Optional[bool] = None, min_forest: Optional[str] = None, max_forest: Optional[str] = None, forest_types: Optional[List[str]] = None, min_rain_variance: Optional[float] = None, max_rain_variance: Optional[float] = None, rain_variance_absolute: Optional[bool] = None) -> Json:
     minf = None
     if min_forest == 'sparse':
         minf = 1

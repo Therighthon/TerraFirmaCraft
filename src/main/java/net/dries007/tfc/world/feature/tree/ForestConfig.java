@@ -59,8 +59,7 @@ public record ForestConfig(HolderSet<ConfiguredFeature<?, ?>> entries) implement
 
         public float distanceFromMean(float temperature, float groundwater, float rainVar)
         {
-            final float adjustedRainVar = climate.isRainVarianceAbsolute() ? Math.abs(rainVar) : rainVar;
-            return (groundwater + 10 * temperature + 250 * adjustedRainVar - 10 * getAverageTemp() - getAverageGroundwater() - 250 * getAverageRainVar()) / 2;
+            return (groundwater + 10 * temperature - 10 * getAverageTemp() - getAverageGroundwater()) / 2;
         }
 
         public float getAverageTemp()
@@ -71,11 +70,6 @@ public record ForestConfig(HolderSet<ConfiguredFeature<?, ?>> entries) implement
         public float getAverageGroundwater()
         {
             return (climate.getMaxGroundwater() - climate.getMinGroundwater()) / 2;
-        }
-
-        public float getAverageRainVar()
-        {
-            return (climate.getMaxRainVariance() - climate.getMinRainVariance()) / 2;
         }
 
         public ConfiguredFeature<?, ?> getFeature()
