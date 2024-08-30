@@ -367,11 +367,11 @@ def generate(rm: ResourceManager):
     rm.placed_feature('random_active_hot_spring', 'tfc:random_active_hot_spring', decorate_chance(50), decorate_square())
 
     # Trees / Forests
-    forest_config(rm, 90, 400, 8, 38, 0.4, 1, True, 'acacia', True)
+    forest_config(rm, 90, 500, 8, 38, 0.4, 0.85, True, 'acacia', True)
     forest_config(rm, 60, 380, -1.1, 13.4, -0.2, 1, False, 'ash', True)
     forest_config(rm, 350, 500, -15.7, 2.5, -0.65, 1, False, 'aspen', True, old_growth_chance=1, krum=True)
     forest_config(rm, 125, 360, -12.1, 6.1, -0.6, 0.8, False, 'birch', False, old_growth_chance=1)
-    forest_config(rm, 35, 180, 8, 38, -1, 1, False, 'blackwood', True)
+    forest_config(rm, 35, 215, 8, 38, -1, 1, False, 'blackwood', True)
     forest_config(rm, 150, 340, -3, 11.6, -0.2, 1, False, 'chestnut', True)
     forest_config(rm, 270, 500, -15.7, 6.1, -1, 0.1, False, 'douglas_fir', True, krum=True)
     forest_config(rm, 210, 500, 4.3, 15.3, -0.4, 0.6, False, 'hickory', True)
@@ -381,10 +381,10 @@ def generate(rm: ResourceManager):
     forest_config(rm, 210, 500, -3, 15.3, -0.5, 0.75, False, 'oak', False)
     forest_config(rm, 150, 330, 15.3, 38, -0.7, 0.7, False, 'palm', False)
     forest_config(rm, 90, 320, -8.4, 9.8, -1, 0.75, False, 'pine', True, old_growth_chance=1, krum=True)
-    forest_config(rm, 210, 500, 9.8, 38, 0.65, 1, True, 'rosewood', True)
+    forest_config(rm, 200, 500, 9.8, 38, 0.65, 1, True, 'rosewood', True)
     forest_config(rm, 215, 500, 2.5, 11.6, -1, -0.4, False, 'sequoia', True, old_growth_chance=3)
-    forest_config(rm, 220, 470, -17.5, -6.6, -1, 1, False, 'spruce', True, krum=True)
-    forest_config(rm, 330, 480, -6.6, 15.3, -0.15, 1, False, 'sycamore', True)
+    forest_config(rm, 220, 500, -17.5, -6.6, -1, 1, False, 'spruce', True, krum=True)
+    forest_config(rm, 330, 500, -6.6, 15.3, -0.15, 1, False, 'sycamore', True)
     forest_config(rm, 100, 285, -15.7, 0.7, -0.45, 0.65, False, 'white_cedar', True, krum=True)
     forest_config(rm, 330, 500, 6.1, 24.4, -0.55, 1, False, 'willow', True)
     # flat: acacia, ash, chestnut, maple, sequoia, spruce, willow
