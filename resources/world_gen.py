@@ -1273,6 +1273,24 @@ def decorate_climate(min_temp: Optional[float] = None, max_temp: Optional[float]
         'fuzzy': fuzzy
     }
 
+def decorate_climate_121(min_temp: Optional[float] = None, max_temp: Optional[float] = None, min_water: Optional[float] = None, max_water: Optional[float] = None, min_rain_variance: Optional[float] = None, max_rain_variance: Optional[float] = None, rain_variance_absolute: Optional[bool] = None, min_forest: Optional[int] = None, max_forest: Optional[int] = None, fuzzy: Optional[bool] = None, forest_types: Optional[List[str]] = None) -> Json:
+
+    return {
+        'type': 'tfc:climate',
+        'min_temperature': min_temp,
+        'max_temperature': max_temp,
+        'min_groundwater': min_water,
+        'max_groundwater': max_water,
+        'min_rain_variance': min_rain_variance,
+        'max_rain_variance': max_rain_variance,
+        'rain_variance_absolute': rain_variance_absolute,
+        'min_forest': min_forest,
+        'max_forest': max_forest,
+        'forest_types': forest_types,
+        'fuzzy': fuzzy
+    }
+
+
 def decorate_no_solid_neighbors() -> Json:
     return 'tfc:no_solid_neighbors'
 
