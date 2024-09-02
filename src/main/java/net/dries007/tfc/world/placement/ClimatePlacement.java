@@ -33,8 +33,8 @@ public class ClimatePlacement extends PlacementModifier
         Codec.FLOAT.optionalFieldOf("min_rain_variance", -1f).forGetter(c -> c.minRainVariance),
         Codec.FLOAT.optionalFieldOf("max_rain_variance", 1f).forGetter(c -> c.maxRainVariance),
         Codec.BOOL.optionalFieldOf("rain_variance_absolute", false).forGetter(c -> c.rainVarianceAbsolute),
-        Codecs.POSITIVE_INT.optionalFieldOf("min_forest", 0).forGetter(c -> c.minForest),
-        Codecs.POSITIVE_INT.optionalFieldOf("max_forest", 4).forGetter(c -> c.maxForest),
+        Codecs.NON_NEGATIVE_INT.optionalFieldOf("min_forest", 0).forGetter(c -> c.minForest),
+        Codecs.NON_NEGATIVE_INT.optionalFieldOf("max_forest", 4).forGetter(c -> c.maxForest),
         ForestType.CODEC.listOf().optionalFieldOf("forest_types", Collections.emptyList()).forGetter(c -> c.types),
         Codec.BOOL.optionalFieldOf("fuzzy", false).forGetter(c -> c.fuzzy)
     ).apply(instance, ClimatePlacement::new));

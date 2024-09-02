@@ -19,7 +19,10 @@
       "max_temperature": 6.1,
       "min_groundwater": 290,
       "max_groundwater": 470,
-      "min_forest": 2,
+      "min_rain_variance": -0.3,
+      "max_rain_variance": 0.45,
+      "rain_variance_absolute": false,
+      "min_forest": 3,
       "max_forest": 4
     }
   ]
