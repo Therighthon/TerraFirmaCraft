@@ -7,12 +7,14 @@
 package net.dries007.tfc.common.entities;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.data.DataManager;
+import net.dries007.tfc.world.Codecs;
 import net.dries007.tfc.world.chunkdata.ForestType;
 import net.dries007.tfc.world.placement.ClimatePlacement;
 
@@ -59,9 +61,9 @@ public record Fauna(
             return this;
         }
 
-        public Builder minRainfall(float min) { return rainfall(min, Float.POSITIVE_INFINITY); }
-        public Builder maxRainfall(float max) { return rainfall(Float.NEGATIVE_INFINITY, max); }
-        public Builder rainfall(float min, float max)
+        public Builder minGroundwater(float min) { return groundwater(min, Float.POSITIVE_INFINITY); }
+        public Builder maxGroundwater(float max) { return groundwater(Float.NEGATIVE_INFINITY, max); }
+        public Builder groundwater(float min, float max)
         {
             minRainfall = min;
             maxRainfall = max;
