@@ -127,6 +127,40 @@ public final class BiomeNoise
             .scaled(-0.75f, 0.7f, SEA_LEVEL_Y - 3, SEA_LEVEL_Y + 28);
     }
 
+    public static Noise2D seaStacks(long seed)
+    {
+        final int minHeight = SEA_LEVEL_Y -24;
+
+        final Noise2D smoothnessNoise = new OpenSimplex2D(seed)
+            .octaves(3)
+            .spread(0.009f);
+
+        final Noise2D towerNoise = new OpenSimplex2D(seed)
+            .octaves(2)
+            .spread(0.022f)
+            .map(Math::abs);
+
+        final Noise2D baseNoise = new OpenSimplex2D(seed)
+            .octaves(3)
+            .spread(0.04f)
+            .scaled(0, 6);
+
+        return (x, z) -> {
+            double y0 = towerNoise.noise(x, z);
+
+            final double cliffHeight = smoothnessNoise.scaled(0.0, 0.2).noise(x, z);
+            y0 = y0 > 0.75 ? y0 + 3 * cliffHeight + 0.1 :
+                y0 > 0.5 ? y0 + 2 * cliffHeight + 0.1 :
+                    y0 > 0.25 ? y0 + cliffHeight + 0.1 :
+                        4 * y0 * y0;
+
+            final double steepness = 90.0 - smoothnessNoise.scaled(0, 70.0).noise(x, z);
+            y0 = steepness * y0 + minHeight;
+
+            return y0 + baseNoise.noise(x, z);
+        };
+    }
+
     public static double sharpHillsMap(double in)
     {
         final double in0 = 1.0f, in1 = 0.67f, in2 = 0.15f, in3 = -0.15f, in4 = -0.67f, in5 = -1.0f;

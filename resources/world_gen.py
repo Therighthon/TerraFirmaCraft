@@ -80,6 +80,8 @@ def generate(rm: ResourceManager):
     biome(rm, 'river', 'river')
     biome(rm, 'shore', 'beach', ocean_features=True)
     biome(rm, 'tidal_flats', 'beach', ocean_features=True)
+    biome(rm, 'sea_dunes', 'beach', ocean_features=True)
+    biome(rm, 'sea_stacks', 'beach', ocean_features=True)
     biome(rm, 'salt_flats', 'plains', barren=True)
     biome(rm, 'mud_flats', 'plains', barren=True)
     biome(rm, 'dune_sea', 'plains', barren=True)

@@ -52,6 +52,8 @@ public class TFCLayers
     public static final int CANYONS = idFor(TFCBiomes.CANYONS);
     public static final int SHORE = idFor(TFCBiomes.SHORE);
     public static final int TIDAL_FLATS = idFor(TFCBiomes.TIDAL_FLATS);
+    public static final int SEA_DUNES = idFor(TFCBiomes.SEA_DUNES);
+    public static final int SEA_STACKS = idFor(TFCBiomes.SEA_STACKS);
     public static final int LAKE = idFor(TFCBiomes.LAKE);
     public static final int RIVER = idFor(TFCBiomes.RIVER);
     public static final int MOUNTAIN_LAKE = idFor(TFCBiomes.MOUNTAIN_LAKE);
@@ -186,6 +188,10 @@ public class TFCLayers
         {
             return VOLCANIC_OCEANIC_MOUNTAINS;
         }
+        if (value == PLATEAU || value == HIGHLANDS)
+        {
+            return SEA_STACKS;
+        }
         return SHORE;
     }
 
@@ -236,6 +242,16 @@ public class TFCLayers
     public static boolean isLow(int value)
     {
         return value == PLAINS || value == HILLS || value == LOW_CANYONS || value == LOWLANDS || value == SALT_MARSH || value == MUD_FLATS || value == SALT_FLATS || value == DUNE_SEA;
+    }
+
+    public static boolean isMid(int value)
+    {
+    return value == CANYONS || value == BADLANDS || value == ROLLING_HILLS || value == PLATEAU || value == HIGHLANDS || value == INVERTED_BADLANDS;
+    }
+
+    public static boolean isShore(int value)
+    {
+        return value == SHORE || value == TIDAL_FLATS || value == SEA_STACKS || value == SEA_DUNES;
     }
 
     public static boolean isFlats(int value)

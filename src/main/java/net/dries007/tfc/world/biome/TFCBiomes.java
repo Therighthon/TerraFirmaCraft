@@ -72,6 +72,9 @@ public final class TFCBiomes
     // Shores
     public static final BiomeExtension SHORE = register("shore", builder().heightmap(BiomeNoise::shore).surface(ShoreSurfaceBuilder.INSTANCE).aquiferHeightOffset(-16).type(BiomeBlendType.LAND).salty().shore().type(RiverBlendType.WIDE).noRivers().noSandyRiverShores()); // Standard shore / beach. Material will vary based on location
     public static final BiomeExtension TIDAL_FLATS = register("tidal_flats", builder().heightmap(BiomeNoise::tidalFlats).surface(ShoreSurfaceBuilder.INSTANCE).aquiferHeightOffset(-16).type(BiomeBlendType.OCEAN).salty().shore().type(RiverBlendType.WIDE).noRivers().noSandyRiverShores());
+    public static final BiomeExtension SEA_DUNES = register("sea_dunes", builder().heightmap(seed -> BiomeNoise.dunes(seed, 2, 16)).surface(GrassyDunesSurfaceBuilder.INSTANCE).aquiferHeightOffset(-16).type(BiomeBlendType.OCEAN).salty().shore().type(RiverBlendType.WIDE).noRivers().noSandyRiverShores());
+    public static final BiomeExtension SEA_STACKS = register("sea_stacks", builder().heightmap(BiomeNoise::seaStacks).surface(NormalSurfaceBuilder.ROCKY).spawnable().aquiferHeightOffset(-16).type(BiomeBlendType.LAND).salty().shore().type(RiverBlendType.CANYON).noRivers().noSandyRiverShores()); // Hills with sharp, exposed rocky areas.
+
 
     // Water
     public static final BiomeExtension LAKE = register("lake", builder().heightmap(BiomeNoise::lake).surface(NormalSurfaceBuilder.INSTANCE).aquiferHeightOffset(-16).type(BiomeBlendType.LAKE).type(RiverBlendType.WIDE).noRivers());
