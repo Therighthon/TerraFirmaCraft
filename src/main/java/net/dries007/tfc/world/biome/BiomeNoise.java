@@ -249,6 +249,40 @@ public final class BiomeNoise
         };
     }
 
+    public static Noise2D cappadocia(long seed)
+    {
+        final int minHeight = SEA_LEVEL_Y + 2;
+
+        final Noise2D smoothnessNoise = new OpenSimplex2D(seed)
+            .octaves(3)
+            .spread(0.013f);
+
+        final Noise2D towerNoise = new OpenSimplex2D(seed)
+            .octaves(2)
+            .spread(0.035f)
+            .map(Math::abs);
+
+        final Noise2D baseNoise = new OpenSimplex2D(seed)
+            .octaves(3)
+            .spread(0.06f)
+            .scaled(0, 6);
+
+        return (x, z) -> {
+            double y0 = towerNoise.noise(x, z);
+
+            final double cliffHeight = smoothnessNoise.scaled(0.0, 0.15).noise(x, z);
+            y0 = y0 > 0.75 ? y0 + 3 * cliffHeight :
+                y0 > 0.5 ? y0 + 2 * cliffHeight :
+                y0 > 0.25 ? y0 + cliffHeight :
+                4 * y0 * y0;
+
+            final double steepness = 60.0 - smoothnessNoise.scaled(0, 45.0).noise(x, z);
+            y0 = steepness * y0 + minHeight;
+
+           return y0 + baseNoise.noise(x, z);
+        };
+    }
+
     /**
      * Uses domain warping to achieve a swirly hills effect
      */
