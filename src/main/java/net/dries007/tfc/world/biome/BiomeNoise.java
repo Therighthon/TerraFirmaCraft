@@ -248,6 +248,19 @@ public final class BiomeNoise
         return new OpenSimplex2D(seed).octaves(4).spread(0.17f).scaled(SEA_LEVEL_Y, SEA_LEVEL_Y + 1.8f);
     }
 
+    public static Noise2D glacialMountains(long seed)
+    {
+        final double spread = 0.003;
+        final Noise2D ridgesOctave0 = new OpenSimplex2D(seed).spread(spread).map(y -> 0.7 - Math.abs(y));
+        final Noise2D ridgesOctave1 = new OpenSimplex2D(seed + 99632L).spread(spread * 2).map(y -> 0.7 - Math.abs(y)).scaled(-.5, 0.5);
+        final Noise2D ridgesOctave2 = new OpenSimplex2D(seed + 9736783276L).spread(spread * 4).map(y -> 0.7 - Math.abs(y)).scaled(-.25, 0.25);
+        final Noise2D bumps = new OpenSimplex2D(seed + 8163781L).spread(spread * 2).octaves(3).scaled(-0.5, 0);
+
+        final Noise2D noise = ridgesOctave0.add(ridgesOctave1).add(ridgesOctave2);
+
+        return noise.scaled(SEA_LEVEL_Y - 30, 80 + SEA_LEVEL_Y);
+    }
+
     /**
      * Adds volcanoes to a base noise height map
      */
