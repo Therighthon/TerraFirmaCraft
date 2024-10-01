@@ -7,27 +7,41 @@
 package net.dries007.tfc.common.entities.misc;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageType;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.AbstractFish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 import net.dries007.tfc.TerraFirmaCraft;
+import net.dries007.tfc.common.TFCDamageTypes;
 import net.dries007.tfc.common.component.TFCComponents;
 import net.dries007.tfc.common.entities.TFCEntities;
 import net.dries007.tfc.common.items.TFCFishingRodItem;
@@ -99,6 +113,17 @@ public class TFCFishingHook extends FishingHook implements IEntityWithComplexSpa
         {
             currentState = FishHookState.HOOKED_IN_ENTITY;
             setPos(hookedIn.getX(), hookedIn.getY(0.8D), hookedIn.getZ());
+
+            //TODO: Improve
+            // Kill the fish if it is near the hook's owner
+            Player owner = this.getPlayerOwner();
+            if (owner != null && distanceToSqr(owner) < 1)
+            {
+                if (hookedIn instanceof LivingEntity && ((LivingEntity) hookedIn).getHealth() < 6f)
+                {
+                    (hookedIn).hurt(owner.damageSources().playerAttack(owner), 10f);
+                }
+            }
         }
         // gradually reduce exhaustion
         if (pullExhaustion > 0)

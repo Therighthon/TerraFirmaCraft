@@ -606,6 +606,8 @@ public class TFCTags
         public static final TagKey<EntityType<?>> TURTLE_FRIENDS = tag("turtle_friends");
         public static final TagKey<EntityType<?>> SPAWNS_ON_COLD_BLOCKS = tag("spawns_on_cold_blocks"); // if ice is a valid spawn
         public static final TagKey<EntityType<?>> BUBBLE_COLUMN_IMMUNE = tag("bubble_column_immune");
+        public static final TagKey<EntityType<?>> NEEDS_NO_FISHING_BAIT = tag("needs_no_fishing_bait");
+        public static final TagKey<EntityType<?>> NEEDS_SMALL_FISHING_BAIT = tag("needs_small_fishing_bait");
         public static final TagKey<EntityType<?>> NEEDS_LARGE_FISHING_BAIT = tag("needs_large_fishing_bait");
         public static final TagKey<EntityType<?>> HUNTS_LAND_PREY = tag("hunts_land_prey");
         public static final TagKey<EntityType<?>> HUNTED_BY_LAND_PREDATORS = tag("hunted_by_land_predators");
@@ -621,6 +623,8 @@ public class TFCTags
         public static final TagKey<EntityType<?>> HUNTED_BY_CATS = tag("hunted_by_cats");
         public static final TagKey<EntityType<?>> HUNTED_BY_DOGS = tag("hunted_by_dogs");
         public static final TagKey<EntityType<?>> SMALL_FISH = tag("small_fish");
+        public static final TagKey<EntityType<?>> LARGE_FISH = tag("large_fish");
+        public static final TagKey<EntityType<?>> HUGE_FISH = tag("huge_fish");
 
         // ===== Data Generated ====== //
 

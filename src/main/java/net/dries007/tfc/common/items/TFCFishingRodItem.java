@@ -74,7 +74,8 @@ public class TFCFishingRodItem extends FishingRodItem
                 ItemStack bait = Bait.getBait(rod);
                 if (bait.isEmpty())
                 {
-                    player.displayClientMessage(Component.translatable("tfc.fishing.no_bait"), true);
+//                    player.displayClientMessage(Component.translatable("tfc.fishing.no_bait"), true);
+                    level.addFreshEntity(new TFCFishingHook(player, level, getFishingStrength(), ItemStack.EMPTY));
                 }
                 else
                 {

@@ -1,6 +1,11 @@
 {
   "values": [
-    "#c:seeds",
-    "tfc:food/shellfish"
+    "tfc:food/shellfish",
+    "tfc:food/tropical_fish",
+    "tfc:food/bluegill",
+    "tfc:food/largemouth_bass",
+    "tfc:food/smallmouth_bass",
+    "tfc:food/rainbow_trout",
+    "tfc:food/lake_trout"
   ]
 }

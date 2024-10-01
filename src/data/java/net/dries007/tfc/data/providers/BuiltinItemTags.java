@@ -213,10 +213,9 @@ public class BuiltinItemTags extends TagsProvider<Item> implements Accessors
             TFCBlocks.GROUNDCOVER.get(GroundcoverBlockType.PINECONE));
 
         tag(SMALL_FISHING_BAIT)
-            .addTag(Tags.Items.SEEDS)
-            .add(Food.SHELLFISH);
+            .add(Food.SHELLFISH, Food.TROPICAL_FISH, Food.BLUEGILL, Food.LARGEMOUTH_BASS, Food.SMALLMOUTH_BASS, Food.RAINBOW_TROUT, Food.LAKE_TROUT);
         tag(LARGE_FISHING_BAIT)
-            .add(Food.COD, Food.SALMON, Food.TROPICAL_FISH, Food.BLUEGILL);
+            .add(Food.COD, Food.SALMON);
         tag(HOLDS_SMALL_FISHING_BAIT).add(
             TFCItems.METAL_ITEMS.get(Metal.COPPER).get(Metal.ItemType.FISHING_ROD),
             TFCItems.METAL_ITEMS.get(Metal.BRONZE).get(Metal.ItemType.FISHING_ROD),
