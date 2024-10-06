@@ -8,6 +8,7 @@ package net.dries007.tfc.world.surface;
 
 import java.util.function.Supplier;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 
@@ -19,10 +20,12 @@ import net.dries007.tfc.common.fluids.TFCFluids;
 
 public final class SurfaceStates
 {
+
     public static final SurfaceState RAW = context -> context.getRock().raw().defaultBlockState();
     public static final SurfaceState COBBLE = context -> context.getRock().cobble().defaultBlockState();
     public static final SurfaceState GRAVEL = context -> context.getRock().gravel().defaultBlockState();
 
+    public static final SurfaceState GLACIER = context -> Blocks.PACKED_ICE.defaultBlockState();
     /**
      * Grass / Dirt / Gravel, or Sand / Sand / Sandstone
      */

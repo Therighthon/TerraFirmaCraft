@@ -150,6 +150,11 @@ public interface Noise2D
         return (x, y) -> Noise2D.this.noise(x, y) + other.noise(x, y);
     }
 
+    default Noise2D max(Noise2D other)
+    {
+        return (x, y) -> Math.max(Noise2D.this.noise(x, y), other.noise(x, y));
+    }
+
     /**
      * Product of two noises - lazily evaluates the second if the first evaluates to zero.
      */

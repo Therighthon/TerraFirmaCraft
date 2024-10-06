@@ -251,14 +251,42 @@ public final class BiomeNoise
     public static Noise2D glacialMountains(long seed)
     {
         final double spread = 0.003;
-        final Noise2D ridgesOctave0 = new OpenSimplex2D(seed).spread(spread).map(y -> 0.7 - Math.abs(y));
-        final Noise2D ridgesOctave1 = new OpenSimplex2D(seed + 99632L).spread(spread * 2).map(y -> 0.7 - Math.abs(y)).scaled(-.5, 0.5);
-        final Noise2D ridgesOctave2 = new OpenSimplex2D(seed + 9736783276L).spread(spread * 4).map(y -> 0.7 - Math.abs(y)).scaled(-.25, 0.25);
-        final Noise2D bumps = new OpenSimplex2D(seed + 8163781L).spread(spread * 2).octaves(3).scaled(-0.5, 0);
+        final Noise2D glaciers = new OpenSimplex2D(seed).spread(spread).map(Math::abs).scaled(0, 2);
 
-        final Noise2D noise = ridgesOctave0.add(ridgesOctave1).add(ridgesOctave2);
+        final Noise2D surfaceNoise = glacialMountainsSurface(seed, spread,  glaciers);
 
-        return noise.scaled(SEA_LEVEL_Y - 30, 80 + SEA_LEVEL_Y);
+        return surfaceNoise.max(glaciers).scaled(SEA_LEVEL_Y - 30, 80 + SEA_LEVEL_Y);
+    }
+
+    public static Noise2D glacialMountainsSurface(long seed, double spread, Noise2D hills)
+    {
+        final Noise2D ridgesOctave0a = new OpenSimplex2D(seed + 2944298L).spread(spread).map(y -> 1 - Math.abs(y));
+        final Noise2D ridgesOctave0b = new OpenSimplex2D(seed + 9867862L).spread(spread).map(y -> 1 - Math.abs(y));
+
+        final Noise2D ridgesOctave1a = new OpenSimplex2D(seed + 9632L).spread(spread * 2).map(y -> 1 - Math.abs(y)).scaled(-0.75, 0.25);
+        final Noise2D ridgesOctave1b = new OpenSimplex2D(seed + 996332L).spread(spread * 2).map(y -> 1 - Math.abs(y)).scaled(-0.75, 0.25);
+
+        final Noise2D ridgesOctave2a = new OpenSimplex2D(seed + 9736783276L).spread(spread * 4).map(y -> 1 - Math.abs(y)).scaled(-0.875, 0.125);
+        final Noise2D ridgesOctave2b = new OpenSimplex2D(seed + 9733276L).spread(spread * 4).map(y -> 1 - Math.abs(y)).scaled(-0.875, 0.125);
+
+        final Noise2D ridges = ridgesOctave0a.add(ridgesOctave0b).add(ridgesOctave1a).add(ridgesOctave1b).add(ridgesOctave2a).add(ridgesOctave2b);
+
+        final Noise2D valleys = new OpenSimplex2D(seed + 97102L).spread(spread).map(BiomeNoise::glacialValley);
+        final Noise2D slopedValleys = slopedValley(valleys, hills);
+
+        return ridges.lazyProduct(slopedValleys);
+    }
+
+    // Creates continuous u-shaped valleys
+    public static double glacialValley(double y)
+    {
+        y = Math.abs(y);
+        return y > (1.0 / 9) ? Math.sqrt(y) / 3 : 9 * y * y;
+    }
+
+    public static Noise2D slopedValley(Noise2D valley, Noise2D slope)
+    {
+        return valley.lazyProduct(slope.map(y -> 1 - y)).add(slope);
     }
 
     /**
