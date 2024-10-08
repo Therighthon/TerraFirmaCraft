@@ -7,41 +7,28 @@
 package net.dries007.tfc.common.entities.misc;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageType;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.AbstractFish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 import net.dries007.tfc.TerraFirmaCraft;
-import net.dries007.tfc.common.TFCDamageTypes;
 import net.dries007.tfc.common.component.TFCComponents;
 import net.dries007.tfc.common.entities.TFCEntities;
 import net.dries007.tfc.common.items.TFCFishingRodItem;
@@ -51,9 +38,11 @@ public class TFCFishingHook extends FishingHook implements IEntityWithComplexSpa
 {
     public static final EntityDataAccessor<ItemStack> BAIT = SynchedEntityData.defineId(TFCFishingHook.class, EntityDataSerializers.ITEM_STACK);
 
-    public int pullExhaustion = 0;
+    public int lineStress = 0;
     private float strength = 0.04f;
     private long lastPulled = 0;
+    private double lastDistance = 0;
+    private float fishStamina = -1;
 
     public TFCFishingHook(EntityType<? extends TFCFishingHook> type, Level level)
     {
@@ -109,31 +98,59 @@ public class TFCFishingHook extends FishingHook implements IEntityWithComplexSpa
     public void tick()
     {
         super.tick();
+        Player owner = this.getPlayerOwner();
         if (hookedIn != null && !hookedIn.isRemoved()) // due to some path-dependent client/server stuff in the big tick loop, we do this to be 100% sure the state is set correctly
         {
+            if (fishStamina == -1)
+            {
+                fishStamina = 20 * getEntitySize(hookedIn);
+            }
+
             currentState = FishHookState.HOOKED_IN_ENTITY;
             setPos(hookedIn.getX(), hookedIn.getY(0.8D), hookedIn.getZ());
 
-            //TODO: Improve
-            // Kill the fish if it is near the hook's owner
-            Player owner = this.getPlayerOwner();
-            if (owner != null && distanceToSqr(owner) < 1)
+            if (owner != null && hookedIn instanceof LivingEntity)
             {
-                if (hookedIn instanceof LivingEntity && ((LivingEntity) hookedIn).getHealth() < 6f)
+                double distance = distanceToSqr(owner);
+
+                TerraFirmaCraft.LOGGER.info("Ticking!");
+
+                // Slow fish down if it's tired
+                if (fishStamina < 1)
+                {
+                    ((LivingEntity) hookedIn).setSpeed(0.1f);
+                    TerraFirmaCraft.LOGGER.info("Tired fish!");
+                }
+                // If fish swims away, pulling on the line, drains the fish's stamina
+                if (distance > lastDistance)
+                {
+                    fishStamina = fishStamina--;
+                    // TODO: this doesn't work because the fish stamina isn't actually saved, need to add an nbt property to make this work,
+                    //  or just directly reduce the fish's speed property slightly every time
+                    TerraFirmaCraft.LOGGER.info(String.valueOf(fishStamina));
+                }
+
+                //TODO: Improve
+                // Kill the fish if it is near the hook's owner
+                if (distance < 1 && hookedIn instanceof LivingEntity && ((LivingEntity) hookedIn).getHealth() < 6f)
                 {
                     (hookedIn).hurt(owner.damageSources().playerAttack(owner), 10f);
                 }
+
+                lastDistance = distance;
             }
         }
+
+
         // gradually reduce exhaustion
-        if (pullExhaustion > 0)
+        if (lineStress > 0)
         {
-            pullExhaustion--;
+            lineStress--;
         }
     }
 
     @Override
-    public void catchingFish(BlockPos pos) { } // no-op fishing
+    public void catchingFish(BlockPos pos) {} // no-op fishing
 
     /**
      * This is a little different from the vanilla method in that we call it on both sides. Vanilla mistakenly does not.
@@ -145,8 +162,8 @@ public class TFCFishingHook extends FishingHook implements IEntityWithComplexSpa
         long diff = level().getGameTime() - lastPulled;
         if (diff < 25)
         {
-            pullExhaustion += (25 - diff) * 2;
-            if (pullExhaustion > 100)
+            lineStress += (25 - diff) * 2;
+            if (lineStress > 100)
             {
                 if (player != null && level().isClientSide)
                 {
@@ -212,17 +229,41 @@ public class TFCFishingHook extends FishingHook implements IEntityWithComplexSpa
     protected void pullEntity(Entity entity)
     {
         Entity owner = this.getOwner();
+
         if (owner != null)
         {
+            // The reeled entity is considered larger if it is in water
+            final float fishSize = getEntitySize(entity) * (entity.isInFluidType() ? 1.6f : 1f);
+
+            // TODO: Increase player weight for higher tier rods?
+            Entity ownerVehicle = owner.getVehicle();
+
             double dx = owner.getX() - this.getX();
             double dy = owner.getY() - this.getY();
             double dz = owner.getZ() - this.getZ();
-            if (dy > 0 && dx < 5 && dz < 5)
+            if (dy > 0 && dx < 3 && dz < 3)
             {
-                dy = 4; // helps you pull the thing onto shore.
+                dy = 3; // helps you pull the thing onto shore.
             }
-            entity.setDeltaMovement(new Vec3(dx, dy, dz).normalize().scale(strength));
+            entity.setDeltaMovement(new Vec3(dx / fishSize, dy / fishSize, dz / fishSize).normalize().scale(strength));
+            if (ownerVehicle != null)
+            {
+                final float ownerSize = getEntitySize(ownerVehicle) + 2f;
+                ownerVehicle.setDeltaMovement(new Vec3(-dx / ownerSize, -dy / ownerSize, -dz / ownerSize).normalize().scale(strength));
+            }
+            else
+            {
+                final float ownerSize = 2f;
+                owner.addDeltaMovement(new Vec3(-dx / ownerSize, -dy / ownerSize, -dz / ownerSize).normalize().scale(strength));
+            }
         }
+    }
+
+    private float getEntitySize(Entity entity)
+    {
+        final float height = entity.getBbHeight();
+        final float width = entity.getBbHeight();
+        return height * width * width;
     }
 
     @Override
@@ -230,7 +271,7 @@ public class TFCFishingHook extends FishingHook implements IEntityWithComplexSpa
     {
         super.addAdditionalSaveData(tag);
         tag.putLong("lastPulled", lastPulled);
-        tag.putInt("exhaustion", pullExhaustion);
+        tag.putInt("exhaustion", lineStress);
         tag.putFloat("strength", strength);
     }
 
@@ -239,7 +280,7 @@ public class TFCFishingHook extends FishingHook implements IEntityWithComplexSpa
     {
         super.readAdditionalSaveData(tag);
         lastPulled = tag.getLong("lastPulled");
-        pullExhaustion = tag.getInt("exhaustion");
+        lineStress = tag.getInt("exhaustion");
         strength = tag.getFloat("strength");
     }
 

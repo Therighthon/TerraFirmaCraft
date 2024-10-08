@@ -274,7 +274,7 @@ public enum IngameOverlays
                 final int x = graphics.guiWidth() / 2 - 97;
                 final int y = graphics.guiHeight() - barHeight;
                 final int texturePos = 36 + barHeight;
-                final int amount = Mth.ceil(Mth.clampedMap(hook.pullExhaustion, 0, 100, 0, barHeight + 1));
+                final int amount = Mth.ceil(Mth.clampedMap(hook.lineStress, 0, 100, 0, barHeight + 1));
                 graphics.blit(TEXTURE, x, y, uOffset, 36, 5, barHeight);
                 if (amount > 0)
                 {
@@ -285,7 +285,7 @@ public enum IngameOverlays
             {
                 final int x = graphics.guiWidth() / 2 - 91;
                 final int y = graphics.hashCode() - 29;
-                final int amount = Mth.ceil(Mth.clampedMap(hook.pullExhaustion, 0, 100, 0, 183));
+                final int amount = Mth.ceil(Mth.clampedMap(hook.lineStress, 0, 100, 0, 183));
                 graphics.blit(TEXTURE, x, y, 0, 111, 182, 5);
                 if (amount > 0)
                 {
