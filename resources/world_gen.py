@@ -80,6 +80,10 @@ def generate(rm: ResourceManager):
     biome(rm, 'river', 'river')
     biome(rm, 'shore', 'beach', ocean_features=True)
     biome(rm, 'tidal_flats', 'beach', ocean_features=True)
+    biome(rm, 'salt_flats', 'plains', barren=True)
+    biome(rm, 'mud_flats', 'plains', barren=True)
+    biome(rm, 'dune_sea', 'plains', barren=True)
+    biome(rm, 'grassy_dunes', 'plains')
 
     biome(rm, 'mountain_lake', 'extreme_hills')
     biome(rm, 'volcanic_mountain_lake', 'extreme_hills', volcano_features=True)
@@ -182,7 +186,7 @@ def generate(rm: ResourceManager):
         'replace_fluids': [],
     })
 
-    rm.placed_feature('flood_fill_lake', 'tfc:flood_fill_lake', decorate_chance(5), decorate_square(), decorate_heightmap('world_surface_wg'))
+    rm.placed_feature('flood_fill_lake', 'tfc:flood_fill_lake', decorate_chance(5), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(min_water=125))
     rm.placed_feature('underground_flood_fill_lake', 'tfc:flood_fill_lake', decorate_chance(3), decorate_square(), decorate_range(-56, 63))
 
     for spring_cfg in (('water', 110), ('lava', 50)):
@@ -494,12 +498,13 @@ def generate(rm: ResourceManager):
             })
 
     configured_placed_feature(rm, ('vein', 'kaolin_disc'), 'tfc:kaolin_disc_vein', {
-        'rarity': 40,
-        'min_y': 75,
-        'max_y': 110,
+        'rarity': 50,
+        'min_y': -7,
+        'max_y': 1,
         'size': 18,
         'height': 6,
         'density': 1.0,
+        'project': True,
         'random_name': 'kaolin',
         'biomes': '#tfc:kaolin_clay_spawns_in',
         'indicator': {
@@ -512,7 +517,7 @@ def generate(rm: ResourceManager):
         },
         'blocks': [],
     }, decorate_climate(min_water=300, min_temp=18))
-    rm.biome_tag('kaolin_clay_spawns_in', 'tfc:plateau', 'tfc:highlands', 'tfc:old_mountains')
+    rm.biome_tag('kaolin_clay_spawns_in', 'tfc:plateau', 'tfc:highlands', 'tfc:old_mountains', 'tfc:rolling_hills')
 
     configured_placed_feature(rm, ('vein', 'gravel'), 'tfc:disc_vein', {
         'rarity': 30,
@@ -553,6 +558,9 @@ def generate(rm: ResourceManager):
                     'with': [{'block': 'tfc:rock/hardened/%s' % rock}]
                 }],
             })
+    configured_placed_feature(rm, 'sea_stacks', 'tfc:sea_stacks', {}, decorate_heightmap('ocean_floor_wg'), decorate_replaceable())
+    configured_placed_feature(rm, 'sea_stacks_patch', 'minecraft:random_patch', {'feature': 'tfc:sea_stacks', 'tries': 6, 'xz_spread': 8, 'y_spread': 2}, decorate_chance(120), decorate_square(), decorate_heightmap('ocean_floor_wg'))
+
 
     rm.configured_feature('cave_vegetation', 'tfc:cave_vegetation', {
         'blocks': [{
@@ -666,7 +674,11 @@ def generate(rm: ResourceManager):
     configured_noise_plant_feature(rm, ('plant', 'red_algae'), plant_config('tfc:plant/red_algae[age=1,stage=1]', 1, 7, 100), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-22.4, 27.6, 215, 450), decorate_range(0, 70), water_depth=8, min_water_depth=5)
     configured_noise_plant_feature(rm, ('plant', 'green_algae'), plant_config('tfc:plant/green_algae[age=1,stage=1]', 1, 7, 100), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-22.4, 27.6, 215, 450), decorate_range(0, 70), water_depth=2)
     configured_noise_plant_feature(rm, ('plant', 'sargassum'), plant_config('tfc:plant/sargassum[age=1,stage=1]', 1, 7, 100), decorate_chance(5), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-8.4, 15.3, 0, 500), water_depth=8, min_water_depth=4)
-
+    configured_plant_patch_feature(rm, ('plant', 'white_water_lily'), plant_config('tfc:plant/white_water_lily', 1, 7, 100), decorate_chance(5), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-12.5, 8, 0, 500))
+    configured_plant_patch_feature(rm, ('plant', 'yellow_water_lily'), plant_config('tfc:plant/yellow_water_lily', 1, 7, 100), decorate_chance(5), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-2.5, 16, 0, 500))
+    configured_plant_patch_feature(rm, ('plant', 'purple_water_lily'), plant_config('tfc:plant/purple_water_lily', 1, 7, 100), decorate_chance(5), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(9.5, 38, 0, 500))
+    configured_plant_patch_feature(rm, ('plant', 'water_taro'), plant_config('tfc:plant/water_taro[age=1,stage=1,fluid=empty,part=lower]', 1, 7, 100, emergent_plant=True), decorate_chance(2), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(11.6, 38, 260, 500))
+    configured_plant_patch_feature(rm, ('plant', 'yucca'), plant_config('tfc:plant/yucca[age=1,stage=1]', 1, 15, 10), decorate_chance(5), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-3, 20.7, 0, 75))
 
     configured_placed_feature(rm, ('plant', 'hanging_vines'), 'tfc:weeping_vines', tall_plant_config('tfc:plant/hanging_vines_plant', 'tfc:plant/hanging_vines', 90, 10, 14, 21), decorate_heightmap('world_surface_wg'), decorate_square(), decorate_climate_121(13.6, 29.6, 220, 470, 0.15, 1, True, 2, 4, fuzzy=True), decorate_air_or_empty_fluid())
     configured_placed_feature(rm, ('plant', 'hanging_vines_cave'), 'tfc:weeping_vines', tall_plant_config('tfc:plant/hanging_vines_plant', 'tfc:plant/hanging_vines', 90, 10, 14, 22), decorate_carving_mask(30, 100), decorate_chance(0.003), decorate_climate_121(13.6, 29.6, 240, 470, 0.15, 1, True, 1, 4, fuzzy=True), decorate_air_or_empty_fluid())
@@ -720,6 +732,7 @@ def generate(rm: ResourceManager):
     configured_plant_patch_feature(rm, ('plant', 'goldenrod'), plant_config('tfc:plant/goldenrod[age=1,stage=1]', 1, 6, 16, requires_clay=True), decorate_climate(-15.7, -4.8, 75, 500))
     configured_plant_patch_feature(rm, ('plant', 'pampas_grass'), plant_config('tfc:plant/pampas_grass[age=1,stage=1,part=lower]', 1, 6, 16, requires_clay=True, tall_plant=True), decorate_climate(8, 38, 0, 300))
     configured_plant_patch_feature(rm, ('plant', 'perovskia'), plant_config('tfc:plant/perovskia[age=1,stage=1]', 1, 6, 16, requires_clay=True), decorate_climate(-8.4, 11.6, 0, 280))
+    configured_plant_patch_feature(rm, ('plant', 'rose'), plant_config('tfc:plant/rose[age=1,stage=1,part=lower]', 1, 15, 10, True, tall_plant=True, limit_density=True), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-7.4, 17.6, 150, 300))
     configured_noise_plant_feature(rm, ('plant', 'water_canna'), plant_config('tfc:plant/water_canna[age=1,stage=1]', 1, 6, 16, requires_clay=True), decorate_climate(11.6, 38, 150, 500))
     configured_plant_patch_feature(rm, ('plant', 'rose'), plant_config('tfc:plant/rose[age=1,stage=1,part=lower]', 1, 15, 10, True, tall_plant=True, limit_density=True), decorate_square(), decorate_heightmap('world_surface_wg'), decorate_climate(-6.6, 17.1, 150, 310))
 
@@ -779,12 +792,22 @@ def generate(rm: ResourceManager):
 
         rm.placed_feature_tag('feature/fruit_trees', 'tfc:plant/%s' % fruit, 'tfc:plant/%s' % fruit)
 
-    configured_placed_feature(rm, 'rare_bamboo', 'tfc:bamboo', {'probability': 0.2}, decorate_chance(30), decorate_climate(11, 40, 300, 500, True, fuzzy=True), ('minecraft:noise_based_count', {
+    configured_placed_feature(rm, 'rare_bamboo', 'tfc:bamboo', {'probability': 0.2, 'state': 'minecraft:bamboo'}, decorate_chance(30), decorate_climate(21, 40, 300, 500, True, fuzzy=True), ('minecraft:noise_based_count', {
         'noise_to_count_ratio': 160,
         'noise_factor': 80.0,
         'noise_offset': 0.3
     }), decorate_square(), decorate_heightmap('world_surface_wg'))
-    configured_placed_feature(rm, 'bamboo', 'tfc:bamboo', {'probability': 0.25}, decorate_count(6), decorate_climate(14, 40, 320, 500, fuzzy=True, forest_types=['dead_bamboo', 'edge_bamboo', 'secondary_bamboo']), ('minecraft:noise_based_count', {
+    configured_placed_feature(rm, 'bamboo', 'tfc:bamboo', {'probability': 0.25, 'state': 'minecraft:bamboo'}, decorate_count(6), decorate_climate(21, 40, 320, 500, fuzzy=True, forest_types=['dead_bamboo', 'edge_bamboo', 'secondary_bamboo']), ('minecraft:noise_based_count', {
+        'noise_to_count_ratio': 160,
+        'noise_factor': 80.0,
+        'noise_offset': 0.3
+    }), decorate_square(), decorate_heightmap('world_surface_wg'))
+    configured_placed_feature(rm, 'rare_bamboo_golden', 'tfc:bamboo', {'probability': 0.2, 'state': 'tfc:plant/golden_bamboo'}, decorate_chance(30), decorate_climate(11, 21.5, 300, 500, True, fuzzy=True), ('minecraft:noise_based_count', {
+        'noise_to_count_ratio': 160,
+        'noise_factor': 80.0,
+        'noise_offset': 0.3
+    }), decorate_square(), decorate_heightmap('world_surface_wg'))
+    configured_placed_feature(rm, 'bamboo_golden', 'tfc:bamboo', {'probability': 0.25, 'state': 'tfc:plant/golden_bamboo'}, decorate_count(6), decorate_climate(14, 21.5, 320, 500, fuzzy=True, forest_types=['dead_bamboo', 'edge_bamboo', 'secondary_bamboo']), ('minecraft:noise_based_count', {
         'noise_to_count_ratio': 160,
         'noise_factor': 80.0,
         'noise_offset': 0.3
@@ -1505,7 +1528,7 @@ VANILLA_MONSTERS: Dict[str, Dict[str, Any]] = {
 }
 
 
-def biome(rm: ResourceManager, name: str, category: str, boulders: bool = False, ocean_features: Union[bool, Literal['both']] = False, lake_features: Union[bool, Literal['default']] = 'default', volcano_features: bool = False, reef_features: bool = False, hot_spring_features: Union[bool, Literal['empty']] = False):
+def biome(rm: ResourceManager, name: str, category: str, boulders: bool = False, ocean_features: Union[bool, Literal['both']] = False, lake_features: Union[bool, Literal['default']] = 'default', volcano_features: bool = False, reef_features: bool = False, barren: bool = False, hot_spring_features: Union[bool, Literal['empty']] = False):
     spawners = {}
     soil_discs = []
     large_features = []
@@ -1528,6 +1551,8 @@ def biome(rm: ResourceManager, name: str, category: str, boulders: bool = False,
         large_features.append('#tfc:feature/icebergs')
         if name != 'tidal_flats':
             surface_decorations.append('#tfc:feature/ocean_plants')
+        else:
+            surface_decorations.append('tfc:sea_stacks_patch')
         if name == 'shore':
             surface_decorations.append('tfc:plant/beachgrass_patch')
             surface_decorations.append('tfc:plant/sea_palm_patch')
@@ -1566,7 +1591,8 @@ def biome(rm: ResourceManager, name: str, category: str, boulders: bool = False,
         large_features.append('tfc:coral_reef')
 
     # Continental / Land Features
-    if land_features:
+    # Exclude these features from salt flat biomes
+    if land_features and not barren:
         soil_discs.append('#tfc:feature/soil_discs')
         if 'salt_marsh' not in name:
             large_features += ['tfc:forest']
@@ -1575,7 +1601,7 @@ def biome(rm: ResourceManager, name: str, category: str, boulders: bool = False,
             surface_decorations += ['tfc:plant/marsh_jungle_vines']
         if 'lowlands' in name:
             large_features += ['tfc:dead_forest']
-        large_features += ['tfc:rare_bamboo', 'tfc:bamboo', 'tfc:cave_vegetation']
+        large_features += ['tfc:rare_bamboo', 'tfc:bamboo', 'tfc:rare_bamboo_golden', 'tfc:bamboo_golden', 'tfc:cave_vegetation']
         surface_decorations.append('#tfc:feature/land_plants')
         spawners['creature'] = [entity for entity in LAND_CREATURES.values()]
 
@@ -1633,7 +1659,7 @@ def biome(rm: ResourceManager, name: str, category: str, boulders: bool = False,
         air_carvers=['tfc:cave', 'tfc:canyon'],
         water_carvers=[],
         features=feature_tags,
-        creature_spawn_probability=0.08,
+        creature_spawn_probability=0.1,
         spawn_costs=costs
     )
 

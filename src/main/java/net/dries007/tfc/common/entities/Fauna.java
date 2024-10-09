@@ -13,6 +13,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.dries007.tfc.util.Helpers;
+import net.dries007.tfc.util.calendar.Month;
 import net.dries007.tfc.util.data.DataManager;
 import net.dries007.tfc.world.Codecs;
 import net.dries007.tfc.world.chunkdata.ForestType;
@@ -26,14 +27,16 @@ public record Fauna(
     int distanceBelowSeaLevel,
     ClimatePlacement climate,
     boolean solidGround,
-    int maxBrightness
+    int maxBrightness,
+    List<Month> months
 ) {
     public static final Codec<Fauna> CODEC = RecordCodecBuilder.create(i -> i.group(
         Codec.INT.optionalFieldOf("chance", 1).forGetter(c -> c.chance),
         Codec.INT.optionalFieldOf("distance_below_sea_level", -1).forGetter(c -> c.distanceBelowSeaLevel),
         ClimatePlacement.CODEC.forGetter(c -> c.climate),
         Codec.BOOL.optionalFieldOf("solid_ground", false).forGetter(c -> c.solidGround),
-        Codec.INT.optionalFieldOf("max_brightness", -1).forGetter(c -> c.maxBrightness)
+        Codec.INT.optionalFieldOf("max_brightness", -1).forGetter(c -> c.maxBrightness),
+        Month.CODEC.listOf().optionalFieldOf("months", Collections.emptyList()).forGetter(c -> c.months)
     ).apply(i, Fauna::new));
 
     public static final DataManager<Fauna> MANAGER = new DataManager<>(Helpers.identifier("fauna"), CODEC);
@@ -51,6 +54,7 @@ public record Fauna(
         int distanceBelowSeaLevel = -1;
         boolean solidGround = false;
         int maxBrightness = -1;
+        List<Month> months = new ArrayList<>();
 
         public Builder minTemperature(float min) { return temperature(min, Float.POSITIVE_INFINITY); }
         public Builder maxTemperature(float max) { return temperature(Float.NEGATIVE_INFINITY, max); }
@@ -94,6 +98,11 @@ public record Fauna(
             forests.addAll(List.of(types));
             return this;
         }
+        public Builder months(List<Month> months)
+        {
+            this.months.addAll(months);
+            return this;
+        }
 
         public Builder chance(int value) { chance = value; return this; }
         public Builder distanceBelowSeaLevel(int value) { distanceBelowSeaLevel = value; return this; }
@@ -104,7 +113,7 @@ public record Fauna(
 
         public Fauna build()
         {
-            return new Fauna(chance, distanceBelowSeaLevel, new ClimatePlacement(minTemperature, maxTemperature, minRainfall, maxRainfall, minRainVariance, maxRainVariance, rainVarianceAbsolute, minForest, maxForest, forests, fuzzy), solidGround, maxBrightness);
+            return new Fauna(chance, distanceBelowSeaLevel, new ClimatePlacement(minTemperature, maxTemperature, minRainfall, maxRainfall, minRainVariance, maxRainVariance, rainVarianceAbsolute, minForest, maxForest, forests, fuzzy), solidGround, maxBrightness, months);
         }
     }
 }

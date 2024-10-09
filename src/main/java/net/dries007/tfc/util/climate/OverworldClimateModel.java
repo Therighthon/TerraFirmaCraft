@@ -20,7 +20,6 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.XoroshiroRandomSource;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,6 +29,7 @@ import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.ICalendar;
 import net.dries007.tfc.util.calendar.Month;
+import net.dries007.tfc.util.tracker.WeatherHelpers;
 import net.dries007.tfc.world.ChunkGeneratorExtension;
 import net.dries007.tfc.world.TFCChunkGenerator;
 import net.dries007.tfc.world.chunkdata.ChunkData;
@@ -98,6 +98,12 @@ public class OverworldClimateModel implements ClimateModel
     public ClimateModelType<?> type()
     {
         return ClimateModels.OVERWORLD.get();
+    }
+
+    @Override
+    public float hemisphereScale()
+    {
+        return temperatureScale;
     }
 
     @Override
@@ -239,38 +245,38 @@ public class OverworldClimateModel implements ClimateModel
     }
 
     @Override
-    public float getFogginess(LevelReader level, BlockPos pos, long calendarTime)
+    public float getFog(LevelReader level, BlockPos pos)
     {
         // seed as if we're 2 hours in the future, in order to start the cycle at 4am (2 hours before sunrise)
-        final long day = ICalendar.getTotalDays(calendarTime + (2 * ICalendar.TICKS_IN_HOUR));
-        final RandomSource random = seededRandom(day, 129341623413L);
+        final ICalendar calendar = Calendars.get(level);
+        final RandomSource random = seededRandom(calendar.getTotalDays(), 129341623413L);
         if (random.nextInt(FOGGY_DAY_RARITY) != 0)
         {
             return 0;
         }
 
         final float fogModifier = random.nextFloat(); // untransformed value of the fog
+        final float hourOfDay = 24 * calendar.getCalendarFractionOfDay();
 
-        final long dayTime = Calendars.get(level).getCalendarDayTime();
-        float scaledTime; // a value between 0 and 1
-        if (dayTime > 22000) // 4am to 6am
+        final float scaledTime;
+        if (4 <= hourOfDay && hourOfDay < 6) // 4am to 6am => [0 -> 1]
         {
-            scaledTime = Mth.map(dayTime, 22000, 24000, 0, 1);
+            scaledTime = Mth.map(hourOfDay, 4, 6, 0, 1);
         }
-        else if (dayTime >= 0 && dayTime < 4000) // 6am to 10am
+        else if (6 <= hourOfDay && hourOfDay < 10) // 6am to 10am => 1
         {
             scaledTime = 1;
         }
-        else if (dayTime >= 4000 && dayTime < 6000) // 10am to 12pm
+        else if (10 <= hourOfDay && hourOfDay < 12) // 10am to 12pm => [1 -> 0]
         {
-            scaledTime = 1 - Mth.map(dayTime, 4000, 6000, 0, 1);
+            scaledTime = Mth.map(hourOfDay, 10, 12, 1, 0);
         }
-        else // 12pm to 4am
+        else // 12pm - 4am => 0
         {
             scaledTime = 0;
         }
 
-        final float rainfall = getAverageRainfall(level, pos);
+        final float rainfall = getRainfall(level, pos);
         final float rainfallModifier = Mth.clampedMap(rainfall, FOGGY_RAINFALL_MINIMUM, FOGGY_RAINFALL_PEAK, 0, 1);
         final float skylightModifier = Mth.clampedMap(level.getBrightness(LightLayer.SKY, pos), 0f, 10f, 0f, 1f);
 
@@ -278,33 +284,34 @@ public class OverworldClimateModel implements ClimateModel
     }
 
     @Override
-    public float getWaterFogginess(LevelReader level, BlockPos pos, long calendarTime)
+    public Vec2 getWind(Level level, BlockPos pos, long calendarTicks, int daysInMonth)
     {
-        if (Helpers.isFluid(level.getFluidState(pos), Fluids.WATER))
-        {
-            return Mth.clampedMap(level.getRawBrightness(pos, 0), 0f, 15f, 0.6f, 1.0f);
-        }
-        return 1f;
-    }
-
-    @Override
-    public Vec2 getWind(Level level, BlockPos pos, long calendarTicks)
-    {
-        // todo: the fact this is querying rain level directly is pretty problematic, it should not be
+        // No wind below sea level
         final int y = pos.getY();
         if (y < SEA_LEVEL - 6)
+        {
             return Vec2.ZERO;
-        final RandomSource random = seededRandom(ICalendar.getTotalDays(calendarTicks), 129341623413L);
+        }
 
+        final RandomSource random = seededRandom(ICalendar.getTotalCalendarDays(calendarTicks), 129341623413L);
+        final boolean isRaining = WeatherHelpers.isPrecipitating(getRain(calendarTicks), getRainfall(level, pos, calendarTicks, daysInMonth));
         final Holder<Biome> biome = level.getBiome(pos);
+
         if (biome.is(TFCTags.Biomes.HAS_PREDICTABLE_WINDS))
         {
+            // Predictable winds occur in oceans, and other biomes which want to have a wind functionality that is more than cosmetic
+            // This is really provided for i.e. aleki's ships mod.
+            //
+            // The basic formulation is that we have prevailing winds which head in predictable angles. They will alternate based
+            // on if it is currently day or night, and based on the "band", which are strips of coordinates which alternate N-S (based
+            // on the Z-coordinate)
             final boolean isDay = level.getDayTime() % 24000 < 12000;
+
             final int windScale = TFCConfig.SERVER.oceanWindScale.get();
             final boolean oddBand = pos.getZ() < 0 ?
                 pos.getZ() % (windScale * 2) < windScale :
                 pos.getZ() % (windScale * 2) > windScale;
-            final float intensity = random.nextFloat() * 0.3f + 0.3f + (0.4f * level.getRainLevel(0f));
+            final float intensity = random.nextFloat() * 0.3f + 0.3f + (isRaining ? 0.4f : 0);
             float angle;
             if (isDay && oddBand)
                 angle = Mth.PI / 4;
@@ -321,9 +328,9 @@ public class OverworldClimateModel implements ClimateModel
         final float preventFrequentWindyDays = random.nextFloat() < 0.1f ? 1f : random.nextFloat();
         final float intensity = Math.min(0.5f * random.nextFloat() * preventFrequentWindyDays
             + 0.4f * Mth.clampedMap(y, SEA_LEVEL, SEA_LEVEL + 65, 0f, 1f)
-            + 0.6f * level.getRainLevel(0f), 1f);
+            + (isRaining ? 0.6f : 0), 1f);
         final float angle = random.nextFloat() * Mth.TWO_PI;
-        return new Vec2(Mth.cos(angle), Mth.sin(angle)).scale(intensity);
+        return new Vec2(Mth.cos(angle) * intensity, Mth.sin(angle) * intensity);
     }
 
     /**
@@ -382,18 +389,14 @@ public class OverworldClimateModel implements ClimateModel
      */
     protected float calculateDailyTemperature(long calendarTime)
     {
-        // Hottest part of the day at 12, coldest at 0
-        int hourOfDay = ICalendar.getHourOfDay(calendarTime);
-        if (hourOfDay > 12)
-        {
-            // Range: 0 - 12
-            hourOfDay = 24 - hourOfDay;
-        }
-        // Range: -1 - 1
-        final float hourModifier = (hourOfDay / 6f) - 1f;
+        // Hottest part of the day at noon, coldest at midnight, range [-1, 1]
+        final float fractionOfDay = ICalendar.getFractionOfDay(calendarTime);
+        final float hourModifier = fractionOfDay < 0.5f
+            ? Mth.map(fractionOfDay, 0f, 0.5f, -1, 1)
+            : Mth.map(fractionOfDay, 0.5f, 1f, 1, -1);
 
         // Note: this does not use world seed, as that is not synced from server - client, resulting in the seed being different
-        final long day = ICalendar.getTotalDays(calendarTime);
+        final long day = ICalendar.getTotalCalendarDays(calendarTime);
         final RandomSource random = seededRandom(day, 1986239412341L);
         return ((random.nextFloat() - random.nextFloat()) + 0.3f * hourModifier) * 3f;
     }

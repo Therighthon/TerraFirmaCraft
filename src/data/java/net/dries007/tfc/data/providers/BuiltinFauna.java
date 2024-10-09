@@ -6,6 +6,7 @@
 
 package net.dries007.tfc.data.providers;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 import net.minecraft.core.HolderLookup;
@@ -14,10 +15,12 @@ import net.minecraft.data.PackOutput;
 import net.dries007.tfc.common.entities.Fauna;
 import net.dries007.tfc.common.entities.Faunas;
 import net.dries007.tfc.common.entities.aquatic.Fish;
-import net.dries007.tfc.world.chunkdata.ForestType;
+import net.dries007.tfc.util.calendar.Month;
 
 public class BuiltinFauna extends DataManagerProvider<Fauna>
 {
+    private static final List<Month> FRESHWATER_FISH_MONTHS = List.of(Month.MAY, Month.JUNE, Month.JULY, Month.AUGUST, Month.SEPTEMBER, Month.OCTOBER);
+
     public BuiltinFauna(PackOutput output, CompletableFuture<HolderLookup.Provider> lookup)
     {
         super(Fauna.MANAGER, output, lookup);
@@ -56,6 +59,7 @@ public class BuiltinFauna extends DataManagerProvider<Fauna>
         add(Faunas.LION, b -> b.minTemperature(16).groundwater(50, 300).maxForest(2));
         add(Faunas.SABERTOOTH, b -> b.maxTemperature(0).minGroundwater(250));
         add(Faunas.TIGER, b -> b.minTemperature(13).minGroundwater(100).minForest(2));
+
         add(Faunas.SQUID, b -> b.distanceBelowSeaLevel(15));
         add(Faunas.OCTOPOTEUTHIS, b -> b.maxBrightness(0).distanceBelowSeaLevel(33));
         add(Faunas.PIG, b -> b.temperature(-10, 35).minGroundwater(200).minForest(2));
