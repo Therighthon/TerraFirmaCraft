@@ -30,6 +30,7 @@
       }
     },
     "bush_leaves": "tfc:wood/leaves/aspen",
-    "old_growth_tree": "tfc:tree/aspen_large"
+    "old_growth_tree": "tfc:tree/aspen_large",
+    "riparian_tree": "tfc:tree/kapok"
   }
 }

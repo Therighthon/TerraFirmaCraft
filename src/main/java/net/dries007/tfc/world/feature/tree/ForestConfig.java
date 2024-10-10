@@ -26,7 +26,7 @@ public record ForestConfig(HolderSet<ConfiguredFeature<?, ?>> entries) implement
         ExtraCodecs.nonEmptyHolderSet(ConfiguredFeature.LIST_CODEC).fieldOf("entries").forGetter(c -> c.entries)
     ).apply(instance, ForestConfig::new));
 
-    public record Entry(ClimatePlacement climate, Optional<BlockState> bushLog, Optional<BlockState> bushLeaves, Optional<BlockState> fallenLog, Optional<BlockState> fallenLeaves, Optional<IWeighted<BlockState>> groundcover, Holder<ConfiguredFeature<?, ?>> treeFeature, Holder<ConfiguredFeature<?, ?>> deadFeature, Optional<Holder<ConfiguredFeature<?, ?>>> oldGrowthFeature, Optional<Holder<ConfiguredFeature<?, ?>>> krummholz, int oldGrowthChance, int spoilerOldGrowthChance, int fallenChance, int deadChance, boolean floating) implements FeatureConfiguration
+    public record Entry(ClimatePlacement climate, Optional<BlockState> bushLog, Optional<BlockState> bushLeaves, Optional<BlockState> fallenLog, Optional<BlockState> fallenLeaves, Optional<IWeighted<BlockState>> groundcover, Holder<ConfiguredFeature<?, ?>> treeFeature, Holder<ConfiguredFeature<?, ?>> deadFeature, Optional<Holder<ConfiguredFeature<?, ?>>> oldGrowthFeature, Optional<Holder<ConfiguredFeature<?, ?>>> krummholz, Optional<Holder<ConfiguredFeature<?, ?>>> riparianFeature, int oldGrowthChance, int spoilerOldGrowthChance, int fallenChance, int deadChance, boolean floating) implements FeatureConfiguration
     {
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create(instance -> {
             Codec<IWeighted<BlockState>> codec = Codecs.weightedCodec(Codecs.BLOCK_STATE, "block");
@@ -41,6 +41,7 @@ public record ForestConfig(HolderSet<ConfiguredFeature<?, ?>> entries) implement
                 ConfiguredFeature.CODEC.fieldOf("dead_tree").forGetter(c -> c.deadFeature),
                 ConfiguredFeature.CODEC.optionalFieldOf("old_growth_tree").forGetter(c -> c.oldGrowthFeature),
                 ConfiguredFeature.CODEC.optionalFieldOf("krummholz").forGetter(c -> c.oldGrowthFeature),
+                ConfiguredFeature.CODEC.optionalFieldOf("riparian_tree").forGetter(c -> c.riparianFeature),
                 Codec.INT.optionalFieldOf("old_growth_chance", 6).forGetter(c -> c.oldGrowthChance),
                 Codec.INT.optionalFieldOf("spoiler_old_growth_chance", 200).forGetter(c -> c.spoilerOldGrowthChance),
                 Codec.INT.optionalFieldOf("fallen_tree_chance", 14).forGetter(c -> c.fallenChance),
@@ -72,6 +73,11 @@ public record ForestConfig(HolderSet<ConfiguredFeature<?, ?>> entries) implement
         public ConfiguredFeature<?, ?> getFeature()
         {
             return treeFeature.value();
+        }
+
+        public ConfiguredFeature<?, ?> getRiparianFeature()
+        {
+            return riparianFeature.orElse(treeFeature).value();
         }
 
         public ConfiguredFeature<?, ?> getDeadFeature()

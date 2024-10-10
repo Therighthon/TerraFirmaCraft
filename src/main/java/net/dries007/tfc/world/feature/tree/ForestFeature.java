@@ -119,6 +119,10 @@ public class ForestFeature extends Feature<ForestConfig>
                 {
                     feature = entry.getOldGrowthFeature();
                 }
+                else if (data.getBaseGroundwater(mutablePos) > 20f)
+                {
+                    feature = entry.getRiparianFeature();
+                }
                 else
                 {
                     feature = entry.getFeature();
@@ -129,6 +133,7 @@ public class ForestFeature extends Feature<ForestConfig>
         return false;
     }
 
+    // TODO: We should really fix these things generating in floodfill lakes
     private boolean placeBush(WorldGenLevel level, RandomSource random, BlockPos chunkBlockPos, ForestConfig config, ChunkData data, BlockPos.MutableBlockPos mutablePos, ForestType type)
     {
         final int chunkX = chunkBlockPos.getX();

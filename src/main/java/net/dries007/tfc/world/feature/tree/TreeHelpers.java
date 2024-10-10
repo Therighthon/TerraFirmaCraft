@@ -300,6 +300,18 @@ public final class TreeHelpers
             .setMirror(randomMirror(random));
     }
 
+    /**
+     * Constructs a placement settings instance useful for tree generation
+     * Has a bounding box constrained by the given chunk and surrounding chunks to not cause cascading chunk loading
+     */
+    public static StructurePlaceSettings getPlacementSettingsNoTransforms(LevelHeightAccessor level, ChunkPos chunkPos, RandomSource random)
+    {
+        return new StructurePlaceSettings()
+            .setBoundingBox(new BoundingBox(chunkPos.getMinBlockX() - 16, level.getMinBuildHeight(), chunkPos.getMinBlockZ() - 16, chunkPos.getMaxBlockX() + 16, level.getMaxBuildHeight(), chunkPos.getMaxBlockZ() + 16))
+            .setRandom(random)
+            .addProcessor(BlockIgnoreProcessor.STRUCTURE_AND_AIR);
+    }
+
     public static void randomize(StructurePlaceSettings settings, RandomSource random)
     {
         settings.setRotation(randomRotation(random)).setMirror(randomMirror(random));
