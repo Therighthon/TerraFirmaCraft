@@ -1495,7 +1495,7 @@ LAND_CREATURES: Dict[str, Dict[str, Any]] = {
     'tiger': spawner('tfc:tiger', min_count=1, max_count=1, weight=2),
     'rabbit': spawner('tfc:rabbit', min_count=1, max_count=4, weight=3),
     'fox': spawner('tfc:fox', min_count=1, max_count=1),
-    'panda': spawner('tfc:panda', min_count=3, max_count=5, weight=80),
+    'panda': spawner('tfc:panda', min_count=3, max_count=5),
     'boar': spawner('tfc:boar', min_count=1, max_count=2, weight=2),
     'wildebeest': spawner('tfc:wildebeest', min_count=1, max_count=2, weight=2),
     'moose': spawner('tfc:moose', min_count=1, max_count=1),

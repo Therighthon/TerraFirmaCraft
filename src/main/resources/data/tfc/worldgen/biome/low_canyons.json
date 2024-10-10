@@ -217,7 +217,7 @@
       },
       {
         "type": "tfc:panda",
-        "weight": 80,
+        "weight": 1,
         "minCount": 3,
         "maxCount": 5
       },
