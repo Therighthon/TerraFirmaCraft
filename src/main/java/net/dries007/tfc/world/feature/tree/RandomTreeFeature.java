@@ -69,19 +69,22 @@ public class RandomTreeFeature extends Feature<RandomTreeConfig>
 
     private Rotation getRiparianRotation(BlockPos.MutableBlockPos pos, Level level)
     {
-        final float water = ChunkData.get(level, pos).getGroundwater(pos);
-        pos.move(0, 0, 1);
-        final float southDelta = ChunkData.get(level, pos).getGroundwater(pos) - water;
-        pos.move(1, 0, -1);
-        final float eastDelta = ChunkData.get(level, pos).getGroundwater(pos) - water;
+        //TODO: Make this work
+        return Rotation.NONE;
 
-        if (Math.abs(southDelta) > Math.abs(eastDelta))
-        {
-            return southDelta > 0 ? Rotation.CLOCKWISE_180 : Rotation.NONE;
-        }
-        else
-        {
-            return eastDelta > 0 ? Rotation.CLOCKWISE_90 : Rotation.COUNTERCLOCKWISE_90;
-        }
+//        final float water = ChunkData.get(level, pos).getGroundwater(pos);
+//        pos.move(0, 0, 1);
+//        final float southDelta = ChunkData.get(level, pos).getGroundwater(pos) - water;
+//        pos.move(1, 0, -1);
+//        final float eastDelta = ChunkData.get(level, pos).getGroundwater(pos) - water;
+//
+//        if (Math.abs(southDelta) > Math.abs(eastDelta))
+//        {
+//            return southDelta > 0 ? Rotation.CLOCKWISE_180 : Rotation.NONE;
+//        }
+//        else
+//        {
+//            return eastDelta > 0 ? Rotation.CLOCKWISE_90 : Rotation.COUNTERCLOCKWISE_90;
+//        }
     }
 }

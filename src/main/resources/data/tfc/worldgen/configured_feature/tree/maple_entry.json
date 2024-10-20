@@ -28,6 +28,7 @@
       }
     },
     "bush_leaves": "tfc:wood/leaves/maple",
-    "old_growth_tree": "tfc:tree/maple_large"
+    "old_growth_tree": "tfc:tree/maple_large",
+    "riparian_tree": "tfc:tree/maple_riparian"
   }
 }
