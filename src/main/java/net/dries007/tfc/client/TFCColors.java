@@ -134,6 +134,7 @@ public final class TFCColors
 
     /**
      * Gets a color based on average temperature and time of year. Autumn occurs at different times of the year at height-adjusted average temperatures from the poles to 12c
+     * TODO: Link to LeafBlockModel
      */
     private static int getSeasonalFoliageColor(BlockPos pos, int autumnIndex)
     {

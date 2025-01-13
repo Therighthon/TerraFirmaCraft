@@ -22,6 +22,7 @@ import net.dries007.tfc.common.blocks.plant.fruit.Lifecycle;
 import net.dries007.tfc.common.blocks.rock.RockSpikeBlock;
 import net.dries007.tfc.common.blocks.rotation.CrankshaftBlock;
 import net.dries007.tfc.common.blocks.wood.BranchDirection;
+import net.dries007.tfc.common.blocks.wood.TFCLeavesBlock;
 import net.dries007.tfc.common.fluids.FluidProperty;
 import net.dries007.tfc.common.fluids.TFCFluids;
 import net.dries007.tfc.world.river.Flow;
@@ -76,6 +77,7 @@ public class TFCBlockStateProperties
 
     public static final IntegerProperty SAPLINGS = IntegerProperty.create("saplings", 1, 4);
 
+    public static final EnumProperty<TFCLeavesBlock.Seasonality> LEAF_SEASONALITY = EnumProperty.create("leaf_seasonality", TFCLeavesBlock.Seasonality.class);
     public static final EnumProperty<DoubleCropBlock.Part> DOUBLE_CROP_PART = EnumProperty.create("part", DoubleCropBlock.Part.class);
     public static final EnumProperty<ITallPlant.Part> TALL_PLANT_PART = EnumProperty.create("part", ITallPlant.Part.class);
     public static final EnumProperty<RockSpikeBlock.Part> ROCK_SPIKE_PART = EnumProperty.create("part", RockSpikeBlock.Part.class);

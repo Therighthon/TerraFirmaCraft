@@ -7,6 +7,7 @@
 package net.dries007.tfc.common.blocks.wood;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ParticleUtils;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -28,6 +30,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -49,12 +52,13 @@ import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.Season;
+import net.dries007.tfc.world.chunkdata.ChunkData;
 
 public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockExtension, IFluidLoggable, ISlowEntities
 {
     public static final BooleanProperty PERSISTENT = BlockStateProperties.PERSISTENT;
     public static final FluidProperty FLUID = TFCBlockStateProperties.WATER;
-
+    public static final EnumProperty<Seasonality> SEASONALITY = TFCBlockStateProperties.LEAF_SEASONALITY;
 
     public static void doParticles(ServerLevel level, double x, double y, double z, int count)
     {
@@ -93,10 +97,12 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
     private final int maxDecayDistance;
     private final ExtendedProperties properties;
     private final int autumnIndex;
+    private final boolean isConifer;
+    private final boolean hasFlowers;
     @Nullable private final Supplier<? extends Block> fallenLeaves;
     @Nullable private final Supplier<? extends Block> fallenTwig;
 
-    public TFCLeavesBlock(ExtendedProperties properties, int autumnIndex, @Nullable Supplier<? extends Block> fallenLeaves, @Nullable Supplier<? extends Block> fallenTwig)
+    public TFCLeavesBlock(ExtendedProperties properties, int autumnIndex, boolean isConifer, boolean hasFlowers, @Nullable Supplier<? extends Block> fallenLeaves, @Nullable Supplier<? extends Block> fallenTwig)
     {
         super(properties.properties());
 
@@ -105,9 +111,11 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
         this.fallenLeaves = fallenLeaves;
         this.fallenTwig = fallenTwig;
         this.autumnIndex = autumnIndex;
+        this.isConifer = isConifer;
+        this.hasFlowers = hasFlowers;
 
         // Distance is dependent on tree species
-        registerDefaultState(stateDefinition.any().setValue(getDistanceProperty(), 1).setValue(PERSISTENT, false));
+        registerDefaultState(stateDefinition.any().setValue(getDistanceProperty(), 1).setValue(SEASONALITY, isConifer ? Seasonality.EVERGREEN : Seasonality.DECIDUOUS).setValue(PERSISTENT, false));
     }
 
     @Override
@@ -289,8 +297,25 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
     public BlockState getStateForPlacement(BlockPlaceContext context)
     {
         final FluidState fluid = context.getLevel().getFluidState(context.getClickedPos());
+        final BlockPos pos = context.getClickedPos();
+        final ChunkData data = ChunkData.get(context.getLevel(), pos);
+        final Seasonality seasonality;
+        // TODO: Standardize with tree placement info
+        if (isConifer)
+        {
+            seasonality = Seasonality.EVERGREEN;
+        }
+        else if (data.getAverageTemp(pos) < 14f)
+        {
+            seasonality = Seasonality.DECIDUOUS;
+        }
+        else
+        {
+            seasonality = data.getRainVariance(pos) > 0.6f ? Seasonality.EVERGREEN : Seasonality.MONSOONAL;
+        }
         return defaultBlockState()
             .setValue(PERSISTENT, context.getPlayer() != null)
+            .setValue(SEASONALITY, seasonality)
             .setValue(getFluidProperty(), getFluidProperty().keyForOrEmpty(fluid.getType()));
     }
 
@@ -310,7 +335,7 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
     {
-        builder.add(PERSISTENT, getDistanceProperty(), getFluidProperty());
+        builder.add(PERSISTENT, getDistanceProperty(), SEASONALITY, getFluidProperty());
     }
 
     @Nullable
@@ -334,6 +359,16 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
     public int getAutumnIndex()
     {
         return autumnIndex;
+    }
+
+    public boolean isConifer()
+    {
+        return isConifer;
+    }
+
+    public boolean hasFlowers()
+    {
+        return hasFlowers;
     }
 
     protected IntegerProperty getDistanceProperty()
@@ -367,6 +402,24 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
         {
             // Check against this leaf block only, not any leaves
             return neighbor.getBlock() == this ? neighbor.getValue(getDistanceProperty()) : maxDecayDistance;
+        }
+    }
+
+    public enum Seasonality implements StringRepresentable
+    {
+        EVERGREEN, DECIDUOUS, MONSOONAL;
+
+        private final String serializedName;
+
+        Seasonality()
+        {
+            serializedName = name().toLowerCase(Locale.ROOT);
+        }
+
+        @Override
+        public String getSerializedName()
+        {
+            return serializedName;
         }
     }
 }

@@ -89,7 +89,11 @@ public class ForestFeature extends Feature<ForestConfig>
         mutablePos.set(chunkX + random.nextInt(16), 0, chunkZ + random.nextInt(16));
         mutablePos.setY(level.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, mutablePos.getX(), mutablePos.getZ()));
 
-        final ForestConfig.Entry entry = getTree(data, random, config, mutablePos, typeConfig);
+        final float groundwater = data.getGroundwater(mutablePos);
+        final float averageTemperature = EnvironmentHelpers.adjustAvgTempForElev(mutablePos.getY(), data.getAverageTemp(mutablePos));
+        final float rainVariance = data.getRainVariance(mutablePos);
+        final ForestConfig.Entry entry = getTree(groundwater, averageTemperature, random, config, mutablePos, typeConfig);
+
         if (entry != null)
         {
             if (entry.floating())
@@ -117,7 +121,10 @@ public class ForestFeature extends Feature<ForestConfig>
                 final int spoilerChance = entry.spoilerOldGrowthChance();
                 if (spoilerChance > 0 && random.nextInt(spoilerChance) == 0)
                 {
-                    feature = entry.getOldGrowthFeature();
+                    if (averageTemperature < 12)
+                    {
+                        feature = entry.getDeciduousOldGrowthFeature();
+                    }
                 }
                 else
                 {
@@ -137,7 +144,9 @@ public class ForestFeature extends Feature<ForestConfig>
         mutablePos.set(chunkX + random.nextInt(16), 0, chunkZ + random.nextInt(16));
         mutablePos.setY(level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, mutablePos.getX(), mutablePos.getZ()));
 
-        final ForestConfig.Entry entry = getTree(data, random, config, mutablePos, type);
+        final float groundwater = data.getGroundwater(mutablePos);
+        final float averageTemperature = EnvironmentHelpers.adjustAvgTempForElev(mutablePos.getY(), data.getAverageTemp(mutablePos));
+        final ForestConfig.Entry entry = getTree(groundwater, averageTemperature, random, config, mutablePos, type);
         if (entry != null && EnvironmentHelpers.canPlaceBushOn(level, mutablePos))
         {
             entry.bushLog().ifPresent(log -> entry.bushLeaves().ifPresent(leaves -> {
@@ -195,7 +204,9 @@ public class ForestFeature extends Feature<ForestConfig>
         mutablePos.set(chunkX + random.nextInt(16), 0, chunkZ + random.nextInt(16));
         mutablePos.setY(level.getHeight(Heightmap.Types.OCEAN_FLOOR, mutablePos.getX(), mutablePos.getZ()));
 
-        final ForestConfig.Entry entry = getTree(data, random, config, mutablePos, type);
+        final float groundwater = data.getGroundwater(mutablePos);
+        final float averageTemperature = EnvironmentHelpers.adjustAvgTempForElev(mutablePos.getY(), data.getAverageTemp(mutablePos));
+        final ForestConfig.Entry entry = getTree(groundwater, averageTemperature, random, config, mutablePos, type);
         if (entry != null)
         {
             entry.groundcover().ifPresent(groundcover -> {
@@ -224,7 +235,9 @@ public class ForestFeature extends Feature<ForestConfig>
         mutablePos.set(chunkX + random.nextInt(16), 0, chunkZ + random.nextInt(16));
         mutablePos.setY(level.getHeight(Heightmap.Types.OCEAN_FLOOR, mutablePos.getX(), mutablePos.getZ()));
 
-        final ForestConfig.Entry entry = getTree(data, random, config, mutablePos, type);
+        final float groundwater = data.getGroundwater(mutablePos);
+        final float averageTemperature = EnvironmentHelpers.adjustAvgTempForElev(mutablePos.getY(), data.getAverageTemp(mutablePos));
+        final ForestConfig.Entry entry = getTree(groundwater, averageTemperature, random, config, mutablePos, type);
         if (entry != null)
         {
             entry.fallenLeaves().ifPresent(placementState -> {
@@ -262,7 +275,9 @@ public class ForestFeature extends Feature<ForestConfig>
         mutablePos.move(Direction.UP);
         if (Helpers.isBlock(downState, TFCTags.Blocks.BUSH_PLANTABLE_ON) || Helpers.isBlock(downState, TFCTags.Blocks.SEA_BUSH_PLANTABLE_ON))
         {
-            final ForestConfig.Entry entry = getTree(data, random, config, mutablePos, type);
+            final float groundwater = data.getGroundwater(mutablePos);
+            final float averageTemperature = EnvironmentHelpers.adjustAvgTempForElev(mutablePos.getY(), data.getAverageTemp(mutablePos));
+            final ForestConfig.Entry entry = getTree(groundwater, averageTemperature, random, config, mutablePos, type);
             if (entry != null)
             {
                 final int fallChance = entry.fallenChance();
@@ -327,10 +342,8 @@ public class ForestFeature extends Feature<ForestConfig>
     }
 
     @Nullable
-    private ForestConfig.Entry getTree(ChunkData chunkData, RandomSource random, ForestConfig config, BlockPos pos, ForestType type)
+    private ForestConfig.Entry getTree(float groundwater, float averageTemperature, RandomSource random, ForestConfig config, BlockPos pos, ForestType type)
     {
-        final float groundwater = chunkData.getGroundwater(pos);
-        final float averageTemperature = EnvironmentHelpers.adjustAvgTempForElev(pos.getY(), chunkData.getAverageTemp(pos));
         final List<ForestConfig.Entry> entries = config.entries().stream().map(configuredFeature -> configuredFeature.value().config()).map(cfg -> (ForestConfig.Entry) cfg)
             .filter(entry -> entry.isValid(averageTemperature, groundwater))
             .sorted(Comparator.comparingDouble(entry -> entry.distanceFromMean(averageTemperature, groundwater)))
