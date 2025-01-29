@@ -43,9 +43,6 @@ import net.dries007.tfc.common.blocks.wood.TFCLeavesBlock;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.climate.Climate;
-import net.dries007.tfc.util.climate.ClimateModel;
-import net.dries007.tfc.util.tracker.WeatherHelpers;
-import net.dries007.tfc.util.tracker.WorldTracker;
 import net.dries007.tfc.world.chunkdata.ChunkData;
 
 public class LeavesBlockModel implements IDynamicBakedModel, IUnbakedGeometry<LeavesBlockModel>
@@ -107,9 +104,18 @@ public class LeavesBlockModel implements IDynamicBakedModel, IUnbakedGeometry<Le
                 // Skip all the other calculations if the tree is an evergreen
                 if (((TFCLeavesBlock) block).isConifer())
                 {
-                    // TODO: Allow for snow
-                    assert denseLeavesBakedModel != null;
-                    return denseLeavesBakedModel;
+                    // TODO: May need to reorganize/copy code
+                    final Level level = ClientHelpers.getLevel();
+                    if (level != null && ChunkData.get(level, pos).getTreeSnow())
+                    {
+                        assert snowyLeavesBakedModel != null;
+                        return snowyLeavesBakedModel;
+                    }
+                    else
+                    {
+                        assert denseLeavesBakedModel != null;
+                        return denseLeavesBakedModel;
+                    }
                 }
                 flowers = ((TFCLeavesBlock) block).hasFlowers();
             }
@@ -155,13 +161,15 @@ public class LeavesBlockModel implements IDynamicBakedModel, IUnbakedGeometry<Le
 
 
         //TODO: Also check if actively snowing?? Maybe if a single snow block melts/places that could update the chunk?
-        final WorldTracker tracker = WorldTracker.get(level);
-        final ClimateModel model = tracker.getClimateModel();
-        final float realTemperature = model.getTemperature(level, pos);
-        final float rainfall = model.getRainfall(level, pos);
-        final long currentCalendarTick = Calendars.SERVER.getCalendarTicks();
+//        final WorldTracker tracker = WorldTracker.get(level);
+//        final ClimateModel model = tracker.getClimateModel();
+//        final float realTemperature = model.getTemperature(level, pos);
+//        final float rainfall = model.getRainfall(level, pos);
+//        final long currentCalendarTick = Calendars.SERVER.getCalendarTicks();
         // Use positionDeltaHash to fade in and out over about 40 seconds
-        if (realTemperature < -2f && WeatherHelpers.isPrecipitating(model.getRain(currentCalendarTick - 6 * positionDeltaHash - 400), rainfall))
+//        if (realTemperature < -2f && WeatherHelpers.isPrecipitating(model.getRain(currentCalendarTick - 6 * positionDeltaHash - 400), rainfall))
+        final ChunkData data = ChunkData.get(level, pos);
+        if (data.getTreeSnow())
         {
             final float springStart = 1f - autumnEnd;
             if (timeOfYear > autumnEnd || timeOfYear < springStart)

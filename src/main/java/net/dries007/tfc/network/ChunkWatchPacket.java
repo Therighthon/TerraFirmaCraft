@@ -7,6 +7,7 @@
 package net.dries007.tfc.network;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.level.ChunkPos;
@@ -27,17 +28,19 @@ public record ChunkWatchPacket(
     LerpFloatLayer rainVariance,
     LerpFloatLayer baseGroundwater,
     LerpFloatLayer temperature,
-    ForestType forestType
+    ForestType forestType,
+    boolean treeSnow
 ) implements CustomPacketPayload
 {
     public static final CustomPacketPayload.Type<ChunkWatchPacket> TYPE = PacketHandler.type("chunk_watch");
-    public static final StreamCodec<ByteBuf, ChunkWatchPacket> CODEC = StreamCodec.composite(
+    public static final StreamCodec<ByteBuf, ChunkWatchPacket> CODEC = StreamCodecs.composite(
         StreamCodecs.CHUNK_POS, c -> c.pos,
         LerpFloatLayer.STREAM_CODEC, c -> c.rainfall,
         LerpFloatLayer.STREAM_CODEC, c -> c.rainVariance,
         LerpFloatLayer.STREAM_CODEC, c -> c.baseGroundwater,
         LerpFloatLayer.STREAM_CODEC, c -> c.temperature,
         ForestType.STREAM, c -> c.forestType,
+        ByteBufCodecs.BOOL, c -> c.treeSnow,
         ChunkWatchPacket::new
     );
 
@@ -56,7 +59,7 @@ public record ChunkWatchPacket(
             final ChunkData data = ChunkData.get(chunk);
             if (data.status() != ChunkData.Status.INVALID)
             {
-                data.onUpdatePacket(rainfall, rainVariance, baseGroundwater, temperature, forestType);
+                data.onUpdatePacket(rainfall, rainVariance, baseGroundwater, temperature, forestType, treeSnow);
             }
         }
     }

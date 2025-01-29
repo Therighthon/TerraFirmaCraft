@@ -89,6 +89,7 @@ public sealed class ChunkData
     private ForestType forestType;
 
     private long lastRandomTick;
+    private boolean treeSnow;
 
     public ChunkData(ChunkPos pos)
     {
@@ -103,6 +104,7 @@ public sealed class ChunkData
         this.rockData = new RockData(generator);
         this.forestType = ForestType.GRASSLAND;
         this.lastRandomTick = -1;
+        this.treeSnow = true;
     }
 
     public ChunkPos getPos()
@@ -195,6 +197,17 @@ public sealed class ChunkData
         chunk.setUnsaved(true); // Flag the chunk, since we need to re-save the data
     }
 
+    public boolean getTreeSnow()
+    {
+        return treeSnow;
+    }
+
+    public void setTreeSnow(ChunkAccess chunk, boolean treeSnow)
+    {
+        this.treeSnow = treeSnow;
+        chunk.setUnsaved(true); // Flag the chunk, since we need to re-save the data
+    }
+
     /**
      * Generate the chunk data from empty to {@link Status#PARTIAL}. Populated lazily on first creation, and guaranteed to be done by structure stage.
      */
@@ -230,13 +243,13 @@ public sealed class ChunkData
         assert status == Status.FULL;
         assert rainfallLayer != null && temperatureLayer != null && rainVarianceLayer != null && baseGroundwaterLayer != null;
 
-        return new ChunkWatchPacket(pos, rainfallLayer, rainVarianceLayer, baseGroundwaterLayer, temperatureLayer, forestType);
+        return new ChunkWatchPacket(pos, rainfallLayer, rainVarianceLayer, baseGroundwaterLayer, temperatureLayer, forestType, treeSnow);
     }
 
     /**
      * Called on client, sets to received data
      */
-    public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType)
+    public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType, boolean treeSnow)
     {
         assert status == Status.EMPTY || status == Status.CLIENT;
 
@@ -245,6 +258,7 @@ public sealed class ChunkData
         this.baseGroundwaterLayer = baseGroundwaterLayer;
         this.temperatureLayer = temperatureLayer;
         this.forestType = forestType;
+        this.treeSnow = treeSnow;
         this.status = Status.CLIENT;
     }
 
@@ -271,6 +285,7 @@ public sealed class ChunkData
             nbt.put("baseGroundwater", baseGroundwaterLayer.write());
             nbt.put("temperature", temperatureLayer.write());
             nbt.putByte("forestType", (byte) forestType.ordinal());
+            nbt.putBoolean("treeSnow", treeSnow);
         }
         return nbt;
     }
@@ -292,6 +307,7 @@ public sealed class ChunkData
             baseGroundwaterLayer = new LerpFloatLayer(nbt.getCompound("baseGroundwater"));
             temperatureLayer = new LerpFloatLayer(nbt.getCompound("temperature"));
             forestType = ForestType.valueOf(nbt.getByte("forestType"));
+            treeSnow = nbt.getBoolean("treeSnow");
         }
     }
 
@@ -335,7 +351,7 @@ public sealed class ChunkData
         public void generateFull(int[] surfaceHeight, int[] aquiferSurfaceHeight) { error(); }
 
         @Override
-        public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType) { error(); }
+        public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType, boolean treeSnow) { error(); }
 
         @Override
         public void deserializeNBT(CompoundTag nbt) { error(); }

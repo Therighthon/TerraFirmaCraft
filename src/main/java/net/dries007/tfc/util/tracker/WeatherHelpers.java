@@ -248,11 +248,13 @@ public final class WeatherHelpers
                 netChangeInSnow = Math.min(64 - countExistingSnowInChunk(level, chunkPos), netChangeInSnow);
                 for (int i = 0; i < netChangeInSnow; i++)
                 {
+                    data.setTreeSnow(chunk, true);
                     handleSnowAccumulation(level, getRandomSurfacePos(level, chunkPos));
                 }
             }
             else if (netChangeInSnow < 0)
             {
+                data.setTreeSnow(chunk, false);
                 handleSnowMelting(level, chunkPos, -netChangeInSnow);
             }
         }
@@ -263,11 +265,13 @@ public final class WeatherHelpers
             if (realTemperature > 2f && level.random.nextInt(TICKS_PER_SNOW_MELT_PER_SNOW_ACCUMULATION) == 0)
             {
                 // Trigger melting
+                data.setTreeSnow(chunk, false);
                 handleSnowMelting(level, chunkPos, 1);
             }
             else if (realTemperature < -2f && isPrecipitating(model.getRain(currentCalendarTick), rainfall))
             {
                 // Trigger accumulation
+                data.setTreeSnow(chunk, true);
                 handleSnowAccumulation(level, surfacePos);
             }
         }
