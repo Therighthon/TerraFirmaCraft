@@ -7,6 +7,7 @@
 package net.dries007.tfc.network;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.level.ChunkPos;
@@ -18,6 +19,8 @@ import net.dries007.tfc.world.chunkdata.ChunkData;
 import net.dries007.tfc.world.chunkdata.ForestType;
 import net.dries007.tfc.world.chunkdata.LerpFloatLayer;
 
+import java.util.List;
+
 /**
  * Sent from server -> client on chunk watch, partially syncs chunk data and updates the client cache
  */
@@ -27,17 +30,21 @@ public record ChunkWatchPacket(
     LerpFloatLayer rainVariance,
     LerpFloatLayer baseGroundwater,
     LerpFloatLayer temperature,
-    ForestType forestType
+    ForestType forestType,
+    int snowCount,
+    List<Byte> snowPositions,
 ) implements CustomPacketPayload
 {
     public static final CustomPacketPayload.Type<ChunkWatchPacket> TYPE = PacketHandler.type("chunk_watch");
-    public static final StreamCodec<ByteBuf, ChunkWatchPacket> CODEC = StreamCodec.composite(
+    public static final StreamCodec<ByteBuf, ChunkWatchPacket> CODEC = StreamCodecs.composite(
         StreamCodecs.CHUNK_POS, c -> c.pos,
         LerpFloatLayer.STREAM_CODEC, c -> c.rainfall,
         LerpFloatLayer.STREAM_CODEC, c -> c.rainVariance,
         LerpFloatLayer.STREAM_CODEC, c -> c.baseGroundwater,
         LerpFloatLayer.STREAM_CODEC, c -> c.temperature,
         ForestType.STREAM, c -> c.forestType,
+        ByteBufCodecs.INT, c -> c.snowCount,
+        ByteBufCodecs.BYTE_ARRAY, c -> c.snowPositions,
         ChunkWatchPacket::new
     );
 
@@ -56,7 +63,7 @@ public record ChunkWatchPacket(
             final ChunkData data = ChunkData.get(chunk);
             if (data.status() != ChunkData.Status.INVALID)
             {
-                data.onUpdatePacket(rainfall, rainVariance, baseGroundwater, temperature, forestType);
+                data.onUpdatePacket(rainfall, rainVariance, baseGroundwater, temperature, forestType, snowCount, snowPositions);
             }
         }
     }

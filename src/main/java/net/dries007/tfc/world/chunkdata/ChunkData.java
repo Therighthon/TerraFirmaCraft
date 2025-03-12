@@ -20,6 +20,10 @@ import org.jetbrains.annotations.Nullable;
 import net.dries007.tfc.common.TFCAttachments;
 import net.dries007.tfc.network.ChunkWatchPacket;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 
 public sealed class ChunkData
 {
@@ -89,6 +93,8 @@ public sealed class ChunkData
     private ForestType forestType;
 
     private long lastRandomTick;
+    private int snowCount;
+    private List<Byte> snowPositions;
 
     public ChunkData(ChunkPos pos)
     {
@@ -103,6 +109,13 @@ public sealed class ChunkData
         this.rockData = new RockData(generator);
         this.forestType = ForestType.GRASSLAND;
         this.lastRandomTick = -1;
+        this.snowCount = 0;
+        this.snowPositions = new ArrayList<>();
+        for (byte i = -128; i < 127; i++)
+        {
+            snowPositions.add(i);
+        }
+        Collections.shuffle(snowPositions);
     }
 
     public ChunkPos getPos()
@@ -195,6 +208,25 @@ public sealed class ChunkData
         chunk.setUnsaved(true); // Flag the chunk, since we need to re-save the data
     }
 
+    public int getSnowCount()
+    {
+        return snowCount;
+    }
+
+    public void setSnowCount(ChunkAccess chunk, int snowCount)
+    {
+        this.snowCount = snowCount;
+        chunk.setUnsaved(true); // Flag the chunk, since we need to re-save the data
+    }
+
+    // TODO: has to be a better way to do this
+    public BlockPos getNextSnowPos(ChunkAccess chunk)
+    {
+        int next = 128 + this.snowPositions.stream().iterator().next();
+        chunk.setUnsaved(true); // Flag the chunk, since we need to re-save the data
+        return new BlockPos(next / 16, 0, next % 16);
+    }
+
     /**
      * Generate the chunk data from empty to {@link Status#PARTIAL}. Populated lazily on first creation, and guaranteed to be done by structure stage.
      */
@@ -230,13 +262,13 @@ public sealed class ChunkData
         assert status == Status.FULL;
         assert rainfallLayer != null && temperatureLayer != null && rainVarianceLayer != null && baseGroundwaterLayer != null;
 
-        return new ChunkWatchPacket(pos, rainfallLayer, rainVarianceLayer, baseGroundwaterLayer, temperatureLayer, forestType);
+        return new ChunkWatchPacket(pos, rainfallLayer, rainVarianceLayer, baseGroundwaterLayer, temperatureLayer, forestType, snowCount, snowPositions);
     }
 
     /**
      * Called on client, sets to received data
      */
-    public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType)
+    public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType, int snowCount)
     {
         assert status == Status.EMPTY || status == Status.CLIENT;
 
@@ -245,6 +277,7 @@ public sealed class ChunkData
         this.baseGroundwaterLayer = baseGroundwaterLayer;
         this.temperatureLayer = temperatureLayer;
         this.forestType = forestType;
+        this.snowCount = snowCount;
         this.status = Status.CLIENT;
     }
 
@@ -271,6 +304,7 @@ public sealed class ChunkData
             nbt.put("baseGroundwater", baseGroundwaterLayer.write());
             nbt.put("temperature", temperatureLayer.write());
             nbt.putByte("forestType", (byte) forestType.ordinal());
+            nbt.putInt("snowCount", snowCount);
         }
         return nbt;
     }
@@ -292,6 +326,7 @@ public sealed class ChunkData
             baseGroundwaterLayer = new LerpFloatLayer(nbt.getCompound("baseGroundwater"));
             temperatureLayer = new LerpFloatLayer(nbt.getCompound("temperature"));
             forestType = ForestType.valueOf(nbt.getByte("forestType"));
+            snowCount = nbt.getInt("snowCount");
         }
     }
 
@@ -335,7 +370,7 @@ public sealed class ChunkData
         public void generateFull(int[] surfaceHeight, int[] aquiferSurfaceHeight) { error(); }
 
         @Override
-        public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType) { error(); }
+        public void onUpdatePacket(LerpFloatLayer rainfallLayer, LerpFloatLayer rainVarianceLayer, LerpFloatLayer baseGroundwaterLayer, LerpFloatLayer temperatureLayer, ForestType forestType, int snowCount) { error(); }
 
         @Override
         public void deserializeNBT(CompoundTag nbt) { error(); }
