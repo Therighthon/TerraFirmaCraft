@@ -13,14 +13,17 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnGroupData;
-import net.minecraft.world.entity.animal.AbstractSchoolingFish;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.animal.AbstractFish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -38,9 +41,11 @@ import net.dries007.tfc.common.fluids.TFCFluids;
 import net.dries007.tfc.common.items.TFCItems;
 import net.dries007.tfc.util.Helpers;
 
-public class Jellyfish extends AbstractSchoolingFish implements AquaticMob
+public class Jellyfish extends AbstractFish implements AquaticMob
 {
     private static final EntityDataAccessor<Integer> DATA_ID_TYPE_VARIANT = SynchedEntityData.defineId(Jellyfish.class, EntityDataSerializers.INT);
+
+    public final AnimationState idleAnimation = new AnimationState();
 
     private static final ResourceLocation[] LOCATIONS = {
         RenderHelpers.animalTexture("jellyfish_blue"),
@@ -50,10 +55,69 @@ public class Jellyfish extends AbstractSchoolingFish implements AquaticMob
         RenderHelpers.animalTexture("jellyfish_orange"),
     };
 
-    public Jellyfish(EntityType<? extends AbstractSchoolingFish> type, Level level)
+    public Jellyfish(EntityType<? extends AbstractFish> type, Level level)
     {
         super(type, level);
         moveControl = new TFCFishMoveControl(this);
+    }
+
+    protected void registerGoals()
+    {
+        goalSelector.addGoal(1, new RandomMovementGoal(this));
+    }
+
+    public static class RandomMovementGoal extends Goal
+    {
+        private final Jellyfish jellyfish;
+
+        public RandomMovementGoal(Jellyfish jellyfish)
+        {
+            this.jellyfish = jellyfish;
+        }
+
+        @Override
+        public boolean canUse()
+        {
+            return true;
+        }
+
+        @Override
+        public void tick()
+        {
+            int ticks = jellyfish.getNoActionTime();
+            if (ticks > 200)
+            {
+                jellyfish.setDeltaMovement(0, 0, 0);
+            }
+            else if (jellyfish.getRandom().nextInt(reducedTickDelay(50)) == 0 || !jellyfish.wasTouchingWater)
+            {
+                final float scale = 0.1F;
+                final float yAmount = -0.25F + this.jellyfish.getRandom().nextFloat();
+                float planeRotation = this.jellyfish.getRandom().nextFloat() * ((float) Math.PI * 2F);
+                float dX = Mth.cos(planeRotation) * scale;
+                float dY = yAmount * scale;
+                float dZ = Mth.sin(planeRotation) * scale;
+                this.jellyfish.setDeltaMovement(dX, dY, dZ);
+                this.jellyfish.setXRot((float) Math.atan(dY));
+                this.jellyfish.setYRot(planeRotation);
+                this.jellyfish.setYBodyRot(planeRotation);
+            }
+        }
+    }
+
+    @Override
+    public void tick()
+    {
+        if (level().isClientSide)
+        {
+            tickAnimationStates();
+        }
+        super.tick();
+    }
+
+    public void tickAnimationStates()
+    {
+        idleAnimation.startIfStopped(tickCount);
     }
 
     public int getVariant()
@@ -172,4 +236,5 @@ public class Jellyfish extends AbstractSchoolingFish implements AquaticMob
     {
         return Helpers.isBlock(level().getBlockState(blockPosition()), TFCTags.Blocks.ANIMAL_IGNORED_PLANTS) ? 1.0F : super.getBlockSpeedFactor();
     }
+
 }
