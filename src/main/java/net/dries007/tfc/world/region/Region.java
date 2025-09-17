@@ -241,6 +241,7 @@ public final class Region
         public boolean land() { return (flags & FLAG_LAND) != 0; }
         public boolean island() { return (flags & FLAG_ISLAND) != 0; }
         public boolean shore() { return distanceToOcean == -2; }
+        public boolean allowableRiverDrain() { return distanceToOcean == -3; }
         public boolean river() { return (flags & FLAG_RIVER) != 0; }
         public boolean lake() { return (flags & FLAG_LAKE) != 0; }
         public boolean mountain() { return (flags & FLAG_MOUNTAIN) != 0; }
@@ -251,6 +252,7 @@ public final class Region
         public void setLand() { flags |= FLAG_LAND; }
         public void setIsland() { flags |= FLAG_ISLAND; }
         public void setShore() { distanceToOcean = -2; }
+        public void setAllowableRiverDrain() { distanceToOcean = -3; }
         public void setRiver() { flags |= FLAG_RIVER; }
         public void setLake() { flags |= FLAG_LAKE; }
         public void setMountain() { flags |= FLAG_MOUNTAIN; }

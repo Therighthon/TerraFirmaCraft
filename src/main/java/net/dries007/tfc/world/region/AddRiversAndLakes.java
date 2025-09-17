@@ -47,7 +47,7 @@ public enum AddRiversAndLakes implements RegionTask
     {
         for (final var point : region.points())
         {
-            if (point.shore())
+            if (point.allowableRiverDrain())
             {
                 // Mark as a possible river source
                 float bestAngle = findBestStartingAngle(region, context.random, point.index);
