@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 
+import net.dries007.tfc.TerraFirmaCraft;
 import net.dries007.tfc.common.blockentities.BerryBushBlockEntity;
 import net.dries007.tfc.common.blockentities.TFCBlockEntities;
 import net.dries007.tfc.common.blocks.ExtendedProperties;
@@ -130,6 +131,8 @@ public final class FruitBlocks
 
         private final Food product;
         private final Lifecycle[] stages;
+        private final float startGrowingSeason;
+        private final float endGrowingSeason;
         private final String serializedName;
         private final int defaultTicksToGrow;
         private final int floweringLeavesColor;
@@ -138,6 +141,8 @@ public final class FruitBlocks
         {
             this.product = product;
             this.stages = stages;
+            this.startGrowingSeason = getGrowingSeasonStart(stages) / 12f;
+            this.endGrowingSeason = getGrowingSeasonEnd(stages) / 12f;
             this.serializedName = name().toLowerCase(Locale.ROOT);
             this.defaultTicksToGrow = daysToGrow * ICalendar.CALENDAR_TICKS_IN_DAY;
             this.floweringLeavesColor = floweringLeavesColor;
@@ -190,4 +195,57 @@ public final class FruitBlocks
             return serializedName;
         }
     }
+
+    /**
+     * @param stages an index of growing stages for each month of the year. Must have 12 entries, and active stages must all be sequential and clumped
+     * @return The start of the growing season as an integer month where 0=Jan 1
+     */
+    public static int getGrowingSeasonStart(Lifecycle[] stages)
+    {
+        if (stages.length == 12)
+        {
+            Lifecycle lastStage = stages[11];
+            for (int i = 0; i < 12; i++)
+            {
+                if (stages[i].active() && !lastStage.active())
+                {
+                    return i;
+                }
+            }
+            TerraFirmaCraft.LOGGER.error("Invalid Fruit Block Lifecycle stage order, must have at least one active month");
+            return 0;
+        }
+        else
+        {
+            TerraFirmaCraft.LOGGER.error("Invalid Fruit Block Lifecycle stage count, should be 12 (Found: {})", stages.length);
+            return 0;
+        }
+    }
+
+    /**
+     * @param stages an index of growing stages for each month of the year. Must have 12 entries, and active stages must all be sequential and clumped
+     * @return The end of the growing season as an integer month where 0=Jan 1
+     */
+    public static int getGrowingSeasonEnd(Lifecycle[] stages)
+    {
+        if (stages.length == 12)
+        {
+            Lifecycle lastStage = stages[11];
+            for (int i = 0; i < 12; i++)
+            {
+                if (!stages[i].active() && lastStage.active())
+                {
+                    return i + 1;
+                }
+            }
+            TerraFirmaCraft.LOGGER.error("Invalid Fruit Block Lifecycle stage order, must have at least one dormant month");
+            return 0;
+        }
+        else
+        {
+            TerraFirmaCraft.LOGGER.error("Invalid Fruit Block Lifecycle stage count, should be 12 (Found: {})", stages.length);
+            return 0;
+        }
+    }
+
 }
