@@ -38,6 +38,7 @@ import net.dries007.tfc.common.blocks.TFCBlocks;
 import net.dries007.tfc.common.blocks.soil.FarmlandBlock;
 import net.dries007.tfc.common.blocks.soil.HoeOverlayBlock;
 import net.dries007.tfc.util.Helpers;
+import net.dries007.tfc.util.calendar.Calendar;
 import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.ICalendar;
 import net.dries007.tfc.util.climate.Climate;
@@ -141,81 +142,96 @@ public class BananaPlantBlock extends SeasonalPlantBlock implements IBushBlock, 
 
         if (level.getBlockEntity(pos) instanceof BerryBushBlockEntity bush)
         {
-            Lifecycle currentLifecycle = state.getValue(LIFECYCLE);
             Lifecycle expectedLifecycle = getLifecycleForCurrentMonth(level, pos);
-            // if we are not working with a plant that is or should be dormant
-            if (!checkAndSetDormant(level, pos, state, currentLifecycle, expectedLifecycle))
+            Lifecycle previousLifecycle = state.getValue(LIFECYCLE);
+
+            // First, check if we are even in a valid climate
+            final BlockPos stemPos = bush.getStemPos();
+            final ClimateRange range = climateRange.get();
+            final int hydration = FarmlandBlock.getHydrationFromStormHydration(level, stemPos.below(), (int) ChunkData.get(level, pos).getStormHydration());
+            final float temperature = Climate.getAverageTemperature(level, stemPos);
+
+            // If plant can't grow here, bypass the other checks and set it to dormant
+            if (!range.checkBoth(hydration, temperature, false))
             {
-                // Otherwise, we do a month-by-month evaluation of how the bush should have grown.
-                // We only do this up to a year. Why? Because eventually, it will have become dormant, and any 'progress' during that year would've been lost anyway because it would unconditionally become dormant.
-                long deltaTicks = Math.min(bush.getTicksSinceBushUpdate(), Calendars.SERVER.getCalendarTicksInYear());
-                long currentCalendarTick = Calendars.SERVER.getCalendarTicks();
-                long nextCalendarTick = currentCalendarTick - deltaTicks;
+                level.setBlockAndUpdate(pos, state.setValue(LIFECYCLE, Lifecycle.DORMANT));
+            }
+            else
+            {
+                // Otherwise, we do a point-by-point evaluation of how the bush should have grown.
+                // We only do this up to a year. Why? Because bananas only grow so big anyways.
+                final long deltaTicks = Math.min(bush.getTicksSinceBushUpdate(), Calendars.SERVER.getCalendarTicksInYear());
+                final long currentCalendarTick = Calendars.SERVER.getCalendarTicks();
+                final long lastUpdateTick = currentCalendarTick - deltaTicks;
 
-                final BlockPos stemPos = bush.getStemPos();
-                final ClimateRange range = climateRange.get();
-                final int hydration = FarmlandBlock.getHydrationFromStormHydrationOverTime(level, stemPos.below(), (int) ChunkData.get(level, pos).getStormHydration(), currentCalendarTick, nextCalendarTick);
+                final long ticksPerCycle = ICalendar.CALENDAR_TICKS_IN_DAY * 5;
+                // Check how many times to run the cycle
+                final int cyclesToRun = (int) (bush.getTicksSinceBushUpdate() / ticksPerCycle);
+                // Preserve any remainder ticks
+                bush.setLastBushTick(lastUpdateTick + cyclesToRun * ticksPerCycle);
 
-                int stage = state.getValue(STAGE);
-
-                BlockPos abovePos = pos.above();
-                BlockState newState;
-                do
+                // Actually run cycles
+                for (int cycle = 1; cycle <= cyclesToRun ; cycle++)
                 {
-                    // This always runs at least once. It is called through random ticks, and calendar updates - although calendar updates will only call this if they've waited at least a day, or the average delta between random ticks.
-                    // Otherwise it will just wait for the next random tick.
+                    final long cycleCalendarTick = lastUpdateTick + (long) cycle * ticksPerCycle;
 
-                    // Jump forward to nextTick.
-                    // Advance both the stage (randomly, if the previous month was healthy), and lifecycle (if the at-the-time conditions were valid)
-                    nextCalendarTick = Math.min(nextCalendarTick + Calendars.SERVER.getCalendarTicksInMonth(), currentCalendarTick);
-                    if (currentLifecycle.active() && stage < 2)
+                    // Only do anything this cycle if the plant would not have been dormant at this time
+                    final Lifecycle targetLifecycle = getLifecycleForMonth(ICalendar.getMonthOfYear(cycleCalendarTick, Calendars.SERVER.getCalendarDaysInMonth()));
+                    final Lifecycle lifecycle = previousLifecycle.advanceTowards(targetLifecycle);
+
+                    if (!(targetLifecycle == Lifecycle.DORMANT))
                     {
-                        BlockPos downPos = pos.below(3);
-                        // increase the stage 1/3 of the time, or always if we realize we're starting to get tall
-                        if (!Helpers.isBlock(level.getBlockState(abovePos), this) && (level.random.nextInt(4) == 0 || Helpers.isBlock(level.getBlockState(downPos), this)))
+                        int stage = state.getValue(STAGE);
+                        if (stage < 2)
                         {
-                            stage++;
-                        }
-                    }
-
-                    float temperatureAtNextTick = Climate.getTemperature(level, pos, nextCalendarTick, Calendars.SERVER.getCalendarDaysInMonth());
-                    Lifecycle lifecycleAtNextTick = getLifecycleForMonth(ICalendar.getMonthOfYear(nextCalendarTick, Calendars.SERVER.getCalendarDaysInMonth()));
-                    if (range.checkBoth(hydration, temperatureAtNextTick, false))
-                    {
-                        currentLifecycle = currentLifecycle.advanceTowards(lifecycleAtNextTick);
-                    }
-                    else
-                    {
-                        currentLifecycle = Lifecycle.DORMANT;
-                    }
-                    // we don't allow the trunk blocks to fruit or flower
-                    if (stage < 2 && currentLifecycle.active())
-                    {
-                        currentLifecycle = Lifecycle.HEALTHY;
-                    }
-
-                    newState = state.setValue(STAGE, stage).setValue(LIFECYCLE, currentLifecycle);
-
-                    // bananas only grow for stages 0 and 1
-                    if (stage < 2 && currentLifecycle.active())
-                    {
-                        if (level.isEmptyBlock(abovePos) && level.canSeeSky(abovePos))
-                        {
-                            level.setBlockAndUpdate(abovePos, newState);
-                            if (level.getBlockEntity(abovePos) instanceof BerryBushBlockEntity newBush)
+                            BlockPos abovePos = pos.above();
+                            // Advance both the stage (randomly, if the previous month was healthy), and lifecycle (if the at-the-time conditions were valid)
+                            if (previousLifecycle.active())
                             {
-                                newBush.setLastBushTick(nextCalendarTick);
-                                newBush.setStemPos(stemPos);
+                                BlockPos downPos = pos.below(3);
+                                // increase the stage 1/3 of the time, or always if we realize we're starting to get tall
+                                if (!Helpers.isBlock(level.getBlockState(abovePos), this) && (level.random.nextInt(4) == 0 || Helpers.isBlock(level.getBlockState(downPos), this)))
+                                {
+                                    stage++;
+                                }
+
+                                // we don't allow the trunk blocks to fruit or flower
+                                previousLifecycle = Lifecycle.HEALTHY;
+                            }
+
+                            // Always set to healthy because if it is dormant it won't grow, and these blocks should never fruit
+                            BlockState newState = state.setValue(STAGE, stage).setValue(LIFECYCLE, Lifecycle.HEALTHY);
+
+                            // bananas only grow for stages 0 and 1
+                            if (previousLifecycle.active())
+                            {
+                                if (level.isEmptyBlock(abovePos) && level.canSeeSky(abovePos))
+                                {
+                                    level.setBlockAndUpdate(abovePos, newState);
+                                    if (level.getBlockEntity(abovePos) instanceof BerryBushBlockEntity newBush)
+                                    {
+                                        newBush.setLastBushTick(cycleCalendarTick);
+                                        newBush.setStemPos(stemPos);
+                                        // TODO: Replace this with something that actually catches up on ticks
+                                        if (level.getBlockState(abovePos).getBlock() instanceof BananaPlantBlock newPlant)
+                                        {
+                                            newPlant.onUpdate(level, pos, state);
+                                        }
+                                    }
+                                }
                             }
                         }
+                        else
+                        {
+                            level.setBlockAndUpdate(pos, state.setValue(STAGE, stage).setValue(LIFECYCLE, lifecycle));
+                        }
                     }
-                }
-                while (nextCalendarTick < currentCalendarTick);
 
-                if (state != newState)
-                {
-                    level.setBlockAndUpdate(pos, newState);
+                    previousLifecycle = lifecycle;
                 }
+
+                //TODO: Might want to replace this
+                checkAndSetDormant(level, pos, state, previousLifecycle, expectedLifecycle);
             }
         }
     }
