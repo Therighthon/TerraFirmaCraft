@@ -22,7 +22,7 @@ public class CenteredFeatureNoise
     {
         return new CenteredFeatureNoiseSampler()
         {
-            final Cellular2D cellNoise = new Cellular2D(seed.seed()).spread(0.009f);
+            final Cellular2D cellNoise = new Cellular2D(seed.seed()).spread(0.003f);
             final Noise2D jitterNoise = new OpenSimplex2D(seed.seed() + 8179234123L).octaves(2).scaled(-0.0016f, 0.0016f).spread(0.128f);
 
             @Override
