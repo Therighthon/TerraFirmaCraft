@@ -233,7 +233,7 @@ public final class WeatherHelpers
 
             // Iterates for maximum of one month of weather
             long calendarTick = currentCalendarTick - Math.min(192_000, timeSinceTick);
-            int netChangeInSnow = 0; // >0 indicates melting, <0 indicates freezing
+            int netChangeInSnow = 0; // >0 indicates accumulation, <0 indicates melting
 
             while (calendarTick < currentCalendarTick)
             {
@@ -431,19 +431,9 @@ public final class WeatherHelpers
     /**
      * @return {@code true} if a snow block or snow pile was placed.
      */
-    private static boolean placeSnowOrSnowPile(ServerLevel level, BlockPos initialPos)
+    private static boolean placeSnowOrSnowPile(ServerLevel level, BlockPos pos)
     {
-        // First, try and find an optimal position, to smoothen out snow accumulation
-        // This will only move to the side, if we're currently at a snow location
-        final BlockPos pos = findOptimalSnowLocation(level, initialPos, level.getBlockState(initialPos));
         final BlockState state = level.getBlockState(pos);
-
-        // If we didn't move to the side, then we still need to pass a can see sky check
-        // If we did, we might've moved under an overhang from a previously valid snow location
-        if (initialPos.equals(pos) && !level.canSeeSky(pos))
-        {
-            return false;
-        }
         return placeSnowOrSnowPileAt(level, pos, state);
     }
 
@@ -471,37 +461,6 @@ public final class WeatherHelpers
             state.getBlock().handlePrecipitation(state, level, pos, Biome.Precipitation.SNOW);
         }
         return false;
-    }
-
-    /**
-     * Smoothens out snow creation, so it doesn't create as uneven piles, by moving snowfall to adjacent positions where possible.
-     */
-    private static BlockPos findOptimalSnowLocation(ServerLevel level, BlockPos pos, BlockState state)
-    {
-        BlockPos targetPos = null;
-        int found = 0;
-        if (isSnow(state))
-        {
-            for (Direction direction : Direction.Plane.HORIZONTAL)
-            {
-                final BlockPos adjPos = pos.relative(direction);
-                final BlockState adjState = level.getBlockState(adjPos);
-                if ((adjState.isAir() || Helpers.isBlock(adjState.getBlock(), TFCTags.Blocks.CAN_BE_SNOW_PILED))
-                    && Blocks.SNOW.defaultBlockState().canSurvive(level, adjPos))
-                {
-                    found++;
-                    if (targetPos == null || level.random.nextInt(found) == 0)
-                    {
-                        targetPos = adjPos;
-                    }
-                }
-            }
-            if (targetPos != null)
-            {
-                return targetPos;
-            }
-        }
-        return pos;
     }
 
     @Nullable
