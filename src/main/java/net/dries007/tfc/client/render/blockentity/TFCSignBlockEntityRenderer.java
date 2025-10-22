@@ -33,20 +33,12 @@ import net.dries007.tfc.util.Helpers;
 
 public class TFCSignBlockEntityRenderer extends SignRenderer
 {
-    public static final Map<WoodType, Function<BlockEntityRendererProvider.Context, SignModel>> MODELS = RenderHelpers.mapOf(map -> {
-        for (Wood wood : Wood.values())
-            map.accept(
-                wood::getVanillaWoodType,
-                context -> new SignModel(context.bakeLayer(RenderHelpers.layerId("sign/" + wood.getSerializedName())))
-            );
-    });
-
-    private final Map<WoodType, SignModel> signModels;
+    private final BlockEntityRendererProvider.Context context;
 
     public TFCSignBlockEntityRenderer(BlockEntityRendererProvider.Context context)
     {
         super(context);
-        signModels = Helpers.mapValue(MODELS, f -> f.apply(context));
+        this.context = context;
     }
 
     @Override
@@ -55,8 +47,16 @@ public class TFCSignBlockEntityRenderer extends SignRenderer
         BlockState blockstate = sign.getBlockState();
         SignBlock signblock = (SignBlock) blockstate.getBlock();
         WoodType woodType = SignBlock.getWoodType(signblock);
-        SignRenderer.SignModel model = this.signModels.get(woodType);
+        SignRenderer.SignModel model = getModel(woodType);
         model.stick.visible = blockstate.getBlock() instanceof StandingSignBlock;
         ((SignRendererAccessor) this).invoke$renderSignWithText(sign, poseStack, source, packedLight, overlay, blockstate, signblock, woodType, model);
+    }
+
+    private SignModel getModel(WoodType woodType)
+    {
+        final String id = woodType.name();
+        final int index = id.indexOf(":") + 1;
+        final String name = id.substring(index);
+        return new SignModel(context.bakeLayer(RenderHelpers.layerId("sign/" + name)));
     }
 }
