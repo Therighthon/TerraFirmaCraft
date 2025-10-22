@@ -8,6 +8,7 @@ package net.dries007.tfc.mixin.client;
 
 import net.minecraft.client.gui.screens.inventory.HangingSignEditScreen;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.dries007.tfc.client.render.blockentity.TFCHangingSignBlockEntityRenderer;
+import net.dries007.tfc.common.blocks.wood.TFCCeilingHangingSignBlock;
+import net.dries007.tfc.common.blocks.wood.TFCWallHangingSignBlock;
 
 @Mixin(HangingSignEditScreen.class)
 public abstract class HangingSignEditScreenMixin
@@ -30,10 +33,10 @@ public abstract class HangingSignEditScreenMixin
     @Inject(method = "<init>(Lnet/minecraft/world/level/block/entity/SignBlockEntity;ZZ)V", at = @At("TAIL"))
     public void inject$constructor(SignBlockEntity signBlockEntity, boolean isFrontText, boolean filter, CallbackInfo ci)
     {
-        final var modelData = TFCHangingSignBlockEntityRenderer.MODELS.get(signBlockEntity.getBlockState().getBlock());
-        if (modelData != null)
+        final SignBlock block = (SignBlock) signBlockEntity.getBlockState().getBlock();
+        if (block instanceof TFCCeilingHangingSignBlock || block instanceof TFCWallHangingSignBlock)
         {
-            this.texture = modelData.textureLocation();
+            this.texture = TFCHangingSignBlockEntityRenderer.RESOURCE_LOCATION.apply(block);
         }
     }
 }

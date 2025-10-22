@@ -19,15 +19,23 @@ import org.jetbrains.annotations.Nullable;
 import net.dries007.tfc.common.blocks.EntityBlockExtension;
 import net.dries007.tfc.common.blocks.ExtendedProperties;
 import net.dries007.tfc.common.blocks.IForgeBlockExtension;
+import net.dries007.tfc.util.Metal;
 
 public class TFCWallHangingSignBlock extends WallHangingSignBlock implements IForgeBlockExtension, EntityBlockExtension
 {
     private final ExtendedProperties properties;
+    private final Metal metal;
 
-    public TFCWallHangingSignBlock(ExtendedProperties properties, WoodType type)
+    public TFCWallHangingSignBlock(ExtendedProperties properties, WoodType type, Metal metal)
     {
         super(type, properties.properties());
         this.properties = properties;
+        this.metal = metal;
+    }
+
+    public Metal getMetal()
+    {
+        return metal;
     }
 
     @Nullable

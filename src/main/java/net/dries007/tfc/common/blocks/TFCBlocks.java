@@ -6,6 +6,7 @@
 
 package net.dries007.tfc.common.blocks;
 
+import com.mojang.datafixers.util.Function3;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -290,12 +291,12 @@ public final class TFCBlocks
     public static final Map<Wood, Map<Metal, Id<TFCCeilingHangingSignBlock>>> CEILING_HANGING_SIGNS = registerHangingSigns("hanging_sign", TFCCeilingHangingSignBlock::new);
     public static final Map<Wood, Map<Metal, Id<TFCWallHangingSignBlock>>> WALL_HANGING_SIGNS = registerHangingSigns("wall_hanging_sign", TFCWallHangingSignBlock::new);
 
-    private static <B extends SignBlock> Map<Wood, Map<Metal, Id<B>>> registerHangingSigns(String variant, BiFunction<ExtendedProperties, WoodType, B> factory)
+    private static <B extends SignBlock> Map<Wood, Map<Metal, Id<B>>> registerHangingSigns(String variant, Function3<ExtendedProperties, WoodType, Metal, B> factory)
     {
         return Helpers.mapOf(Wood.class, wood ->
             Helpers.mapOf(Metal.class, Metal::allParts, metal -> register(
                 "wood/" + variant + "/" + metal.getSerializedName() + "/" + wood.getSerializedName(),
-                () -> factory.apply(ExtendedProperties.of(wood.woodColor()).sound(SoundType.WOOD).noCollission().strength(1F).flammableLikePlanks().blockEntity(TFCBlockEntities.HANGING_SIGN).ticks(SignBlockEntity::tick), wood.getVanillaWoodType()),
+                () -> factory.apply(ExtendedProperties.of(wood.woodColor()).sound(SoundType.WOOD).noCollission().strength(1F).flammableLikePlanks().blockEntity(TFCBlockEntities.HANGING_SIGN).ticks(SignBlockEntity::tick), wood.getVanillaWoodType(), metal),
                 (Function<B, BlockItem>) null)
             )
         );
