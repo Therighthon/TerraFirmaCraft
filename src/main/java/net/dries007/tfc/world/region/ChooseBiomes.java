@@ -55,207 +55,216 @@ public enum ChooseBiomes implements RegionTask
 
         for (final var point : region.points())
         {
-            final int areaSeed = blobArea.get(point.x, point.z);
-            if (point.island())
+            if (point.land())
             {
-                point.biome = randomSeededFrom(rngSeed, areaSeed, ISLAND_BIOMES);
-            }
-            else if (point.mountain())
-            {
-                final float temp = point.temperature;
-                if (point.coastalMountain())
-                {
-                    // Different temperature limits used because biomes at different elevations
-                    final float maxIceSheetTemp = -16f + 0.006f * point.rainfall;
-                    if (temp < maxIceSheetTemp + 2)
-                    {
-                        point.biome = ICE_SHEET_OCEANIC_MOUNTAINS;
-                    }
-                    else if (temp < maxIceSheetTemp + 6)
-                    {
-                        point.biome = GLACIATED_OCEANIC_MOUNTAINS;
-                    }
-                    else if (temp < maxIceSheetTemp + 10)
-                    {
-                        point.biome = GLACIALLY_CARVED_OCEANIC_MOUNTAINS;
-                    }
-                    else
-                    {
-                        point.biome = randomSeededFrom(rngSeed, areaSeed, OCEANIC_MOUNTAIN_ALTITUDE_BIOMES);
-                    }
-                }
-                else
-                {
-                    final float maxIceSheetTemp = -14f + 0.006f * point.rainfall;
-                    if (temp < maxIceSheetTemp)
-                    {
-                        point.biome = ICE_SHEET_MOUNTAINS;
-                    }
-                    else if (temp < maxIceSheetTemp + 4)
-                    {
-                        point.biome = GLACIATED_MOUNTAINS;
-                    }
-                    else if (temp < maxIceSheetTemp + 10)
-                    {
-                        point.biome = GLACIALLY_CARVED_MOUNTAINS;
-                    }
-                    else
-                    {
-                        point.biome = randomSeededFrom(rngSeed, areaSeed, MOUNTAIN_ALTITUDE_BIOMES);
-                    }
-                }
-            }
-            else if (point.land())
-            {
-                final float rain = point.rainfall;
-                final float maxIceSheetTemp = -17f + 0.006f * rain;
-                final float temp = point.temperature;
-                if (temp < maxIceSheetTemp)
-                {
-                    int biome = randomSeededFrom(rngSeed, areaSeed, ICE_SHEET_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
-
-                    if (point.distanceToOcean < 3 && isFlatIceSheet(biome))
-                    {
-                        biome = ICE_SHEET_OCEANIC;
-                    }
-                    point.biome = biome;
-                }
-                else if (temp < maxIceSheetTemp + 1)
-                {
-                    point.biome = ICE_SHEET_EDGE;
-                }
-                else if (temp < maxIceSheetTemp + 2.5)
-                {
-                    point.biome = randomSeededFrom(rngSeed, areaSeed, KNOB_AND_KETTLE_BIOMES);
-                }
-                else if (temp < maxIceSheetTemp + 6)
-                {
-                    point.biome = randomSeededFrom(rngSeed, areaSeed, PALEO_ICE_SHEET_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
-                }
-                else if (rain < 60)
-                {
-                    point.biome = randomSeededFrom(rngSeed, areaSeed, DESERT_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
-                }
-                else if (rain < 155)
-                {
-                    point.biome = randomSeededFrom(rngSeed, areaSeed, SEMI_ARID_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
-                }
-                else
-                {
-                    point.biome = randomSeededFrom(rngSeed, areaSeed, ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
-                }
-            }
-            else if (point.baseOceanDepth < 3)
-            {
-                point.biome = OCEAN;
-            }
-            else if (point.baseOceanDepth > 9)
-            {
-                point.biome = DEEP_OCEAN_TRENCH;
-            }
-            else if (point.baseOceanDepth >= 5 || point.distanceToEdge < 2)
-            {
-                point.biome = DEEP_OCEAN;
+                point.biome = PLAINS;
             }
             else
             {
-                point.biome = randomSeededFrom(rngSeed, areaSeed, MID_DEPTH_OCEAN_BIOMES);
+                point.biome = OCEAN;
             }
-
-            // Add hot spot biomes
-            final byte age = point.hotSpotAge;
-            if (age > 0)
-            {
-                if (age == 4 && point.biome == OCEAN || point.biome == DEEP_OCEAN || point.biome == OCEAN_REEF || point.biome == DEEP_OCEAN_TRENCH)
-                {
-                    point.biome = SUNKEN_SHIELD_VOLCANO;
-                }
-                else
-                {
-                    point.biome = getHotSpotBiome(point.hotSpotAge);
-                }
-            }
-
-            // Adjust certain biome placements by climate. Low, freshwater biomes don't make much sense appearing in
-            // Replacements for very low rainfall areas
-            final float minRainForLowFreshWaterBiomes = 90f + Math.floorMod(areaSeed ^ climateSeed, 40);
-            final float rainfall = point.rainfall;
-            final float temperature = point.temperature;
-            if (rainfall < minRainForLowFreshWaterBiomes)
-            {
-                if (rainfall <= 55)
-                {
-                    if (point.biome == LOWLANDS || point.biome == LOW_CANYONS) point.biome = SALT_FLATS;
-                    else if (point.biome == HILLS || point.biome == ROLLING_HILLS || point.biome == PLATEAU) point.biome = DUNE_SEA;
-                }
-            }
-            if (rainfall < 145 && (point.biome == PATTERNED_GROUND || point.biome == INVERTED_PATTERNED_GROUND)) point.biome = STONE_CIRCLES;
-
-            // Prevent badlands from appearing in very high rainfall environments
-            final float maxRainfallForBadlands = 420f + Math.floorMod(areaSeed ^ climateSeed, 40);
-            if (rainfall > maxRainfallForBadlands)
-            {
-                if (point.biome == BADLANDS) point.biome = HIGHLANDS;
-            }
-
-            // Special Biome Glaciation
-            final float maxIceSheetTemp = -14f + 0.006f * rainfall;
-            if (point.land() && temperature < maxIceSheetTemp)
-            {
-                final int biome = point.biome;
-                if (biome == ACTIVE_SHIELD_VOLCANO || biome == DORMANT_SHIELD_VOLCANO || biome == EXTINCT_SHIELD_VOLCANO) point.biome = ICE_SHEET_SHIELD_VOLCANO;
-            }
-            else if (temperature < maxIceSheetTemp + 4f)
-            {
-                final int biome = point.biome;
-                if (biome == ACTIVE_SHIELD_VOLCANO || biome == DORMANT_SHIELD_VOLCANO || biome == EXTINCT_SHIELD_VOLCANO) point.biome = GLACIATED_SHIELD_VOLCANO;
-            }
-
-            // Karst Biomes
-            if (point.isSurfaceRockKarst)
-            {
-                // High rainfall karst biomes
-                if (rainfall > 375)
-                {
-                    // Check for hot, wet climates to place tower karsts
-                    if (rainfall > 425 && rainfall + 10 * temperature > 500)
-                    {
-                        point.biome = getTowerKarstBiome(point.biome);
-                    }
-                    //Tropical/Subtropical wet areas not filled in by towers are Shilin
-                    else if (temperature > 9)
-                    {
-                        point.biome = getShilinBiome(point.biome);
-                    }
-                    // Colder wet biomes are Burren
-                    else if (temperature < 0)
-                    {
-                        point.biome = getBurrenBiome(point.biome);
-                    }
-                    else
-                    {
-                        point.biome = getDolineBiome(point.biome);
-                    }
-                }
-                else if (rainfall > 250)
-                {
-                    if (temperature > 5)
-                    {
-                        point.biome = getCenoteBiome(point.biome);
-                    }
-                    else
-                    {
-                        point.biome = getDolineBiome(point.biome);
-                    }
-                }
-
-            }
-
-            // Increase prevalence/size of salt marshes in climates where mangroves can generate
-            if (point.distanceToOcean <= 2 && point.biome == LOWLANDS && point.rainfall > 220 && point.temperature > 18)
-            {
-                point.biome = SALT_MARSH;
-            }
+            // TODO: This is done just so everywhere has my noise
+//            final int areaSeed = blobArea.get(point.x, point.z);
+//            if (point.island())
+//            {
+//                point.biome = randomSeededFrom(rngSeed, areaSeed, ISLAND_BIOMES);
+//            }
+//            else if (point.mountain())
+//            {
+//                final float temp = point.temperature;
+//                if (point.coastalMountain())
+//                {
+//                    // Different temperature limits used because biomes at different elevations
+//                    final float maxIceSheetTemp = -16f + 0.006f * point.rainfall;
+//                    if (temp < maxIceSheetTemp + 2)
+//                    {
+//                        point.biome = ICE_SHEET_OCEANIC_MOUNTAINS;
+//                    }
+//                    else if (temp < maxIceSheetTemp + 6)
+//                    {
+//                        point.biome = GLACIATED_OCEANIC_MOUNTAINS;
+//                    }
+//                    else if (temp < maxIceSheetTemp + 10)
+//                    {
+//                        point.biome = GLACIALLY_CARVED_OCEANIC_MOUNTAINS;
+//                    }
+//                    else
+//                    {
+//                        point.biome = randomSeededFrom(rngSeed, areaSeed, OCEANIC_MOUNTAIN_ALTITUDE_BIOMES);
+//                    }
+//                }
+//                else
+//                {
+//                    final float maxIceSheetTemp = -14f + 0.006f * point.rainfall;
+//                    if (temp < maxIceSheetTemp)
+//                    {
+//                        point.biome = ICE_SHEET_MOUNTAINS;
+//                    }
+//                    else if (temp < maxIceSheetTemp + 4)
+//                    {
+//                        point.biome = GLACIATED_MOUNTAINS;
+//                    }
+//                    else if (temp < maxIceSheetTemp + 10)
+//                    {
+//                        point.biome = GLACIALLY_CARVED_MOUNTAINS;
+//                    }
+//                    else
+//                    {
+//                        point.biome = randomSeededFrom(rngSeed, areaSeed, MOUNTAIN_ALTITUDE_BIOMES);
+//                    }
+//                }
+//            }
+//            else if (point.land())
+//            {
+//                final float rain = point.rainfall;
+//                final float maxIceSheetTemp = -17f + 0.006f * rain;
+//                final float temp = point.temperature;
+//                if (temp < maxIceSheetTemp)
+//                {
+//                    int biome = randomSeededFrom(rngSeed, areaSeed, ICE_SHEET_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
+//
+//                    if (point.distanceToOcean < 3 && isFlatIceSheet(biome))
+//                    {
+//                        biome = ICE_SHEET_OCEANIC;
+//                    }
+//                    point.biome = biome;
+//                }
+//                else if (temp < maxIceSheetTemp + 1)
+//                {
+//                    point.biome = ICE_SHEET_EDGE;
+//                }
+//                else if (temp < maxIceSheetTemp + 2.5)
+//                {
+//                    point.biome = randomSeededFrom(rngSeed, areaSeed, KNOB_AND_KETTLE_BIOMES);
+//                }
+//                else if (temp < maxIceSheetTemp + 6)
+//                {
+//                    point.biome = randomSeededFrom(rngSeed, areaSeed, PALEO_ICE_SHEET_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
+//                }
+//                else if (rain < 60)
+//                {
+//                    point.biome = randomSeededFrom(rngSeed, areaSeed, DESERT_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
+//                }
+//                else if (rain < 155)
+//                {
+//                    point.biome = randomSeededFrom(rngSeed, areaSeed, SEMI_ARID_ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
+//                }
+//                else
+//                {
+//                    point.biome = randomSeededFrom(rngSeed, areaSeed, ALTITUDE_BIOMES[point.discreteBiomeAltitude()]);
+//                }
+//            }
+//            else if (point.baseOceanDepth < 3)
+//            {
+//                point.biome = OCEAN;
+//            }
+//            else if (point.baseOceanDepth > 9)
+//            {
+//                point.biome = DEEP_OCEAN_TRENCH;
+//            }
+//            else if (point.baseOceanDepth >= 5 || point.distanceToEdge < 2)
+//            {
+//                point.biome = DEEP_OCEAN;
+//            }
+//            else
+//            {
+//                point.biome = randomSeededFrom(rngSeed, areaSeed, MID_DEPTH_OCEAN_BIOMES);
+//            }
+//
+//            // Add hot spot biomes
+//            final byte age = point.hotSpotAge;
+//            if (age > 0)
+//            {
+//                if (age == 4 && point.biome == OCEAN || point.biome == DEEP_OCEAN || point.biome == OCEAN_REEF || point.biome == DEEP_OCEAN_TRENCH)
+//                {
+//                    point.biome = SUNKEN_SHIELD_VOLCANO;
+//                }
+//                else
+//                {
+//                    point.biome = getHotSpotBiome(point.hotSpotAge);
+//                }
+//            }
+//
+//            // Adjust certain biome placements by climate. Low, freshwater biomes don't make much sense appearing in
+//            // Replacements for very low rainfall areas
+//            final float minRainForLowFreshWaterBiomes = 90f + Math.floorMod(areaSeed ^ climateSeed, 40);
+//            final float rainfall = point.rainfall;
+//            final float temperature = point.temperature;
+//            if (rainfall < minRainForLowFreshWaterBiomes)
+//            {
+//                if (rainfall <= 55)
+//                {
+//                    if (point.biome == LOWLANDS || point.biome == LOW_CANYONS) point.biome = SALT_FLATS;
+//                    else if (point.biome == HILLS || point.biome == ROLLING_HILLS || point.biome == PLATEAU) point.biome = DUNE_SEA;
+//                }
+//            }
+//            if (rainfall < 145 && (point.biome == PATTERNED_GROUND || point.biome == INVERTED_PATTERNED_GROUND)) point.biome = STONE_CIRCLES;
+//
+//            // Prevent badlands from appearing in very high rainfall environments
+//            final float maxRainfallForBadlands = 420f + Math.floorMod(areaSeed ^ climateSeed, 40);
+//            if (rainfall > maxRainfallForBadlands)
+//            {
+//                if (point.biome == BADLANDS) point.biome = HIGHLANDS;
+//            }
+//
+//            // Special Biome Glaciation
+//            final float maxIceSheetTemp = -14f + 0.006f * rainfall;
+//            if (point.land() && temperature < maxIceSheetTemp)
+//            {
+//                final int biome = point.biome;
+//                if (biome == ACTIVE_SHIELD_VOLCANO || biome == DORMANT_SHIELD_VOLCANO || biome == EXTINCT_SHIELD_VOLCANO) point.biome = ICE_SHEET_SHIELD_VOLCANO;
+//            }
+//            else if (temperature < maxIceSheetTemp + 4f)
+//            {
+//                final int biome = point.biome;
+//                if (biome == ACTIVE_SHIELD_VOLCANO || biome == DORMANT_SHIELD_VOLCANO || biome == EXTINCT_SHIELD_VOLCANO) point.biome = GLACIATED_SHIELD_VOLCANO;
+//            }
+//
+//            // Karst Biomes
+//            if (point.isSurfaceRockKarst)
+//            {
+//                // High rainfall karst biomes
+//                if (rainfall > 375)
+//                {
+//                    // Check for hot, wet climates to place tower karsts
+//                    if (rainfall > 425 && rainfall + 10 * temperature > 500)
+//                    {
+//                        point.biome = getTowerKarstBiome(point.biome);
+//                    }
+//                    //Tropical/Subtropical wet areas not filled in by towers are Shilin
+//                    else if (temperature > 9)
+//                    {
+//                        point.biome = getShilinBiome(point.biome);
+//                    }
+//                    // Colder wet biomes are Burren
+//                    else if (temperature < 0)
+//                    {
+//                        point.biome = getBurrenBiome(point.biome);
+//                    }
+//                    else
+//                    {
+//                        point.biome = getDolineBiome(point.biome);
+//                    }
+//                }
+//                else if (rainfall > 250)
+//                {
+//                    if (temperature > 5)
+//                    {
+//                        point.biome = getCenoteBiome(point.biome);
+//                    }
+//                    else
+//                    {
+//                        point.biome = getDolineBiome(point.biome);
+//                    }
+//                }
+//
+//            }
+//
+//            // Increase prevalence/size of salt marshes in climates where mangroves can generate
+//            if (point.distanceToOcean <= 2 && point.biome == LOWLANDS && point.rainfall > 220 && point.temperature > 18)
+//            {
+//                point.biome = SALT_MARSH;
+//            }
         }
     }
 

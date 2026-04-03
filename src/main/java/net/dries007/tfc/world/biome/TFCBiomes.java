@@ -57,7 +57,7 @@ public final class TFCBiomes
     public static final BiomeExtension DEEP_OCEAN_TRENCH = register("deep_ocean_trench", builder().heightmap(seed -> BiomeNoise.oceanRidge(seed, -30, -16)).surface(ShoreAndOceanSurfaceBuilder.OCEAN).aquiferHeightOffset(-24).type(BiomeBlendType.OCEAN).salty().noRivers()); // Deeper ocean with sharp relief carving to create very deep trenches
 
     // Low biomes
-    public static final BiomeExtension PLAINS = register("plains", builder().heightmap(seed -> BiomeNoise.hills(seed, 4, 10)).surface(NormalSurfaceBuilder.INSTANCE).spawnable().type(RiverBlendType.FLOODPLAIN)); // Very flat, slightly above sea level.
+    public static final BiomeExtension PLAINS = register("plains", builder().heightmap(seed -> BiomeNoise.erosion(seed)).surface(NormalSurfaceBuilder.INSTANCE).spawnable().type(RiverBlendType.FLOODPLAIN)); // Very flat, slightly above sea level.
     public static final BiomeExtension HILLS = register("hills", builder().heightmap(seed -> BiomeNoise.hills(seed, -5, 16)).surface(NormalSurfaceBuilder.INSTANCE).spawnable().type(RiverBlendType.FLOODPLAIN)); // Small hills, slightly above sea level.
     public static final BiomeExtension LOWLANDS = register("lowlands", builder().heightmap(BiomeNoise::lowlands).surface(LowlandsSurfaceBuilder.INSTANCE).aquiferHeightOffset(-16).spawnable().type(RiverBlendType.BANKED).noSandyRiverShores()); // Flat, swamp-like, lots of shallow pools below sea level.
     public static final BiomeExtension SALT_MARSH = register("salt_marsh", builder().heightmap(BiomeNoise::lowlands).surface(LowlandsSurfaceBuilder.INSTANCE).aquiferHeightOffset(-16).spawnable().salty().type(RiverBlendType.BANKED).noSandyRiverShores()); // Flat, swamp-like, lots of shallow pools below sea level.

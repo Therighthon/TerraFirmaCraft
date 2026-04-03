@@ -13,6 +13,7 @@ import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.world.BiomeNoiseSampler;
 import net.dries007.tfc.world.noise.Cellular2D;
 import net.dries007.tfc.world.Seed;
+import net.dries007.tfc.world.noise.CellularErosion2D;
 import net.dries007.tfc.world.noise.Noise2D;
 import net.dries007.tfc.world.noise.Noise3D;
 import net.dries007.tfc.world.noise.OpenSimplex2D;
@@ -27,6 +28,53 @@ import static net.dries007.tfc.world.TFCChunkGenerator.*;
  */
 public final class BiomeNoise
 {
+
+    public static Noise2D erosion(long seed)
+    {
+        final Noise2D noiseIn =  new OpenSimplex2D(seed).octaves(4).spread(0.02f).scaled(SEA_LEVEL_Y + 120, SEA_LEVEL_Y - 50);
+        final CellularErosion2D cells = new CellularErosion2D(seed, noiseIn).spread(0.03);
+        return (x, y) -> {
+            final CellularErosion2D.Cell cell = cells.cell(x, y);
+
+            double hCenter = noiseIn.noise(cell.x(), cell.y());
+            double hNeighbor = noiseIn.noise(cell.nx(), cell.ny());
+            double hBorder = 0.5 * (hCenter + hNeighbor);
+
+            // In order to get a consistently-scaled distance to the cell edge, we project the point onto the cell edge and calculate the distance
+
+            // Start by getting a point on the cell edge. We also know that the line between cell centers is perpendicular to the cell edge
+            final double xCentroid = 0.5 * (cell.x() + cell.nx());
+            final double yCentroid = 0.5 * (cell.y() + cell.ny());
+            // Vector from the nearest cell center to the second-nearest cell center
+            final double sampleDX = x - xCentroid;
+            final double sampleDY = y - yCentroid;
+            // Vector oriented along the cell edge
+            final double parallelDX = yCentroid - cell.y();
+            final double parallelDY = cell.x() - xCentroid;
+
+            final double edgeDotProductOverMagnitudeSquared = (sampleDX * parallelDX + sampleDY * parallelDY) / (parallelDX * parallelDX + parallelDY * parallelDY);
+            final double xProjectedOnEdge = xCentroid + edgeDotProductOverMagnitudeSquared * parallelDX;
+            final double yProjectedOnEdge = yCentroid + edgeDotProductOverMagnitudeSquared * parallelDY;
+            final double edgeDist = Math.sqrt((x - xProjectedOnEdge) * (x - xProjectedOnEdge) + (y - yProjectedOnEdge) * (y - yProjectedOnEdge));
+
+            final double edgeDistOfCenter = Math.sqrt((sampleDX * sampleDX) + (sampleDY * sampleDY));
+
+            return Mth.clampedMap(edgeDist, 0, edgeDistOfCenter - 2, hBorder, hCenter);
+
+//            boolean nearValley = (cell.outlet().cx() == cell.ncx() && cell.outlet().cy() == cell.ncy()) ||
+//                (cell.nearestInlet().cx() == cell.nx() && cell.nearestInlet().cy() == cell.ny());
+//            if (nearValley)
+//            {
+//
+//                // Project point onto the line connecting the two cell centers
+//                final double dotProductOverMagnitudeSquared = (sampleDX * parallelDX + sampleDY * parallelDY) / (sampleDX * sampleDX + sampleDY * sampleDY);
+//                final double xProjected = xCentroid + dotProductOverMagnitudeSquared * sampleDX;
+//                final double yProjected = yCentroid + dotProductOverMagnitudeSquared * sampleDY;
+//                final double valleyDist = Math.sqrt((x - xProjected) * (x - xProjected) + (y - yProjected) * (y - yProjected));
+//                return
+//            }
+        };
+    }
 
     /**
      * Signed version f connected valley noise, usable for creating asymmetrical features in valleys

@@ -142,7 +142,7 @@ public class CellularErosion2D implements Noise2D
             }
         }
 
-        return new Cell(thisCenterX / frequency, thisCenterY / frequency, noJitterCenterX, noJitterCenterY, closestNeighborCenterX / frequency, closestNeighborCenterY / frequency, distance0, distance1, closestHash * (1 / 2147483648.0f), angle0, outlet, nearestInlet, inlets, frequency);
+        return new Cell(thisCenterX / frequency, thisCenterY / frequency, noJitterCenterX, noJitterCenterY, closestNeighborCenterX / frequency, closestNeighborCenterY / frequency, FastNoiseLite.FastFloor(closestNeighborCenterX), FastNoiseLite.FastFloor(closestNeighborCenterY), distance0, distance1, closestHash * (1 / 2147483648.0f), angle0, outlet, nearestInlet, inlets, frequency);
     }
 
     /**
@@ -152,6 +152,8 @@ public class CellularErosion2D implements Noise2D
      * @param cy    "Y"-coordinate of cell center before jitter, unscaled
      * @param nx    "X"-coordinate of neighboring cell center
      * @param ny    "Y"-coordinate of neighboring cell center
+     * @param ncx   "X"-coordinate of neighboring cell center before jitter, unscaled
+     * @param ncy   "Y"-coordinate of neighboring cell center before jitter, unscaled
      * @param f1    Distance to x, y
      * @param f2    Distance to cx, cy
      * @param noise Hash value of the cell, range 0-1
@@ -161,7 +163,7 @@ public class CellularErosion2D implements Noise2D
      * @param inlets        All inlet cell points of the cell
      * @param frequency     Scale factor, useful to have accessible
      */
-    public record Cell(double x, double y, int cx, int cy, double nx, double ny, double f1, double f2, double noise, double angle, Point outlet, @Nullable Point nearestInlet, List<Point> inlets, double frequency) {}
+    public record Cell(double x, double y, int cx, int cy, double nx, double ny, int ncx, int ncy, double f1, double f2, double noise, double angle, Point outlet, @Nullable Point nearestInlet, List<Point> inlets, double frequency) {}
 
 
     public Point getOutlet(int xr, int yr)
