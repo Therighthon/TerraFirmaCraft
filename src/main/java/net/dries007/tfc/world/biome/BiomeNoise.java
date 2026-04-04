@@ -6,6 +6,7 @@
 
 package net.dries007.tfc.world.biome;
 
+import java.util.List;
 import java.util.Random;
 import net.minecraft.util.Mth;
 
@@ -29,51 +30,67 @@ import static net.dries007.tfc.world.TFCChunkGenerator.*;
 public final class BiomeNoise
 {
 
+
     public static Noise2D erosion(long seed)
     {
+        final double frequency = 0.015;
         final Noise2D noiseIn =  new OpenSimplex2D(seed).octaves(4).spread(0.02f).scaled(SEA_LEVEL_Y + 120, SEA_LEVEL_Y - 50);
-        final CellularErosion2D cells = new CellularErosion2D(seed, noiseIn).spread(0.03);
+        final CellularErosion2D cells = new CellularErosion2D(seed, 0.15f, noiseIn).spread(frequency);
         return (x, y) -> {
             final CellularErosion2D.Cell cell = cells.cell(x, y);
 
             double hCenter = noiseIn.noise(cell.x(), cell.y());
             double hNeighbor = noiseIn.noise(cell.nx(), cell.ny());
-            double hBorder = 0.5 * (hCenter + hNeighbor);
 
-            // In order to get a consistently-scaled distance to the cell edge, we project the point onto the cell edge and calculate the distance
+            double heightOut = 300;
+            // TODO: Calculating all 9 possible valleys for every point is kind of excessive, we could probably add a distance filter or something
+            List<CellularErosion2D.Valley> valleys = cell.valleys();
 
-            // Start by getting a point on the cell edge. We also know that the line between cell centers is perpendicular to the cell edge
-            final double xCentroid = 0.5 * (cell.x() + cell.nx());
-            final double yCentroid = 0.5 * (cell.y() + cell.ny());
-            // Vector from the nearest cell center to the second-nearest cell center
-            final double sampleDX = x - xCentroid;
-            final double sampleDY = y - yCentroid;
-            // Vector oriented along the cell edge
-            final double parallelDX = yCentroid - cell.y();
-            final double parallelDY = cell.x() - xCentroid;
+            for (CellularErosion2D.Valley valley : valleys)
+            {
+                final double ux = valley.u().x();
+                final double uy = valley.u().y();
+                final double vx = valley.v().x();
+                final double vy = valley.v().y();
+                final double px = x * frequency;
+                final double py = y * frequency;
 
-            final double edgeDotProductOverMagnitudeSquared = (sampleDX * parallelDX + sampleDY * parallelDY) / (parallelDX * parallelDX + parallelDY * parallelDY);
-            final double xProjectedOnEdge = xCentroid + edgeDotProductOverMagnitudeSquared * parallelDX;
-            final double yProjectedOnEdge = yCentroid + edgeDotProductOverMagnitudeSquared * parallelDY;
-            final double edgeDist = Math.sqrt((x - xProjectedOnEdge) * (x - xProjectedOnEdge) + (y - yProjectedOnEdge) * (y - yProjectedOnEdge));
+                final double l_uv2 = dist2(ux, uy, vx, vy);
+                final double distance, valleyBaseHeight;
+                if (l_uv2 == 0)
+                {
+                    distance = Math.sqrt(dist2(px, py, ux, uy)) / frequency;
+                    valleyBaseHeight = hCenter;
+                }
+                else
+                {
+                    // Consider the line extending the segment, parameterized as u + t (v - u).
+                    // We find projection of point p onto the line.
+                    // It falls where t = [(p-u) . (v-u)] / |v-u|^2
+                    // We clamp t from [0,1] to handle points outside the segment uv.
+                    final double t = Math.clamp(dot(px - ux, py - uy, vx - ux, vy - uy) / l_uv2, 0, 1);
+                    valleyBaseHeight = Mth.map(t, 0, 1, hCenter, hNeighbor);
+                    final double xProj = ux + t * (vx - ux);
+                    final double yProj = uy + t * (vy - uy);
+                    distance = Math.sqrt(dist2(px, py, xProj, yProj)) / frequency;
+                }
 
-            final double edgeDistOfCenter = Math.sqrt((sampleDX * sampleDX) + (sampleDY * sampleDY));
+                final double valleyHeight = valleyBaseHeight + 0.8 * distance;
+                heightOut = Math.min(heightOut, valleyHeight);
+            }
 
-            return Mth.clampedMap(edgeDist, 0, edgeDistOfCenter - 2, hBorder, hCenter);
-
-//            boolean nearValley = (cell.outlet().cx() == cell.ncx() && cell.outlet().cy() == cell.ncy()) ||
-//                (cell.nearestInlet().cx() == cell.nx() && cell.nearestInlet().cy() == cell.ny());
-//            if (nearValley)
-//            {
-//
-//                // Project point onto the line connecting the two cell centers
-//                final double dotProductOverMagnitudeSquared = (sampleDX * parallelDX + sampleDY * parallelDY) / (sampleDX * sampleDX + sampleDY * sampleDY);
-//                final double xProjected = xCentroid + dotProductOverMagnitudeSquared * sampleDX;
-//                final double yProjected = yCentroid + dotProductOverMagnitudeSquared * sampleDY;
-//                final double valleyDist = Math.sqrt((x - xProjected) * (x - xProjected) + (y - yProjected) * (y - yProjected));
-//                return
-//            }
+            return heightOut;
         };
+    }
+
+    public static double dist2(double ux, double uy, double vx, double vy)
+    {
+        return Mth.square(ux - vx) + Mth.square(uy - vy);
+    }
+
+    public static double dot(double ux, double uy, double vx, double vy)
+    {
+        return ux * vx + uy * vy;
     }
 
     /**

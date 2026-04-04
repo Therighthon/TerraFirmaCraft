@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToDoubleFunction;
 import it.unimi.dsi.fastutil.HashCommon;
-import javax.annotation.Nullable;
 
 import net.dries007.tfc.util.Helpers;
 
@@ -124,25 +123,11 @@ public class CellularErosion2D implements Noise2D
 
         // Now we do the drainage "network"
 
-        // Each cell should have up to 7 "inlets" and one outlet, the outlet being the lowest of the 8 adjacent points,
-        // and inlets being any points for which this point is an outlet
-        Point outlet = getOutlet(noJitterCenterX, noJitterCenterY);
-        List<Point> inlets = getInlets(noJitterCenterX, noJitterCenterY, thisCenterX, thisCenterY);
-        Point nearestInlet = null;
-        double lastDistance = Double.MAX_VALUE;
-        for (int i = 0; i < inlets.size(); i++)
-        {
-            final Point point = inlets.get(i);
-            double newDistanceX = point.x - x;
-            double newDistanceY = point.y - y;
-            double newDistance = newDistanceX * newDistanceX + newDistanceY * newDistanceY;
-            if (newDistance < lastDistance)
-            {
-                nearestInlet = point;
-            }
-        }
+        // Each cell has one outlet (the center of a neighboring cell) and we get the outlet of all 8 neighboring cells
+        // This ensures that we will account for all streams that could possibly influence this point
+        final List<Valley> valleys = getValleys(noJitterCenterX, noJitterCenterY);
 
-        return new Cell(thisCenterX / frequency, thisCenterY / frequency, noJitterCenterX, noJitterCenterY, closestNeighborCenterX / frequency, closestNeighborCenterY / frequency, FastNoiseLite.FastFloor(closestNeighborCenterX), FastNoiseLite.FastFloor(closestNeighborCenterY), distance0, distance1, closestHash * (1 / 2147483648.0f), angle0, outlet, nearestInlet, inlets, frequency);
+        return new Cell(thisCenterX / frequency, thisCenterY / frequency, noJitterCenterX, noJitterCenterY, closestNeighborCenterX / frequency, closestNeighborCenterY / frequency, FastNoiseLite.FastFloor(closestNeighborCenterX), FastNoiseLite.FastFloor(closestNeighborCenterY), distance0, distance1, closestHash * (1 / 2147483648.0f), angle0, valleys, frequency);
     }
 
     /**
@@ -158,18 +143,17 @@ public class CellularErosion2D implements Noise2D
      * @param f2    Distance to cx, cy
      * @param noise Hash value of the cell, range 0-1
      * @param angle Diamond angle to the center
-     * @param outlet        Outlet cell point of the cell
-     * @param nearestInlet  Inlet cell point of the cell that is nearest the sampled point
-     * @param inlets        All inlet cell points of the cell
+     * @param valleys        All inlet cell points of the cell
      * @param frequency     Scale factor, useful to have accessible
      */
-    public record Cell(double x, double y, int cx, int cy, double nx, double ny, int ncx, int ncy, double f1, double f2, double noise, double angle, Point outlet, @Nullable Point nearestInlet, List<Point> inlets, double frequency) {}
+    public record Cell(double x, double y, int cx, int cy, double nx, double ny, int ncx, int ncy, double f1, double f2, double noise, double angle, List<Valley> valleys, double frequency) {}
 
 
     public Point getOutlet(int xr, int yr)
     {
         double noise = Double.MAX_VALUE;
-        double x = 0, y = 0, cx = 0, cy = 0;
+        double x = 0, y = 0;
+        int cx = 0, cy = 0;
         for (int xi = xr - 1; xi <= xr + 1; xi++)
         {
             for (int yi = yr - 1; yi <= yr + 1; yi++)
@@ -193,32 +177,26 @@ public class CellularErosion2D implements Noise2D
         return new Point(x, y, cx, cy, noise);
     }
 
-    public List<Point> getInlets(int xr, int yr, double xCenter, double yCenter)
+    public List<Valley> getValleys(int xr, int yr)
     {
-        List<Point> inlets = new ArrayList<>(8);
-        final double noiseCenter = noiseIn.noise(xCenter, yCenter);
+        List<Valley> valleys = new ArrayList<>(9);
         for (int xi = xr - 1; xi <= xr + 1; xi++)
         {
             for (int yi = yr - 1; yi <= yr + 1; yi++)
             {
+
                 int hash = FastNoiseLite.Hash(seed, (xi * primeX), (yi * primeY));
                 int idx = hash & (255 << 1);
                 double vecX = xi + FastNoiseLite.RandVecs2D[idx] * jitter;
                 double vecY = yi + FastNoiseLite.RandVecs2D[idx | 1] * jitter;
 
-                // We only need to check the outlet of this point if it is higher than our center point
-                final double noiseAt = noiseIn.noise(vecX, vecY);
-                if (noiseAt > noiseCenter)
-                {
-                    final Point outletAt = getOutlet(xi, yi);
-                    if (outletAt.cx == xr && outletAt.cy == yr)
-                    {
-                        inlets.add(new Point(vecX, vecY, xi, yi, noiseAt));
-                    }
-                }
+                // Whatever point we are sampling is upstream, as we only search for its outlet
+                final Point upstream = new Point(vecX, vecY, xi, yi, noiseIn.noise(vecX, vecY));
+                final Point downstream = getOutlet(xr, yr);
+                valleys.add(new Valley(upstream, downstream));
             }
         }
-        return inlets;
+        return valleys;
     }
 
     /**
@@ -228,5 +206,12 @@ public class CellularErosion2D implements Noise2D
      * @param cy "Y"-coordinate of Point's Cell center before jitter, unscaled
      * @param h Value of initial noise at the point
      */
-    public record Point(double x, double y, double cx, double cy, double h) {}
+    public record Point(double x, double y, int cx, int cy, double h) {}
+
+    /**
+     * Set of two points between which a valley should be carved out
+     * @param u Point at one end of the valley
+     * @param v Point at the other end of the valley
+     */
+    public record Valley(Point u, Point v) {}
 }
