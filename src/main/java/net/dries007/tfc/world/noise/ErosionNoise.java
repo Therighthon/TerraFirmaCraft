@@ -20,7 +20,8 @@ import it.unimi.dsi.fastutil.HashCommon;
  */
 public final class ErosionNoise
 {
-    // TODO: Input noise should be scaled -1 to 1, I think. Confirm and write a comment
+    // TODO: This class should be cleaned up now that is functional. Mainly, variables that are unnecessarily packed into vectors
+    //  should be split out since this is not running as an OpenGL shader.
     public static Noise2D mountainErosion(long seed, Noise2D noiseIn, double noiseInAmplitude)
     {
         return (x, y) ->
@@ -65,7 +66,7 @@ public final class ErosionNoise
             //  y: The amount (from 0 to 1) to override the actual slope.
             final FastNoiseLite.Vector2 erosionAssumedSlope = new FastNoiseLite.Vector2(0.7, 1.0);
             // The scale of the erosion effect, affecting it both horizontally and vertically.
-            final double erosionScale = 60;
+            final double erosionScale = 64;
             // Control over the erosion octaves, with each successive octave layering
             // smaller gullies onto the terrain.
             final int octaves = 3;

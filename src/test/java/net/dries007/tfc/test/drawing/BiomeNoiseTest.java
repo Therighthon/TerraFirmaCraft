@@ -47,6 +47,12 @@ public class BiomeNoiseTest implements TestSetup
     }
 
     @Test
+    public void testMountains()
+    {
+        terrain.draw("noise_mountains", mountains(124153L, 10, 70, 1f));
+    }
+
+    @Test
     public void testRollingHills()
     {
         terrain.draw("noise_rolling_hills", hills(seed(), -5, 28));

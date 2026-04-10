@@ -241,6 +241,7 @@ tasks {
 
     jar {
         manifest {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
             attributes["Implementation-Version"] = project.version
         }
     }

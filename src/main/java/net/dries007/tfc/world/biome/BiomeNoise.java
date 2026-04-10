@@ -46,8 +46,9 @@ public final class BiomeNoise
 
     public static Noise2D erosionalMountainNoise(long seed, double minHeight, double maxHeight)
     {
-        final Noise2D noiseIn = new OpenSimplex2D(seed + 4).octaves(3).spread(0.012).scaled(minHeight + SEA_LEVEL_Y, maxHeight + SEA_LEVEL_Y);
-        return ErosionNoise.mountainErosion(seed, noiseIn, maxHeight - minHeight);
+        final Noise2D noiseIn = new OpenSimplex2D(seed + 4).octaves(3).spread(0.008).scaled(minHeight + SEA_LEVEL_Y, maxHeight + SEA_LEVEL_Y);
+        final Noise2D erodedShape = ErosionNoise.mountainErosion(seed, noiseIn, maxHeight - minHeight);
+        return erodedShape.max(ocean(seed, -26, -12));
     }
 
     /**
