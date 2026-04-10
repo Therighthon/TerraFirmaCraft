@@ -62,9 +62,6 @@ public class Cellular2D implements Noise2D
         x *= frequency;
         y *= frequency;
 
-        final int primeX = 501125321;
-        final int primeY = 1136930381;
-
         int xr = FastNoiseLite.FastFloor(x);
         int yr = FastNoiseLite.FastFloor(y);
 
@@ -79,6 +76,8 @@ public class Cellular2D implements Noise2D
         int noJitterCenterX = 0;
         int noJitterCenterY = 0;
 
+        int primeX = 501125321;
+        int primeY = 1136930381;
         int xPrimed = (xr - sample) * primeX;
         int yPrimedBase = (yr - sample) * primeY;
 

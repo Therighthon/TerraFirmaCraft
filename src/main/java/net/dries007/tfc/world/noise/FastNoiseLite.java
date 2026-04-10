@@ -2605,6 +2605,42 @@ public class FastNoiseLite
             this.x = x;
             this.y = y;
         }
+
+        public double mag2()
+        {
+            return x * x + y * y;
+        }
+
+        public double mag()
+        {
+            return Math.sqrt(mag2());
+        }
+
+        public double dot(Vector2 other)
+        {
+            return this.x * other.x + this.y * other.y;
+        }
+
+        public Vector2 unit()
+        {
+            final double mag = mag();
+            return new Vector2(x / mag, y / mag);
+        }
+
+        public Vector2 plus(Vector2 other)
+        {
+            return new Vector2(x + other.x, y + other.y);
+        }
+
+        public Vector2 minus(Vector2 other)
+        {
+            return new Vector2(x - other.x, y - other.y);
+        }
+
+        public Vector2 scale(double scale)
+        {
+            return new Vector2(x * scale, y * scale);
+        }
     }
 
     public static class Vector3
@@ -2617,6 +2653,68 @@ public class FastNoiseLite
             this.x = x;
             this.y = y;
             this.z = z;
+        }
+
+        public Vector3(/*FNLfloat*/ double x, Vector2 u)
+        {
+            this.x = x;
+            this.y = u.x;
+            this.z = u.y;
+        }
+
+        public Vector2 yz()
+        {
+            return new Vector2(this.y, this.z);
+        }
+
+        public Vector3 plus(Vector3 other)
+        {
+            return new Vector3(x + other.x, y + other.x, z + other.z);
+        }
+
+        public Vector3 minus(Vector3 other)
+        {
+            return new Vector3(x - other.x, y - other.x, z - other.z);
+        }
+
+        public Vector3 scale(double scale)
+        {
+            return new Vector3(x * scale, y * scale, z * scale);
+        }
+
+        public void plusEquals(Vector3 other)
+        {
+            this.x = x + other.x;
+            this.y = y + other.y;
+            this.z = z + other.z;
+        }
+    }
+
+    public static class Vector4
+    {
+        public /*FNLfloat*/ double x;
+        public /*FNLfloat*/ double y;
+        public /*FNLfloat*/ double z;
+        public /*FNLfloat*/ double w;
+        public Vector4(Vector2 u, Vector2 v)
+        {
+            this.x = u.x;
+            this.y = u.y;
+            this.z = v.x;
+            this.w = v.y;
+        }
+
+        public Vector4(/*FNLfloat*/ double x, /*FNLfloat*/ double y, /*FNLfloat*/ double z, /*FNLfloat*/ double w)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+
+        public Vector2 zw()
+        {
+            return new Vector2(this.z, this.w);
         }
     }
 }

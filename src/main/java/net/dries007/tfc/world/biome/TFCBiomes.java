@@ -61,7 +61,7 @@ public final class TFCBiomes
     public static final BiomeExtension OCEAN_RIDGE = register("ocean_ridge", builder().heightmap(BiomeNoise::oceanRidge).surface(ShoreAndOceanSurfaceBuilder.OCEAN_RIDGE).aquiferHeightOffset(-24).type(BiomeBlendType.OCEAN).salty().noRivers());
     public static final BiomeExtension RIFT_VALLEY = register("rift_valley", builder().heightmap(seed -> BiomeNoise.riftValley(seed, 2, 30, false)).surface(NormalSurfaceBuilder.INSTANCE).spawnable().type(RiverBlendType.CAVE));
     public static final BiomeExtension RIFT_LAKE = register("rift_lake", builder().heightmap(seed -> BiomeNoise.riftValley(seed, -10, 30, true)).surface(NormalSurfaceBuilder.INSTANCE).aquiferHeightOffset(-16).type(BiomeBlendType.LAKE).type(RiverBlendType.CAVE).noRivers());
-    public static final BiomeExtension COLLISIONAL_MOUNTAINS = register("collisional_mountains", builder().heightmap(seed -> BiomeNoise.mountains(seed, 18, 90, 0.6f)).surface(NormalSurfaceBuilder.ROCKY).spawnable().type(RiverBlendType.CAVE)); // // TODO: Very large mountains
+    public static final BiomeExtension COLLISIONAL_MOUNTAINS = register("collisional_mountains", builder().heightmap(seed -> BiomeNoise.erosionalMountainNoise(seed, 15, 210)).surface(NormalSurfaceBuilder.ROCKY).spawnable().type(RiverBlendType.CAVE)); // // TODO: Very large mountains
 
     // Low biomes
     public static final BiomeExtension PLAINS = register("plains", builder().heightmap(seed -> BiomeNoise.hills(seed, 4, 10)).surface(NormalSurfaceBuilder.INSTANCE).spawnable().type(RiverBlendType.FLOODPLAIN)); // Very flat, slightly above sea level.

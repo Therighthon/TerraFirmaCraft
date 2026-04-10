@@ -13,6 +13,7 @@ import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.world.BiomeNoiseSampler;
 import net.dries007.tfc.world.noise.Cellular2D;
 import net.dries007.tfc.world.Seed;
+import net.dries007.tfc.world.noise.ErosionNoise;
 import net.dries007.tfc.world.noise.Noise2D;
 import net.dries007.tfc.world.noise.Noise3D;
 import net.dries007.tfc.world.noise.OpenSimplex2D;
@@ -27,7 +28,6 @@ import static net.dries007.tfc.world.TFCChunkGenerator.*;
  */
 public final class BiomeNoise
 {
-
     /**
      * Signed version f connected valley noise, usable for creating asymmetrical features in valleys
      */
@@ -42,6 +42,12 @@ public final class BiomeNoise
     public static Noise2D connectedValleyNoise(long seed)
     {
         return connectedValleyBaseNoise(seed).abs();
+    }
+
+    public static Noise2D erosionalMountainNoise(long seed, double minHeight, double maxHeight)
+    {
+        final Noise2D noiseIn = new OpenSimplex2D(seed + 4).octaves(3).ridged().spread(0.008).scaled(minHeight + SEA_LEVEL_Y, maxHeight + SEA_LEVEL_Y);
+        return ErosionNoise.mountainErosion(seed, noiseIn);
     }
 
     /**
@@ -856,14 +862,6 @@ public final class BiomeNoise
             .abs()
             .clampedScaled(0.20, 0.60, minHeight, maxHeight);
         return stairStepCliffs(seed, maxBaseNoise.min(hoodooNoise).max(minBaseNoise), 5, 8, 7).add(new OpenSimplex2D(seed).octaves(3).spread(0.08).scaled(-3, 3));
-    }
-
-    public static Noise2D tableMountains(long seed)
-    {
-        final int minHeight = SEA_LEVEL_Y + 16;
-        final int plateauHeight = SEA_LEVEL_Y + 48;
-
-        return stairStepCliffs(seed, canyonBaseNoise(seed, minHeight, plateauHeight, 0.1), 20, 30, 10);
     }
 
     /**
