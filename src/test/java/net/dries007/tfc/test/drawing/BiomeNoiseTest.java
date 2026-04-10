@@ -41,6 +41,12 @@ public class BiomeNoiseTest implements TestSetup
         .size(1600);
 
     @Test
+    public void testErosion()
+    {
+        terrain.draw("noise_erosion", erosionalMountainNoise(124153L, -60, 100));
+    }
+
+    @Test
     public void testRollingHills()
     {
         terrain.draw("noise_rolling_hills", hills(seed(), -5, 28));

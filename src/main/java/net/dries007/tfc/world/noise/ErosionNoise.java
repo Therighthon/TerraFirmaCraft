@@ -195,7 +195,7 @@ public final class ErosionNoise
                 weightSum += weight;
                 double waveInput = vectorFromCellPoint.dot(sideDir) + offset;
                 final FastNoiseLite.Vector2 partialPhaseDir = new FastNoiseLite.Vector2(Math.cos(waveInput), Math.sin(waveInput));
-                phaseDir.plus(partialPhaseDir.scale(weight));
+                phaseDir = phaseDir.plus(partialPhaseDir.scale(weight));
             }
         }
 
