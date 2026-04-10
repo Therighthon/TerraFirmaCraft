@@ -21,7 +21,7 @@ import it.unimi.dsi.fastutil.HashCommon;
 public final class ErosionNoise
 {
     // TODO: Input noise should be scaled -1 to 1, I think. Confirm and write a comment
-    public static Noise2D mountainErosion(long seed, Noise2D noiseIn)
+    public static Noise2D mountainErosion(long seed, Noise2D noiseIn, double noiseInAmplitude)
     {
         return (x, y) ->
         {
@@ -30,7 +30,7 @@ public final class ErosionNoise
             final double heightIn = noiseIn.noise(x, y);
             // We get slopes by sampling adjacent points, not from a derivative
             final FastNoiseLite.Vector3 heightAndSlope = new FastNoiseLite.Vector3(heightIn, 0.5 * (noiseIn.noise(x + 1, y) - noiseIn.noise(x - 1, y)), 0.5 * (noiseIn.noise(x, y + 1) - noiseIn.noise(x, y - 1)));
-            final double fadeTarget = Math.clamp(heightIn / 0.6, -1, 1);
+            final double fadeTarget = Math.clamp(heightIn / (0.6 * noiseInAmplitude), -1, 1);
             // The strength of the erosion effect, affecting the magnitude of all octaves,
             // and indirectly affecting the directions of the gullies as a result.
             final double erosionStrength = 0.22;
@@ -146,7 +146,6 @@ public final class ErosionNoise
 
             // Apply height offset and derivative (slope) according to strength of current octave.
             heightAndSlope.plusEquals(fadedGullies.scale(strength));
-            double seven = heightAndSlope.z;
 
             // Update fadeTarget to include the new octave.
             fadeTarget = fadedGullies.x;
@@ -174,6 +173,7 @@ public final class ErosionNoise
     public static FastNoiseLite.Vector4 phacelleNoise(FastNoiseLite.Vector2 p, FastNoiseLite.Vector2 normDir, double freq, double offset, double normalization, long seed)
     {
         final FastNoiseLite.Vector2 sideDir = new FastNoiseLite.Vector2(-normDir.y, normDir.x).scale(freq * 2 * Math.PI);
+        offset *= 2 * Math.PI;
 
         final FastNoiseLite.Vector2 pInt = new FastNoiseLite.Vector2(Math.floor(p.x), Math.floor(p.y));
         final FastNoiseLite.Vector2 pFract = p.minus(pInt);
