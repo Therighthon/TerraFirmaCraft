@@ -107,7 +107,9 @@ public class ChunkNoiseFiller extends ChunkHeightFiller
     private final int[] surfaceIntegrityDepth; // 16x16, block pos resolution
     private final BiomeExtension[] localBiomes; // 16x16, block pos resolution
     private final BiomeExtension[] localBiomesNoRivers; // 16x16, block pos resolution
+    private final BiomeExtension[] localSecondaryBiomes; // 16x16, block pos resolution
     private final double[] localBiomeWeights; // 16x16, block pos resolution
+    private final double[] localSecondaryBiomeWeights; // 16x16, block pos resolution
 
     // Current local position / context
     private double cellDeltaX, cellDeltaZ; // Delta within a noise cell
@@ -166,8 +168,10 @@ public class ChunkNoiseFiller extends ChunkHeightFiller
         this.preVolcanicHeight = new int[16 * 16];
         this.surfaceIntegrityDepth = new int[16 * 16];
         this.localBiomes = new BiomeExtension[16 * 16];
+        this.localSecondaryBiomes = new BiomeExtension[16 * 16];
         this.localBiomesNoRivers = new BiomeExtension[16 * 16];
         this.localBiomeWeights = new double[16 * 16];
+        this.localSecondaryBiomeWeights = new double[16 * 16];
     }
 
     public TFCAquifer aquifer()
@@ -195,6 +199,11 @@ public class ChunkNoiseFiller extends ChunkHeightFiller
         return localBiomes;
     }
 
+    public BiomeExtension[] localSecondaryBiomes()
+    {
+        return localSecondaryBiomes;
+    }
+
     public BiomeExtension[] localBiomesNoRivers()
     {
         return localBiomesNoRivers;
@@ -203,6 +212,11 @@ public class ChunkNoiseFiller extends ChunkHeightFiller
     public double[] localBiomeWeights()
     {
         return localBiomeWeights;
+    }
+
+    public double[] localSecondaryBiomeWeights()
+    {
+        return localSecondaryBiomeWeights;
     }
 
     /**
@@ -655,11 +669,13 @@ public class ChunkNoiseFiller extends ChunkHeightFiller
     }
 
     @Override
-    protected void updateLocalCaches(Object2DoubleMap<BiomeExtension> biomeWeights, BiomeExtension biomeAt, @Nullable RiverInfo info, double height, double preVolcanicHeight, boolean couldBeSalty, int surfaceIntegrityDepth)
+    protected void updateLocalCaches(Object2DoubleMap<BiomeExtension> biomeWeights, BiomeExtension biomeAt, BiomeExtension secondBiomeAt, @Nullable RiverInfo info, double height, double preVolcanicHeight, boolean couldBeSalty, int surfaceIntegrityDepth)
     {
         final int localIndex = localX + 16 * localZ;
 
         localBiomesNoRivers[localIndex] = biomeAt;
+        localSecondaryBiomes[localIndex] = secondBiomeAt;
+        localSecondaryBiomeWeights[localIndex] = biomeWeights.getOrDefault(secondBiomeAt, 0.5);
         if (height <= SEA_LEVEL_Y + 1 && info != null && info.normDistSq() < 1.1 && biomeAt.hasRivers())
         {
             biomeAt = TFCBiomes.RIVER;

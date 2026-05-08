@@ -48,6 +48,7 @@ public class SurfaceBuilderContext
     private final BiomeExtension atollBiome;
     private final BiomeExtension stratovolcanoBiome;
     private double biomeWeight;
+    private double secondaryBiomeWeight;
     private double slope;
     private int preVolcanicHeight;
     private float temperature;
@@ -83,11 +84,12 @@ public class SurfaceBuilderContext
         defaultFluidStates.add(Blocks.WATER.defaultBlockState());
     }
 
-    public void buildSurface(BiomeExtension biome, BiomeExtension originalBiome, double biomeWeight, boolean salty, SurfaceBuilder builder, int x, int y, int z, double slope, int preVolcanicHeight)
+    public void buildSurface(BiomeExtension biome, BiomeExtension originalBiome, double biomeWeight, double secondaryBiomeWeight, boolean salty, SurfaceBuilder builder, SurfaceBuilder secondaryBuilder, int x, int y, int z, double slope, int preVolcanicHeight)
     {
         this.biome = biome;
         this.originalBiome = originalBiome;
         this.biomeWeight = biomeWeight;
+        this.secondaryBiomeWeight = secondaryBiomeWeight;
         this.slope = slope;
         this.preVolcanicHeight = preVolcanicHeight;
         this.temperature = chunkData.getAverageSeaLevelTemp(x, z);
@@ -101,7 +103,14 @@ public class SurfaceBuilderContext
         final int actualMinSurfaceHeight = Math.max(minY, Math.min(y, oceanFloor) - 20); // Iterate down to at least the ocean floor and below
 
         cursor.set(x, 0, z);
-        builder.buildSurface(this, y, actualMinSurfaceHeight);
+        if (0.5 * SoilSurfaceState.PATCH_NOISE.noise(x, z) + 0.5 < secondaryBiomeWeight)
+        {
+            secondaryBuilder.buildSurface(this, y, actualMinSurfaceHeight);
+        }
+        else
+        {
+            builder.buildSurface(this, y, actualMinSurfaceHeight);
+        }
     }
 
     public BiomeExtension biome()
@@ -147,6 +156,11 @@ public class SurfaceBuilderContext
     public double weight()
     {
         return biomeWeight;
+    }
+
+    public double secondaryWeight()
+    {
+        return secondaryBiomeWeight;
     }
 
     public BlockPos pos()

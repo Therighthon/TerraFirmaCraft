@@ -453,7 +453,7 @@ public class TFCChunkGenerator extends ChunkGenerator implements ChunkGeneratorE
 
             sections.forEach(LevelChunkSection::release);
 
-            surfaceManager.buildSurface(actualLevel, chunk, rockLayerSettings(), chunkData, filler.localBiomes(), filler.localBiomesNoRivers(), filler.localBiomeWeights(), filler.createSlopeMap(), filler.preVolcanicHeight(), random, getSeaLevel(), settings.minY(), cinderConeBiome, tuffRingBiome, tuyaBiome, atollBiome, stratovolcanoBiome);
+            surfaceManager.buildSurface(actualLevel, chunk, rockLayerSettings(), chunkData, filler.localBiomes(), filler.localSecondaryBiomes(), filler.localBiomesNoRivers(), filler.localBiomeWeights(), filler.localSecondaryBiomeWeights(), filler.createSlopeMap(), filler.preVolcanicHeight(), random, getSeaLevel(), settings.minY(), cinderConeBiome, tuffRingBiome, tuyaBiome, atollBiome, stratovolcanoBiome);
 
             return chunk;
         }, Util.backgroundExecutor());

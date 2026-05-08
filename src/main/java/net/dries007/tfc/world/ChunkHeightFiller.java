@@ -114,8 +114,8 @@ public class ChunkHeightFiller
         double height = 0, normalHeight = 0, shoreHeight = 0;
         double shoreWeight = 0, oceanWeight = 0;
 
-        BiomeExtension biomeAt = null, normalBiomeAt = null, shoreBiomeAt = null, oceanBiomeAt = null;
-        double maxNormalWeight = 0, maxShoreWeight = 0, maxOceanWeight = 0; // Partition on biome type
+        BiomeExtension biomeAt = null, secondBiomeAt = null, normalBiomeAt = null, secondNormalBiomeAt = null, shoreBiomeAt = null, oceanBiomeAt = null;
+        double maxNormalWeight = 0, secondNormalWeight = 0, maxShoreWeight = 0, maxOceanWeight = 0; // Partition on biome type
 
         boolean anySaltyBiomesNearby = false;
         for (Object2DoubleMap.Entry<BiomeExtension> entry : biomeWeights.object2DoubleEntrySet())
@@ -168,6 +168,8 @@ public class ChunkHeightFiller
                 normalHeight += biomeHeight;
                 if (maxNormalWeight < biomeWeight)
                 {
+                    secondNormalBiomeAt = normalBiomeAt;
+                    secondNormalWeight = maxNormalWeight;
                     normalBiomeAt = biome;
                     maxNormalWeight = biomeWeight;
                 }
@@ -175,18 +177,33 @@ public class ChunkHeightFiller
         }
 
         biomeAt = normalBiomeAt;
+        secondBiomeAt = secondNormalBiomeAt;
+
         computeInitialShoreWeights(biomeWeights);
 
         final double landWeight = 1 - oceanWeight - shoreWeight;
         if (shoreWeight > 0 && shoreBiomeAt != null)
         {
             height = adjustHeightForShoreContributions(height, oceanWeight, landWeight, shoreWeight, maxShoreWeight, shoreBiomeAt, shoreHeight, normalHeight);
-            if (shoreWeight > 0.5) biomeAt = shoreBiomeAt;
+            if (shoreWeight > 0.5)
+            {
+                secondBiomeAt = biomeAt;
+                biomeAt = shoreBiomeAt;
+            }
+            else if (shoreWeight > secondNormalWeight)
+            {
+                secondBiomeAt = shoreBiomeAt;
+            }
         }
 
         if (biomeAt == null)
         {
             biomeAt = oceanBiomeAt;
+            secondBiomeAt = oceanBiomeAt;
+        }
+        else if (secondBiomeAt == null)
+        {
+            secondBiomeAt = biomeAt;
         }
 
         if (oceanWeight >= 0.25)
@@ -223,7 +240,7 @@ public class ChunkHeightFiller
 
         if (useCache)
         {
-            updateLocalCaches(biomeWeights, biomeAt, info, height, preVolcanicHeight, anySaltyBiomesNearby, surfaceIntegrityDepth);
+            updateLocalCaches(biomeWeights, biomeAt, secondBiomeAt, info, height, preVolcanicHeight, anySaltyBiomesNearby, surfaceIntegrityDepth);
         }
 
         return height;
@@ -333,7 +350,7 @@ public class ChunkHeightFiller
         return volcanoHeight == NOT_PRESENT_RETURN ? heightIn : volcanoHeight;
     }
 
-    protected void updateLocalCaches(Object2DoubleMap<BiomeExtension> biomeWeights, BiomeExtension biomeAt, @Nullable RiverInfo info, double height, double preVolcanicHeight, boolean couldBeSalty, int surfaceIntegrityDepth) {}
+    protected void updateLocalCaches(Object2DoubleMap<BiomeExtension> biomeWeights, BiomeExtension biomeAt, BiomeExtension secondBiomeAt, @Nullable RiverInfo info, double height, double preVolcanicHeight, boolean couldBeSalty, int surfaceIntegrityDepth) {}
 
     @Nullable
     protected RiverInfo sampleRiverInfo(boolean useCache)
