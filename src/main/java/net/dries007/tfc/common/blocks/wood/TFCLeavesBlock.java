@@ -23,10 +23,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.TransparentBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -51,11 +53,12 @@ import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.Season;
 import net.dries007.tfc.util.registry.RegistryWood;
 
-public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockExtension, IFluidLoggable, ISlowEntities
+public class TFCLeavesBlock extends TransparentBlock implements ILeavesBlock, IForgeBlockExtension, IFluidLoggable, ISlowEntities
 {
     public static final BooleanProperty PERSISTENT = BlockStateProperties.PERSISTENT;
     public static final FluidProperty FLUID = TFCBlockStateProperties.WATER;
     public static final IntegerProperty DISTANCE = TFCBlockStateProperties.DISTANCE_10;
+    public static final DirectionProperty FACING = BlockStateProperties.FACING;
 
     // This is the maximum (normal) value of the distance that we support. Setting to 10 will cause it to decay on random tick,
     // as in vanilla, and that behavior can be enabled in the config.
@@ -110,7 +113,7 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
         this.wood = wood;
 
         // Distance is dependent on tree species
-        registerDefaultState(stateDefinition.any().setValue(DISTANCE, 1).setValue(PERSISTENT, false));
+        registerDefaultState(stateDefinition.any().setValue(DISTANCE, 1).setValue(PERSISTENT, false).setValue(FACING, Direction.UP));
     }
 
     @Override
@@ -135,12 +138,6 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
             level.scheduleTick(currentPos, this, 1);
         }
         return state;
-    }
-
-    @Override
-    protected int getLightBlock(BlockState state, BlockGetter level, BlockPos pos)
-    {
-        return 1;
     }
 
     @Override
@@ -289,7 +286,8 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
         final FluidState fluid = context.getLevel().getFluidState(context.getClickedPos());
         return defaultBlockState()
             .setValue(PERSISTENT, context.getPlayer() != null)
-            .setValue(getFluidProperty(), getFluidProperty().keyForOrEmpty(fluid.getType()));
+            .setValue(getFluidProperty(), getFluidProperty().keyForOrEmpty(fluid.getType()))
+            .setValue(FACING, context.getClickedFace());
     }
 
     @Override
@@ -307,7 +305,7 @@ public class TFCLeavesBlock extends Block implements ILeavesBlock, IForgeBlockEx
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
     {
-        builder.add(PERSISTENT, DISTANCE, getFluidProperty());
+        builder.add(PERSISTENT, DISTANCE, FACING, getFluidProperty());
     }
 
     @Nullable

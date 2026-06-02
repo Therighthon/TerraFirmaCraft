@@ -105,7 +105,7 @@ import net.dries007.tfc.world.chunkdata.ForestType;
 public final class SelfTests
 {
     public static final boolean THROW_ON_FAIL = true;
-    public static final boolean ENABLED = Boolean.getBoolean("tfc.enableDebugSelfTests");
+    public static final boolean ENABLED = false;
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static boolean EXTERNAL_ERROR = false;

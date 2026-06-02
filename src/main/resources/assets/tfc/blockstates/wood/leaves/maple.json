@@ -1,8 +1,29 @@
 {
-  "__comment__": "This file was automatically created by mcresources",
   "variants": {
-    "": {
-      "model": "tfc:block/wood/leaves/maple_dynamic"
+    "facing=up": {
+      "model": "tfc:block/branch"
+    },
+    "facing=north": {
+      "model": "tfc:block/branch",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "tfc:block/branch",
+      "x": 90,
+      "y": 90
+    },
+	"facing=down": {
+      "model": "tfc:block/branch",
+	  "x": 180
+    },
+    "facing=south": {
+      "model": "tfc:block/branch",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "tfc:block/branch",
+      "x": 90,
+      "y": 270
     }
   }
 }
