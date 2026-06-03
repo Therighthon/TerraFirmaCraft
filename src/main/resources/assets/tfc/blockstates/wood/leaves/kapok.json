@@ -1,8 +1,29 @@
 {
-  "__comment__": "This file was automatically created by mcresources",
   "variants": {
-    "": {
-      "model": "tfc:block/wood/leaves/kapok_dynamic"
+    "facing=up": {
+      "model": "tfc:block/branch_small"
+    },
+    "facing=north": {
+      "model": "tfc:block/branch_small",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "tfc:block/branch_small",
+      "x": 90,
+      "y": 90
+    },
+	"facing=down": {
+      "model": "tfc:block/branch_small",
+	  "x": 180
+    },
+    "facing=south": {
+      "model": "tfc:block/branch_small",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "tfc:block/branch_small",
+      "x": 90,
+      "y": 270
     }
   }
 }
