@@ -956,6 +956,7 @@ VANILLA_TRIMS = ('coast', 'sentry', 'dune', 'wild', 'ward', 'eye', 'vex', 'tide'
 
 BUTTERFLIES = ('golden_birdwing', 'papilio_rumanzovia', 'papilio_palinurus', 'peacock', 'sericinus', 'papilio_blumei', 'adonis_blue', 'silverwashed_fritillary')
 MOTHS = ('moth_diaphora', 'moth_saturnia', 'moth_argema', 'moth_attacus', 'moth_luna', 'moth_trosia')
+DRAGONFLIES = ('alpine_emerald', 'azure_hawker', 'banded_groundling', 'common_flangetail', 'ebony_jewelwing', 'epaulet_skimmer', 'globe_wanderer', 'green_darner', 'kirby_dropwing', 'pincertail', 'scarlet_darter', 'siberian_winterdamsel', 'vagrant_emperor', 'variegated_flutterer', 'white_Faced_darter')
 
 ALLOYS: Dict[str, Tuple[Tuple[str, float, float], ...]] = {
     'bismuth_bronze': (('zinc', 0.2, 0.3), ('copper', 0.5, 0.65), ('bismuth', 0.1, 0.2)),

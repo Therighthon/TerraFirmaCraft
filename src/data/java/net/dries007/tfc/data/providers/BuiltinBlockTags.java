@@ -744,6 +744,23 @@ public class BuiltinBlockTags extends TagsProvider<Block> implements Accessors
             .stream()
             .filter(b -> b.get().defaultBlockState().getDestroySpeed(empty(), BlockPos.ZERO) == 0f));
         tag(NATURAL_REGROWING_PLANTS).add(TFCBlocks.PLANTS);
+        tag(EMERGENT_FRESHWATER_PLANTS).add(
+            TFCBlocks.PLANTS.get(Plant.ARROWHEAD),
+            TFCBlocks.PLANTS.get(Plant.BUR_REED),
+            TFCBlocks.PLANTS.get(Plant.CATTAIL),
+            TFCBlocks.PLANTS.get(Plant.PHRAGMITE),
+            TFCBlocks.PLANTS.get(Plant.MARIGOLD),
+            TFCBlocks.PLANTS.get(Plant.WATER_TARO),
+            TFCBlocks.PLANTS.get(Plant.PICKERELWEED));
+        tag(FLOATING_FRESHWATER_PLANTS).add(
+            TFCBlocks.PLANTS.get(Plant.DUCKWEED),
+            TFCBlocks.PLANTS.get(Plant.LOTUS),
+            TFCBlocks.PLANTS.get(Plant.GREEN_ALGAE),
+            TFCBlocks.PLANTS.get(Plant.PISTIA),
+            TFCBlocks.PLANTS.get(Plant.WATER_CANNA),
+            TFCBlocks.PLANTS.get(Plant.WHITE_WATER_LILY),
+            TFCBlocks.PLANTS.get(Plant.PURPLE_WATER_LILY),
+            TFCBlocks.PLANTS.get(Plant.YELLOW_WATER_LILY));
         tag(ANIMAL_IGNORED_PLANTS).add(TFCBlocks.PLANTS.values()
             .stream()
             .filter(b -> b.get().getSpeedFactor() != 1.0f));

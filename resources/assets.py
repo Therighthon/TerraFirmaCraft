@@ -2640,6 +2640,8 @@ def generate(rm: ResourceManager):
         particle(rm, but, ['tfc:butterfly/' + but + '_' + str(i) for i in range(1, 5)])
     for moth in MOTHS:
         particle(rm, moth, ['tfc:moth/' + moth + '_' + str(i) for i in range(1, 5)])
+    for dragon in DRAGONFLIES:
+        particle(rm, dragon, ['tfc:dragonfly/' + dragon + '_' + str(i) for i in range(1, 3)])
 
 
 def particle(rm: ResourceManager, name: str, textures: List[str]):

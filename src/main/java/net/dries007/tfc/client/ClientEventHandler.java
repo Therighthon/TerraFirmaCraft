@@ -164,6 +164,7 @@ import net.dries007.tfc.client.particle.AnimatedParticle;
 import net.dries007.tfc.client.particle.BubbleColumnDownParticle;
 import net.dries007.tfc.client.particle.BubbleColumnUpParticle;
 import net.dries007.tfc.client.particle.BubbleParticle;
+import net.dries007.tfc.client.particle.DragonflyParticle;
 import net.dries007.tfc.client.particle.FallingLeafParticle;
 import net.dries007.tfc.client.particle.FluidDripParticle;
 import net.dries007.tfc.client.particle.GlintParticleProvider;
@@ -1019,6 +1020,7 @@ public final class ClientEventHandler
         event.registerSpriteSet(TFCParticles.SPARK.get(), SparkParticle.Provider::new);
         TFCParticles.BUTTERFLIES.values().forEach(fly -> event.registerSpriteSet(fly.get(), AnimatedParticle.Provider::new));
         TFCParticles.MOTHS.values().forEach(moth -> event.registerSpriteSet(moth.get(), AnimatedParticle.Provider::new));
+        TFCParticles.DRAGONFLIES.values().forEach(dragonfly -> event.registerSpriteSet(dragonfly.get(), DragonflyParticle.Provider::new));
         event.registerSpriteSet(TFCParticles.FLUID_DRIP.get(), set -> FluidDripParticle.provider(set, FluidDripParticle.FluidHangParticle::new));
         event.registerSpriteSet(TFCParticles.FLUID_FALL.get(), set -> FluidDripParticle.provider(set, FluidDripParticle.FluidFallAndLandParticle::new));
         event.registerSpriteSet(TFCParticles.FLUID_LAND.get(), set -> FluidDripParticle.provider(set, FluidDripParticle.FluidLandParticle::new));

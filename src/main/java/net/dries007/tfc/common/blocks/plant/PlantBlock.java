@@ -35,6 +35,7 @@ import net.dries007.tfc.client.ClientHelpers;
 import net.dries007.tfc.client.ClimateRenderCache;
 import net.dries007.tfc.client.overworld.SolarCalculator;
 import net.dries007.tfc.client.particle.Butterfly;
+import net.dries007.tfc.client.particle.Dragonfly;
 import net.dries007.tfc.client.particle.Moth;
 import net.dries007.tfc.client.particle.TFCParticles;
 import net.dries007.tfc.common.TFCTags;
@@ -251,25 +252,41 @@ public abstract class PlantBlock extends TFCBushBlock
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random)
     {
 
-        if (random.nextInt(120) == 0 && Helpers.isBlock(state, BlockTags.FLOWERS))
+        if (random.nextInt(120) == 0)
         {
-            final int dayTime = SolarCalculator.getSunBasedDayTime(pos.getZ(), ClimateRenderCache.INSTANCE.getHemisphereScale(), Calendars.CLIENT.getCalendarFractionOfYear(), Calendars.CLIENT.getCalendarFractionOfDay());
-            if (dayTime < 12_000)
+            if (Helpers.isBlock(state, TFCTags.Blocks.EMERGENT_FRESHWATER_PLANTS) || Helpers.isBlock(state, TFCTags.Blocks.FLOATING_FRESHWATER_PLANTS))
             {
-                // During the day, spawn butterflies
-                final Butterfly but = Butterfly.getRandomButterfly(ClimateRenderCache.INSTANCE.getInstantTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
-                if (but != null)
+                final int dayTime = SolarCalculator.getSunBasedDayTime(pos.getZ(), ClimateRenderCache.INSTANCE.getHemisphereScale(), Calendars.CLIENT.getCalendarFractionOfYear(), Calendars.CLIENT.getCalendarFractionOfDay());
+                if (dayTime < 13_000)
                 {
-                    level.addParticle(TFCParticles.BUTTERFLIES.get(but).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                    // During the day, spawn dragonflies
+                    final Dragonfly dragon = Dragonfly.getRandomDragonfly(ClimateRenderCache.INSTANCE.getInstantTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
+                    if (dragon != null)
+                    {
+                        level.addParticle(TFCParticles.DRAGONFLIES.get(dragon).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                    }
                 }
             }
-            else
+            else if (Helpers.isBlock(state, BlockTags.FLOWERS))
             {
-                // During the night, spawn moths
-                final Moth moth = Moth.getRandomMoth(ClimateRenderCache.INSTANCE.getInstantTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
-                if (moth != null)
+                final int dayTime = SolarCalculator.getSunBasedDayTime(pos.getZ(), ClimateRenderCache.INSTANCE.getHemisphereScale(), Calendars.CLIENT.getCalendarFractionOfYear(), Calendars.CLIENT.getCalendarFractionOfDay());
+                if (dayTime < 12_000)
                 {
-                    level.addParticle(TFCParticles.MOTHS.get(moth).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                    // During the day, spawn butterflies
+                    final Butterfly but = Butterfly.getRandomButterfly(ClimateRenderCache.INSTANCE.getInstantTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
+                    if (but != null)
+                    {
+                        level.addParticle(TFCParticles.BUTTERFLIES.get(but).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                    }
+                }
+                else
+                {
+                    // During the night, spawn moths
+                    final Moth moth = Moth.getRandomMoth(ClimateRenderCache.INSTANCE.getInstantTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
+                    if (moth != null)
+                    {
+                        level.addParticle(TFCParticles.MOTHS.get(moth).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                    }
                 }
             }
         }

@@ -222,6 +222,8 @@ public class TFCTags
         public static final TagKey<Block> NATURAL_REGROWING_PLANTS = tag("natural_regrowing_plants");
         /** Blocks that most animals will be able to move through without getting slowed, as would a player. */
         public static final TagKey<Block> ANIMAL_IGNORED_PLANTS = tag("animal_ignored_plants");
+        public static final TagKey<Block> EMERGENT_FRESHWATER_PLANTS = tag("emergent_freshwater_plants");
+        public static final TagKey<Block> FLOATING_FRESHWATER_PLANTS = tag("floating_freshwater_plants");
 
         /** Blocks that bears will use their ice-sliding animation on. */
         public static final TagKey<Block> BEAR_CRAWLS_ON = tag("bear_crawls_on");

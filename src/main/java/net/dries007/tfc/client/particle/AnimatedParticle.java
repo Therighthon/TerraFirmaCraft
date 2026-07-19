@@ -14,8 +14,9 @@ import net.minecraft.util.Mth;
 public class AnimatedParticle extends TextureSheetParticle
 {
     private final SpriteSet sprites;
+    private final int textures;
 
-    public AnimatedParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites)
+    public AnimatedParticle(ClientLevel level, double x, double y, double z, int textures, SpriteSet sprites)
     {
         super(level, x, y, z);
         this.xd = Mth.nextFloat(random, -0.1f, 0.1f);
@@ -25,6 +26,7 @@ public class AnimatedParticle extends TextureSheetParticle
         this.lifetime = 40 + this.random.nextInt(60);
         scale(0.5f + random.nextFloat());
         this.sprites = sprites;
+        this.textures = textures;
         setSpriteFromAge(sprites);
     }
 
@@ -34,7 +36,7 @@ public class AnimatedParticle extends TextureSheetParticle
         super.tick();
         if (!removed)
         {
-            setSprite(sprites.get(age % 4, 4));
+            setSprite(sprites.get(age % textures, 4));
         }
     }
 
@@ -49,7 +51,7 @@ public class AnimatedParticle extends TextureSheetParticle
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed)
         {
-            return new AnimatedParticle(level, x, y, z, sprites);
+            return new AnimatedParticle(level, x, y, z, 4, sprites);
         }
     }
 }
