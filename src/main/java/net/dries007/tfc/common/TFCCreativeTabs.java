@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.DyeColor;
@@ -53,26 +54,71 @@ public final class TFCCreativeTabs
 {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, TerraFirmaCraft.MOD_ID);
 
-    public static final Id TFC_BUILDING_BLOCKS = register("tfc_0building_blocks",
+    public static final Id TFC_BUILDING_BLOCKS = register("tfc_building_blocks",
         () -> new ItemStack(TFCBlocks.ROCK_BLOCKS.get(Rock.SHALE).get(Rock.BlockType.CHISELED)), TFCCreativeTabs::fillBuildingBlocksTab);
-    public static final Id TFC_COLORED_BLOCKS = register("tfc_1colored_blocks",
-        () -> new ItemStack(TFCBlocks.GLAZED_LARGE_VESSELS.get(DyeColor.CYAN)), TFCCreativeTabs::fillColoredBlocksTab);
-    public static final Id TFC_NATURAL_BLOCKS = register("tfc_2natural_blocks",
-        () -> new ItemStack(TFCBlocks.SOIL.get(SoilBlockType.CLAY_GRASS).get(SoilBlockType.Variant.ARIDISOL)), TFCCreativeTabs::fillNaturalBlocks);
-    public static final Id TFC_FLORA_CROPS = register("tfc_3flora_crops",
-        () -> new ItemStack(TFCBlocks.PLANTS.get(Plant.KING_FERN)), TFCCreativeTabs::fillFloraCropsTab);
-    public static final Id TFC_FUNCTIONAL_BLOCKS = register("tfc_4functional_blocks",
-        () -> new ItemStack(TFCBlocks.WOODS.get(Wood.ASH).get(Wood.BlockType.BARREL)), TFCCreativeTabs::fillFunctionalBlocksTab);
-    public static final Id TFC_TOOLS_UTILITIES = register("tfc_5tools_utilities",
-        () -> new ItemStack(TFCItems.METAL_ITEMS.get(Metal.STEEL).get(Metal.ItemType.SAW)), TFCCreativeTabs::fillToolsUtilitiesTab);
-    public static final Id TFC_COMBAT = register("tfc_6combat",
-        () -> new ItemStack(TFCItems.METAL_ITEMS.get(Metal.RED_STEEL).get(Metal.ItemType.JAVELIN)), TFCCreativeTabs::fillCombatTab);
-    public static final Id TFC_FOODS_DRINKS = register("tfc_7foods_drinks",
-        () -> new ItemStack(TFCItems.FOOD.get(Food.GREEN_APPLE)), TFCCreativeTabs::fillFoodsDrinksTab);
-    public static final Id TFC_METALS_INGREDIENTS = register("tfc_8metals_ingredients",
-        () -> new ItemStack(TFCItems.METAL_ITEMS.get(Metal.BLACK_BRONZE).get(Metal.ItemType.INGOT)), TFCCreativeTabs::fillMetalsIngredientsTab);
-    public static final Id TFC_SPAWN_EGGS = register("tfc_9spawn_eggs",
-        () -> new ItemStack(Objects.requireNonNull(SpawnEggItem.byId(TFCEntities.CARIBOU.get()))), TFCCreativeTabs::fillSpawnEggsTab);
+    public static final Id TFC_COLORED_BLOCKS = register("tfc_colored_blocks",
+        () -> new ItemStack(TFCBlocks.GLAZED_LARGE_VESSELS.get(DyeColor.CYAN)), TFCCreativeTabs::fillColoredBlocksTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey());
+    public static final Id TFC_NATURAL_BLOCKS = register("tfc_natural_blocks",
+        () -> new ItemStack(TFCBlocks.SOIL.get(SoilBlockType.CLAY_GRASS).get(SoilBlockType.Variant.ARIDISOL)), TFCCreativeTabs::fillNaturalBlocks,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey());
+    public static final Id TFC_FLORA_CROPS = register("tfc_flora_crops",
+        () -> new ItemStack(TFCBlocks.PLANTS.get(Plant.KING_FERN)), TFCCreativeTabs::fillFloraCropsTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_NATURAL_BLOCKS.tab.getKey());
+    public static final Id TFC_FUNCTIONAL_BLOCKS = register("tfc_functional_blocks",
+        () -> new ItemStack(TFCBlocks.WOODS.get(Wood.ASH).get(Wood.BlockType.BARREL)), TFCCreativeTabs::fillFunctionalBlocksTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_NATURAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_FLORA_CROPS.tab.getKey());
+    public static final Id TFC_TOOLS_UTILITIES = register("tfc_tools_utilities",
+        () -> new ItemStack(TFCItems.METAL_ITEMS.get(Metal.STEEL).get(Metal.ItemType.SAW)), TFCCreativeTabs::fillToolsUtilitiesTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_NATURAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_FLORA_CROPS.tab.getKey(),
+        TFCCreativeTabs.TFC_FUNCTIONAL_BLOCKS.tab.getKey());
+    public static final Id TFC_COMBAT = register("tfc_combat",
+        () -> new ItemStack(TFCItems.METAL_ITEMS.get(Metal.RED_STEEL).get(Metal.ItemType.JAVELIN)), TFCCreativeTabs::fillCombatTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_NATURAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_FLORA_CROPS.tab.getKey(),
+        TFCCreativeTabs.TFC_FUNCTIONAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_TOOLS_UTILITIES.tab.getKey());
+    public static final Id TFC_FOODS_DRINKS = register("tfc_foods_drinks",
+        () -> new ItemStack(TFCItems.FOOD.get(Food.GREEN_APPLE)), TFCCreativeTabs::fillFoodsDrinksTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_NATURAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_FLORA_CROPS.tab.getKey(),
+        TFCCreativeTabs.TFC_FUNCTIONAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_TOOLS_UTILITIES.tab.getKey(),
+        TFCCreativeTabs.TFC_COMBAT.tab.getKey());
+    public static final Id TFC_METALS_INGREDIENTS = register("tfc_metals_ingredients",
+        () -> new ItemStack(TFCItems.METAL_ITEMS.get(Metal.BLACK_BRONZE).get(Metal.ItemType.INGOT)), TFCCreativeTabs::fillMetalsIngredientsTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_NATURAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_FLORA_CROPS.tab.getKey(),
+        TFCCreativeTabs.TFC_FUNCTIONAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_TOOLS_UTILITIES.tab.getKey(),
+        TFCCreativeTabs.TFC_COMBAT.tab.getKey(),
+        TFCCreativeTabs.TFC_FOODS_DRINKS.tab.getKey());
+    public static final Id TFC_SPAWN_EGGS = register("tfc_spawn_eggs",
+        () -> new ItemStack(Objects.requireNonNull(SpawnEggItem.byId(TFCEntities.CARIBOU.get()))), TFCCreativeTabs::fillSpawnEggsTab,
+        TFCCreativeTabs.TFC_BUILDING_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_COLORED_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_NATURAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_FLORA_CROPS.tab.getKey(),
+        TFCCreativeTabs.TFC_FUNCTIONAL_BLOCKS.tab.getKey(),
+        TFCCreativeTabs.TFC_TOOLS_UTILITIES.tab.getKey(),
+        TFCCreativeTabs.TFC_COMBAT.tab.getKey(),
+        TFCCreativeTabs.TFC_FOODS_DRINKS.tab.getKey(),
+        TFCCreativeTabs.TFC_METALS_INGREDIENTS.tab.getKey());
 
 
     public static Stream<CreativeModeTab.DisplayItemsGenerator> generators()
@@ -1263,12 +1309,13 @@ public final class TFCCreativeTabs
 
     // Helpers
 
-    private static Id register(String name, Supplier<ItemStack> icon, CreativeModeTab.DisplayItemsGenerator displayItems)
+    private static Id register(String name, Supplier<ItemStack> icon, CreativeModeTab.DisplayItemsGenerator displayItems, ResourceKey<CreativeModeTab>... tabsBefore)
     {
         final var holder = CREATIVE_TABS.register(name, () -> CreativeModeTab.builder()
             .icon(icon)
             .title(Component.translatable("tfc.creative_mode_tab." + name))
             .displayItems(displayItems)
+            .withTabsBefore(tabsBefore)
             .build());
         return new Id(holder, displayItems);
     }
