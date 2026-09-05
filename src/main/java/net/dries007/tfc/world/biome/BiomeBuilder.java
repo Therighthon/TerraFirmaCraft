@@ -31,6 +31,9 @@ import static net.dries007.tfc.world.TFCChunkGenerator.*;
 
 public class BiomeBuilder
 {
+    private static final double VERTICAL_SCALE = 2;
+    private static final double HORIZONTAL_SCALE = 2;
+
     public static BiomeBuilder builder()
     {
         return new BiomeBuilder();
@@ -88,8 +91,8 @@ public class BiomeBuilder
 
     public BiomeBuilder heightmap(LongFunction<Noise2D> heightNoiseFactory)
     {
-        this.heightNoiseFactory = seed -> heightNoiseFactory.apply(seed.seed());
-        this.noiseFactory = seed -> BiomeNoiseSampler.fromHeightNoise(heightNoiseFactory.apply(seed.seed()));
+        this.heightNoiseFactory = seed -> heightNoiseFactory.apply(seed.seed()).seaLevelScale(VERTICAL_SCALE).spread(1 / HORIZONTAL_SCALE);
+        this.noiseFactory = seed -> BiomeNoiseSampler.fromHeightNoise(heightNoiseFactory.apply(seed.seed()).seaLevelScale(VERTICAL_SCALE).spread(1 / HORIZONTAL_SCALE));
         return this;
     }
 

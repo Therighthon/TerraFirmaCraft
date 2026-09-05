@@ -9,6 +9,9 @@ package net.dries007.tfc.world.noise;
 import java.util.function.DoubleUnaryOperator;
 import net.minecraft.util.Mth;
 
+import static net.dries007.tfc.util.climate.OverworldClimateModel.*;
+import static net.dries007.tfc.world.TFCChunkGenerator.*;
+
 /**
  * Wrapper for a 2D noise layer
  */
@@ -109,6 +112,15 @@ public interface Noise2D
         final double scale = (max - min) / (oldMax - oldMin);
         final double shift = min - oldMin * scale;
         return affine(scale, shift);
+    }
+
+    default Noise2D seaLevelScale(double scale)
+    {
+        return (x, y) ->
+        {
+            double seaLevelDiff = Noise2D.this.noise(x, y) - SEA_LEVEL_Y;
+            return SEA_LEVEL_Y + seaLevelDiff * scale;
+        };
     }
 
     default Noise2D affine(double scale, double shift)
