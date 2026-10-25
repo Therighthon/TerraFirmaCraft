@@ -1010,13 +1010,13 @@ def generate(rm: ResourceManager):
     block.with_block_loot(when_silk_touch('minecraft:ice'))
     rm.item_model('ice_pile', parent='minecraft:item/ice', no_textures=True)
 
-    # Loot table for snow blocks and snow piles - only drop snowballs when broken with hands
+    # Loot table for snow blocks and snow piles - only drop snowballs when broken with shovel
     rm.block_loot('snow_pile',
                   (when_silk_touch('minecraft:snow'),
-                  when_not_shovel_or_silk_touch('minecraft:snowball')))
+                  when_shovel_not_silk_touch('minecraft:snowball')))
     rm.block_loot('minecraft:snow',
                   (when_silk_touch('minecraft:snow'),
-                   when_not_shovel_or_silk_touch('minecraft:snowball')))
+                   when_shovel_not_silk_touch('minecraft:snowball')))
     rm.block_loot('minecraft:snow_block', ('4 minecraft:snowball', when_silk_touch('tfc:snow_block')))
     rm.block_loot('tfc:snow_block', ('4 minecraft:snowball', when_silk_touch('tfc:snow_block')))
 
@@ -2931,8 +2931,8 @@ def door_blockstate(base: str) -> JsonObject:
 def when_silk_touch(item: str):
     return {'name': item, 'conditions': [silk_touch()]}
 
-def when_not_shovel_or_silk_touch(item: str):
-    return {'name': item, 'conditions': [loot_tables.inverted(match_tag_1_21_plus('minecraft:shovels'))]}
+def when_shovel_not_silk_touch(item: str):
+    return {'name': item, 'conditions': [loot_tables.all_of(match_tag_1_21_plus('minecraft:shovels'), loot_tables.inverted(loot_tables.silk_touch()))]}
 
 def when_sheared(item: str):
     return {'name': item, 'conditions': [loot_tables.any_of(
