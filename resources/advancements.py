@@ -1,7 +1,6 @@
-from mcresources import ResourceManager, utils, advancements
-from mcresources.advancements import AdvancementCategory
+from mcresources import ResourceManager, utils
+from mcresources.advancements import AdvancementCategory, inventory_changed
 from mcresources.type_definitions import Json
-from mcresources.utils import is_sequence, resource_location, parse_item_stack
 
 from constants import *
 
@@ -104,7 +103,7 @@ def generate(rm: ResourceManager):
     world.advancement('coral_reef', icon('tfc:coral/brain_coral_fan'), 'What a rel-Reef!', 'Find a coral reef', 'volcano', biome('ocean_reef'))
     world.advancement('trench', icon('tfc:rock/magma/diorite'), 'In the Trenches', 'Find a deep ocean trench', 'volcano', biome('deep_ocean_trench'))
     world.advancement('adventuring_time', icon('tfc:metal/boots/red_steel'), 'Adventuring Time', 'Discover every biome in TFC', 'volcano', multiple_all(*[biome(b) for b in TFC_BIOMES]), requirements=[[b] for b in TFC_BIOMES], frame='challenge')
-    world.advancement('globe_trotter', icon('minecraft:map'), 'Globe Trotter', 'Travel to positive 10,000 and -10,000 z, the hottest and coldest points nearest to spawn', 'root', multiple_all(location({'position': {'z': {'min': 10000}}}, name='high'), location({'position': {'z': {'max': -10000}}}, name='low')), requirements=[['high'], ['low']], frame='challenge')
+    world.advancement('globe_trotter', icon('minecraft:map'), 'Globe Trotter', 'Travel to positive 10,000 and -10,000 z, the hottest and coldest points nearest to spawn', 'root', multiple_all(location({'position': {'z': {'min': 9999}}}, name='high'), location({'position': {'z': {'max': -9999}}}, name='low')), requirements=[['high'], ['low']], frame='challenge')
     world.advancement('dune', icon('tfc:plant/barrel_cactus'), 'Dune', 'Travel to a desert and find a barrel cactus', 'seeds', inventory_changed('tfc:plant/barrel_cactus'))
     world.advancement('fruit', food_icon('tfc:food/orange'), 'Healthy Diet', 'Eat every berry and tree fruit in TFC', 'root', multiple_all(*[consume_item('tfc:food/%s' % f, name=f) for f in (*BERRIES, *FRUITS)]), requirements=[[f] for f in (*BERRIES, *FRUITS)], frame='challenge')
     world.advancement('saplings', icon('tfc:wood/sapling/pine'), 'Arborist', 'Find every (non-fruit) tree sapling in TFC', 'root', multiple_all(*[inventory_changed('tfc:wood/sapling/%s' % t, name=t) for t in WOODS.keys()]), requirements=[[t] for t in WOODS.keys()])
@@ -154,7 +153,7 @@ def entity_predicate(mob: str, other: Dict = None) -> Json:
 def consume_item(item: str, name: str = 'item_consumed') -> Json:
     if isinstance(item, str) and name == 'item_consumed':
         name = item.split(':')[1]
-    return generic('minecraft:consume_item', {'item': item_predicate(item)}, name=name)
+    return generic('minecraft:consume_item', {'item': utils.item_predicate(item)}, name=name)
 
 def icon(name: str) -> Json:
     return {'id': name}
@@ -186,42 +185,6 @@ def multiple_all(*conditions: Json) -> Json:
 
 def generic(trigger_type: str, conditions: Json, name: str = 'special_condition') -> Json:
     return {name: {'trigger': trigger_type, 'conditions': conditions}}
-
-def inventory_changed(item: str | Json, name: str = 'item_obtained') -> Json:
-    if isinstance(item, str) and name == 'item_obtained':
-        name = item.split(':')[1]
-    return {name: inventory_changed2(item)}
-
-#todo: move all this to mcresources
-
-def inventory_changed2(*item_predicates: Json) -> Json:
-    return {
-        'trigger': 'minecraft:inventory_changed',
-        'conditions': {
-            'items': [item_predicate(ip) for ip in item_predicates]
-        }
-    }
-
-def item_predicate(data_in: Json) -> Json:
-    if isinstance(data_in, dict):
-        return data_in
-    elif is_sequence(data_in):  # List of item IDs
-        return {'items': [resource_location(e).join() for e in data_in]}
-    elif isinstance(data_in, str):  # Single item or tag
-        item, tag, count, _ = parse_item_stack(data_in, False)
-        d: Json = {'items': '#' + item} if tag else {'items': item}
-        if count:
-            d['count'] = count
-        return d
-    else:
-        raise ValueError('Unknown object %s at item_predicate' % str(data_in))
-
-def item_use_on_block(block: str, item: str, name: str = 'item_use_on_block_condition'):
-    block_json = {'tag': block[1:]} if block[0] == '#' else {'blocks': [block]}
-    return {name: {'trigger': 'minecraft:item_used_on_block', 'conditions': {
-        'location': {'block': block_json},
-        'item': {'items': [item]}
-    }}}
 
 def root_trigger() -> Json:
     return {'in_game_condition': {'trigger': 'minecraft:tick'}}

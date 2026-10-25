@@ -10,15 +10,16 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.world.level.levelgen.placement.PlacementModifierType;
 
 import net.dries007.tfc.world.Seed;
-import net.dries007.tfc.world.biome.TuffRingNoise;
+import net.dries007.tfc.world.volcano.CenteredFeatureNoise;
+import net.dries007.tfc.world.volcano.CenteredFeatureNoiseSampler;
 
-public class TuffRingPlacement extends CenterOrDistanceToPlacement<TuffRingNoise>
+public class TuffRingPlacement extends CenterOrDistanceToPlacement<CenteredFeatureNoiseSampler>
 {
     public static final MapCodec<TuffRingPlacement> CODEC = codec(TuffRingPlacement::new);
 
-    public TuffRingPlacement(boolean center, float distance)
+    public TuffRingPlacement(boolean center, float minEasing, float maxEasing)
     {
-        super(center, distance);
+        super(center, minEasing, maxEasing);
     }
 
     @Override
@@ -28,8 +29,8 @@ public class TuffRingPlacement extends CenterOrDistanceToPlacement<TuffRingNoise
     }
 
     @Override
-    protected TuffRingNoise createContext(Seed seed)
+    protected CenteredFeatureNoiseSampler createContext(Seed seed)
     {
-        return new TuffRingNoise(seed);
+        return CenteredFeatureNoise.tuffRing(seed);
     }
 }

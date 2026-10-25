@@ -9,7 +9,6 @@ package net.dries007.tfc.common.blocks.devices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
@@ -37,7 +36,6 @@ import net.dries007.tfc.common.blockentities.PotBlockEntity;
 import net.dries007.tfc.common.blockentities.TFCBlockEntities;
 import net.dries007.tfc.common.blocks.ExtendedProperties;
 import net.dries007.tfc.common.blocks.TFCBlocks;
-import net.dries007.tfc.common.items.Powder;
 import net.dries007.tfc.common.items.TFCItems;
 import net.dries007.tfc.util.Helpers;
 
@@ -84,13 +82,10 @@ public class StovePotBlock extends PotBlock
         final PotBlockEntity pot = level.getBlockEntity(pos, TFCBlockEntities.POT.get()).orElse(null);
         if (pot != null)
         {
-            if (!pot.isBoiling() && stack.isEmpty() && player.isShiftKeyDown())
+            if (!pot.isBoiling() && stack.isEmpty() && player.isShiftKeyDown() && (state.getValue(LIT) || pot.getAsh() <= 0))
             {
-                if (!(!state.getValue(LIT) && !pot.isBoiling() && pot.getAsh() > 0))
-                {
-                    ItemHandlerHelper.giveItemToPlayer(player, new ItemStack(TFCItems.POT.get()));
-                    AbstractFirepitBlockEntity.convertTo(level, pos, state, pot, TFCBlocks.STOVE.get());
-                }
+                ItemHandlerHelper.giveItemToPlayer(player, new ItemStack(TFCItems.POT.get()));
+                AbstractFirepitBlockEntity.convertTo(level, pos, state, pot, TFCBlocks.STOVE.get());
                 if (state.getValue(LIT))
                 {
                     TFCDamageTypes.pot(player, 1f);
@@ -98,13 +93,12 @@ public class StovePotBlock extends PotBlock
                 }
                 return ItemInteractionResult.sidedSuccess(level.isClientSide);
             }
-
         }
         return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
     }
 
     @Override
-    public BlockState rotate(BlockState state, Rotation rot)
+    protected BlockState rotate(BlockState state, Rotation rot)
     {
         return state.setValue(FACING, rot.rotate(state.getValue(FACING)));
     }
@@ -112,7 +106,7 @@ public class StovePotBlock extends PotBlock
     @Override
     protected BlockState mirror(BlockState state, Mirror mirror)
     {
-        return state.rotate(mirror.getRotation(state.getValue(FACING)));
+        return rotate(state, mirror.getRotation(state.getValue(FACING)));
     }
 
 }

@@ -15,25 +15,23 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.GrowingPlantHeadBlock;
 import net.minecraft.world.level.block.NetherVines;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.CommonHooks;
 import org.jetbrains.annotations.Nullable;
 
 import net.dries007.tfc.common.blocks.ExtendedProperties;
 import net.dries007.tfc.common.blocks.IForgeBlockExtension;
+import net.dries007.tfc.common.blocks.ISlowEntities;
 import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.registry.RegistryPlant;
 
-public class TopPlantBlock extends GrowingPlantHeadBlock implements IForgeBlockExtension
+public class TopPlantBlock extends GrowingPlantHeadBlock implements IForgeBlockExtension, ISlowEntities
 {
     protected static final float AABB_OFFSET = 3.0F;
     private final Supplier<? extends Block> bodyBlock;
@@ -77,8 +75,17 @@ public class TopPlantBlock extends GrowingPlantHeadBlock implements IForgeBlockE
     public BlockState getStateForPlacement(BlockPlaceContext context)
     {
         BlockState state = super.getStateForPlacement(context);
+        if (state == null)
+        {
+            return null;
+        }
+        // Only the head has the age property
+        if (state.getBlock().equals(this.getBodyBlock()))
+        {
+            return state;
+        }
         BlockState belowState = context.getLevel().getBlockState(context.getClickedPos().relative(growthDirection.getOpposite()));
-        return state == null ? null : belowState.getBlock() == this ? state.setValue(AGE, Math.min(belowState.getValue(AGE) + 1, 25)) : state.setValue(AGE, Mth.nextInt(context.getLevel().getRandom(), 26 - maxHeight, 26 - minHeight));
+        return belowState.getBlock() == this ? state.setValue(AGE, Math.min(belowState.getValue(AGE) + 1, 25)) : state.setValue(AGE, Mth.nextInt(context.getLevel().getRandom(), 26 - maxHeight, 26 - minHeight));
     }
 
     @Override
@@ -119,6 +126,13 @@ public class TopPlantBlock extends GrowingPlantHeadBlock implements IForgeBlockE
     protected MapCodec<? extends GrowingPlantHeadBlock> codec()
     {
         return fakeBlockCodec();
+    }
+
+    @Override
+    public float slowEntityFactor(BlockState state)
+    {
+        final float modifier = TFCConfig.SERVER.plantsMovementModifier.get().floatValue(); // 0.0 = full speed factor, 1.0 = no modifier
+        return Helpers.lerp(modifier, getPlant().getSpeedFactor(), 1.0f);
     }
 
     public RegistryPlant getPlant()

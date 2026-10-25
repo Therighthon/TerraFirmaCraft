@@ -92,7 +92,7 @@ public class WaterloggedBerryBushBlock extends StationaryBerryBushBlock implemen
     @Override
     protected boolean mayPlaceOn(BlockState state, BlockGetter level, BlockPos pos)
     {
-        return super.mayPlaceOn(state, level, pos) || Helpers.isBlock(level.getBlockState(pos.below()), TFCTags.Blocks.SEA_BUSH_PLANTABLE_ON);
+        return super.mayPlaceOn(state, level, pos) || Helpers.isBlock(level.getBlockState(pos), TFCTags.Blocks.SEA_BUSH_PLANTABLE_ON);
     }
 
     @Override
@@ -105,5 +105,21 @@ public class WaterloggedBerryBushBlock extends StationaryBerryBushBlock implemen
     protected boolean canPlaceNewBushAt(Level level, BlockPos pos, BlockState placementState)
     {
         return placementState.canSurvive(level, pos) && (FluidHelpers.isAirOrEmptyFluid(level.getBlockState(pos)) && getFluidProperty().canContain(level.getFluidState(pos).getType()));
+    }
+
+    @Override
+    public void onUpdate(Level level, BlockPos pos, BlockState state)
+    {
+        if (state.getValue(getFluidProperty()).getFluid() == Fluids.EMPTY)
+        {
+            if (state.getBlock() instanceof WaterloggedBerryBushBlock)
+            {
+                level.setBlock(pos, state.setValue(LIFECYCLE, Lifecycle.DORMANT), 3);
+            }
+        }
+        else
+        {
+            super.onUpdate(level, pos, state);
+        }
     }
 }

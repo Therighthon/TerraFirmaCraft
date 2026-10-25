@@ -80,7 +80,7 @@ public abstract class OviparousAnimal extends ProducingAnimal implements Pluckab
     public void readAdditionalSaveData(CompoundTag tag)
     {
         super.readAdditionalSaveData(tag);
-        EntityHelpers.getLongOrDefault(tag, "plucked", Long.MIN_VALUE);
+        setLastPluckedTick(EntityHelpers.getLongOrDefault(tag, "plucked", Long.MIN_VALUE));
     }
 
     @Override
@@ -234,7 +234,7 @@ public abstract class OviparousAnimal extends ProducingAnimal implements Pluckab
                 baby.setGender(Gender.valueOf(random.nextBoolean()));
                 baby.setBirthTickNow();
                 baby.setFamiliarity(getFamiliarity() < 0.9F ? getFamiliarity() / 2.0F : getFamiliarity() * 0.9F);
-                stack.set(TFCComponents.EGG, EggComponent.of(baby, Calendars.SERVER.getTotalDays() + hatchDays.get()));
+                stack.set(TFCComponents.EGG, EggComponent.of(baby, Calendars.SERVER.getTotalCalendarDays() + hatchDays.get()));
                 FoodCapability.setInvisibleNonDecaying(stack);
             }
         }

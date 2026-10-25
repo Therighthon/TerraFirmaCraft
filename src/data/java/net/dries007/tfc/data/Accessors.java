@@ -6,7 +6,6 @@
 
 package net.dries007.tfc.data;
 
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import com.google.common.collect.ImmutableMap;
@@ -22,9 +21,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -93,6 +92,11 @@ public interface Accessors
     default <T> TagKey<T> commonTagOf(ResourceKey<Registry<T>> key, String name)
     {
         return TagKey.create(key, ResourceLocation.fromNamespaceAndPath("c", name.toLowerCase(Locale.ROOT)));
+    }
+
+    default <T> TagKey<T> tfcTagOf(ResourceKey<Registry<T>> key, String name)
+    {
+        return TagKey.create(key, ResourceLocation.fromNamespaceAndPath("tfc", name.toLowerCase(Locale.ROOT)));
     }
 
     default Item dyeOf(DyeColor color)
@@ -181,9 +185,16 @@ public interface Accessors
         return FluidHeat.MANAGER.getOrThrow(Helpers.identifier(metal.getSerializedName())).meltTemperature();
     }
 
+    /**
+     * Converts a number of hours into player ticks, since recipe durations are defined in player ticks.
+     * Recipes using this will take the same amount of real-world time to complete regardless of the
+     * server config's specified day length.
+     * @param hours The number of in-game hours
+     * @return The equivalent number of player ticks
+     */
     default int hours(int hours)
     {
-        return hours * ICalendar.CALENDAR_TICKS_IN_HOUR;
+        return hours * ICalendar.PLAYER_TICKS_IN_DEFAULT_HOUR;
     }
 
     /**

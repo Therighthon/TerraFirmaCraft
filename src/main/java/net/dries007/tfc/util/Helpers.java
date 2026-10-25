@@ -73,6 +73,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
@@ -82,6 +83,7 @@ import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -125,7 +127,6 @@ import net.dries007.tfc.common.effect.TFCEffects;
 import net.dries007.tfc.common.entities.ai.prey.PestAi;
 import net.dries007.tfc.common.entities.prey.Pest;
 import net.dries007.tfc.mixin.accessor.RecipeManagerAccessor;
-import net.dries007.tfc.util.climate.OverworldClimateModel;
 import net.dries007.tfc.util.collections.IndirectHashCollection;
 import net.dries007.tfc.util.data.FluidHeat;
 import net.dries007.tfc.util.data.Support;
@@ -133,6 +134,7 @@ import net.dries007.tfc.util.tooltip.Tooltips;
 import net.dries007.tfc.world.chunkdata.ChunkData;
 
 import static net.dries007.tfc.TerraFirmaCraft.*;
+import static net.dries007.tfc.util.climate.OverworldClimateModel.*;
 
 public final class Helpers
 {
@@ -177,6 +179,21 @@ public final class Helpers
     public static ResourceLocation resourceLocation(String domain, String path)
     {
         return ResourceLocation.fromNamespaceAndPath(domain, path);
+    }
+
+    public static ChunkPos chunkPos(BlockPos pos)
+    {
+        return new ChunkPos(pos);
+    }
+
+    public static ChunkPos chunkPos(long packed)
+    {
+        return new ChunkPos(packed);
+    }
+
+    public static long packChunkPos(int x, int z)
+    {
+        return ChunkPos.asLong(x, z);
     }
 
     public static Vec3 getRandomSpeedRanges(RandomSource random)
@@ -330,6 +347,11 @@ public final class Helpers
 
                         final BlockState state = level.getBlockState(cursor);
 
+                        if (state.getBlock() instanceof SnowLayerBlock && Helpers.isEntity(entity, TFCTags.Entities.IGNORES_SNOW))
+                        {
+                            return;
+                        }
+
                         if (state.getBlock() instanceof ISlowEntities slow)
                         {
                             factor = Math.min(factor, slow.slowEntityFactor(state));
@@ -351,8 +373,21 @@ public final class Helpers
         final float fallDamageReduction = 5;
         final Vec3 motion = entity.getDeltaMovement();
 
+        // Modify the factor for horizontal movement depending on whether the entity is on the ground
+        // This is because the player cannot accelerate in the air as quickly on the ground to counter the deceleration, so
+        // jumping feels overly punishing
+        final float horizFactor;
+        if (entity.onGround())
+        {
+            horizFactor = factor;
+        }
+        else
+        {
+            horizFactor = 0.25f * (factor + 3);
+        }
+
         // Affect falling very slightly, and don't affect jumping
-        entity.setDeltaMovement(motion.multiply(factor, motion.y < 0 ? 1 - 0.2f * (1 - factor) : 1, factor));
+        entity.setDeltaMovement(motion.multiply(horizFactor, motion.y < 0 ? 1 - 0.2f * (1 - factor) : 1, horizFactor));
         if (entity.fallDistance > fallDamageReduction)
         {
             entity.causeFallDamage(entity.fallDistance - fallDamageReduction, 1.0f, entity.damageSources().fall());
@@ -592,7 +627,7 @@ public final class Helpers
         }
         else if (level.random.nextFloat() <= 0.7) // Otherwise, 30% chance to just skip checking for climate-specific pests and spawning a rat
         {
-            final float rainfall = data.getRainfall(pos);
+            final float rainfall = data.getAverageRainfall(pos);
             if (rainfall < 160)
             {
                 return Helpers.randomEntity(TFCTags.Entities.DESERT_PESTS, level.random);
@@ -929,6 +964,33 @@ public final class Helpers
         return stack;
     }
 
+    /**
+     * Inserts every stack from {@code source} that {@code destination} accepts while ignoring creation date and
+     * stopping once the destination is full. Inserted items are removed from {@code source} in place; anything that
+     * does not fit (or that {@link IItemHandler#isItemValid} rejects) is left untouched.
+     */
+    public static void mergeInsertAll(IItemHandler destination, Container source)
+    {
+        final int slots = destination.getSlots();
+        int cursor = 0;
+        for (int slot = 0; slot < source.getContainerSize() && cursor < slots; slot++)
+        {
+            final ItemStack stack = source.getItem(slot);
+            if (stack.isEmpty() || !destination.isItemValid(cursor, stack))
+                continue;
+            ItemStack remainder = stack;
+            while (cursor < slots && !remainder.isEmpty())
+            {
+                remainder = mergeInsertStack(destination, cursor, remainder);
+                if (!remainder.isEmpty())
+                {
+                    cursor++; // slot is now full, move on
+                }
+            }
+            source.setItem(slot, remainder);
+        }
+    }
+
     public static boolean insertOne(Level level, BlockPos pos, Supplier<? extends BlockEntityType<? extends InventoryBlockEntity<?>>> type, ItemStack stack)
     {
         return level.getBlockEntity(pos, type.get()).map(entity -> insertOne(entity, stack)).orElse(false);
@@ -954,6 +1016,29 @@ public final class Helpers
             if (!stack.isEmpty())
                 return false;
         return true;
+    }
+
+    /**
+     * @return {@code true} if any slot in the provided BE's inventory is empty.
+     */
+    public static boolean hasOpenSlot(InventoryBlockEntity<?> entity)
+    {
+        return hasOpenSlot(entity.getInventory());
+    }
+
+    /**
+     * @return {@code true} if any slot in the provided inventory is empty.
+     */
+    public static boolean hasOpenSlot(IItemHandler inventory)
+    {
+        for (int slot = 0; slot < inventory.getSlots(); slot++)
+        {
+            if (inventory.getStackInSlot(slot).isEmpty())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -1378,6 +1463,13 @@ public final class Helpers
         return (int) hash;
     }
 
+    public static int hash(long salt, int x, int z)
+    {
+        long hash = salt ^ ((long) x * PRIME_X) ^ z;
+        hash *= 0x27d4eb2d;
+        return (int) hash;
+    }
+
     public static RandomSource fork(RandomSource random)
     {
         return new XoroshiroRandomSource(random.nextLong(), random.nextLong());
@@ -1473,6 +1565,48 @@ public final class Helpers
     }
 
     /**
+     * Returns an approximate angle in the range [0, 4] where 4 is the equivalent of 360 degrees from a vector in the form x, y
+     */
+    public static double diamondAngle(double x, double y)
+    {
+        if (y >= 0)
+            return (x >= 0 ? y / (x + y) : 1 - x / (-x + y));
+        else
+            return (x < 0 ? 2 - y / (-x - y) : 3 + x / (x - y));
+    }
+
+    /**
+     * Returns a y-value on a hyperbolic curve that intersects the x and y axes at the specified locations
+     */
+    public static double hyperbolicSection(double x, double xIntercept, double yIntercept)
+    {
+        return yIntercept * ((2 / (x / xIntercept + 1)) - 1);
+    }
+
+    /**
+     * Returns a new random double in the range [0, 1)
+     *
+     * @param input a double in the range [-1, 1]
+     * @param index an index for getting multiple values from one double
+     */
+    public static double hashDouble(double input, int index)
+    {
+        long inputBits = Double.doubleToLongBits(input);
+        long x = mix64(inputBits + index);
+        return (x >>> 11) * 0x1.0p-53;
+    }
+
+    public static long mix64(long x)
+    {
+        x ^= x >>> 33;
+        x *= 0xff51afd7ed558ccdL;
+        x ^= x >>> 33;
+        x *= 0xc4ceb9fe1a85ec53L;
+        x ^= x >>> 33;
+        return x;
+    }
+
+    /**
      * Checks the existence of a <a href="https://en.wikipedia.org/wiki/Perfect_matching">perfect matching</a> of a <a href="https://en.wikipedia.org/wiki/Bipartite_graph">bipartite graph</a>.
      * The graph is interpreted as the matches between the set of inputs, and the set of tests.
      * This algorithm computes the <a href="https://en.wikipedia.org/wiki/Edmonds_matrix">Edmonds Matrix</a> of the graph, which has the property that the determinant is identically zero iff the graph does not admit a perfect matching.
@@ -1549,11 +1683,18 @@ public final class Helpers
     }
 
     /**
-     * @return The average annual temperature adjusted for elevation above sea level
+     * @return The average annual temperature adjusted for elevation above sea level or below y=0
      */
     public static float adjustAverageTemperatureByElevation(int y, float averageTemperature, float seaLevel)
     {
-        return averageTemperature - Mth.clamp((y - seaLevel) * 0.16225f, 0, 17.822f);
+        if (y > 0)
+        {
+            return averageTemperature - Mth.clamp((y - seaLevel) * 0.16225f, 0, 17.822f);
+        }
+
+        // Account for lava level influence
+        final float depthInfluence = Helpers.inverseLerp(y, DEPTH_LEVEL, 0);
+        return Mth.lerp(depthInfluence, LAVA_LEVEL_TEMPERATURE, averageTemperature);
     }
 
     /**

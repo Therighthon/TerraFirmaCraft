@@ -20,36 +20,36 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
-import net.minecraft.world.level.levelgen.feature.configurations.BlockStateConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
 
 import net.dries007.tfc.common.fluids.FluidHelpers;
+import net.dries007.tfc.util.Helpers;
 
-public class RivuletFeature extends Feature<BlockStateConfiguration>
+public class RivuletFeature extends Feature<BlockStateMapConfig>
 {
-    public RivuletFeature(Codec<BlockStateConfiguration> codec)
+    public RivuletFeature(Codec<BlockStateMapConfig> codec)
     {
         super(codec);
     }
 
     @Override
-    public boolean place(FeaturePlaceContext<BlockStateConfiguration> context)
+    public boolean place(FeaturePlaceContext<BlockStateMapConfig> context)
     {
         final WorldGenLevel world = context.level();
         final BlockPos pos = context.origin();
         final RandomSource rand = context.random();
-        final BlockStateConfiguration config = context.config();
+        final BlockStateMapConfig config = context.config();
 
-        final ChunkPos chunkPos = new ChunkPos(pos);
+        final ChunkPos chunkPos = Helpers.chunkPos(pos);
         final BoundingBox box = new BoundingBox(chunkPos.getMinBlockX() - 14, Integer.MIN_VALUE, chunkPos.getMinBlockZ() - 14, chunkPos.getMaxBlockX() + 14, Integer.MAX_VALUE, chunkPos.getMaxBlockZ() + 14); // Leeway so we can check outside this box
 
         // Basic pathfinding down the slope
         final Set<BlockPos> chosen = new HashSet<>();
         final LinkedList<BlockPos> branches = new LinkedList<>();
 
-        final BlockPos startPos = new BlockPos(pos.getX(), world.getHeight(Heightmap.Types.WORLD_SURFACE_WG, pos.getX(), pos.getZ()), pos.getZ());
+        final BlockPos startPos = new BlockPos(pos.getX(), world.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, pos.getX(), pos.getZ()), pos.getZ());
         if (!world.getFluidState(startPos.below()).isEmpty()) return false;
         final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
         branches.add(startPos);
@@ -84,7 +84,7 @@ public class RivuletFeature extends Feature<BlockStateConfiguration>
                     {
                         continue; // Outside of the bounding box, skip!
                     }
-                    final int height = world.getHeight(Heightmap.Types.WORLD_SURFACE_WG, mutablePos.getX(), mutablePos.getZ());
+                    final int height = world.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, mutablePos.getX(), mutablePos.getZ());
                     if (height <= mutablePos.getY())
                     {
                         // Check that the block below is solid
@@ -148,9 +148,14 @@ public class RivuletFeature extends Feature<BlockStateConfiguration>
                 mutablePos.setWithOffset(chosenPos, Direction.DOWN);
                 setBlock(world, mutablePos, getReplaceState(world, mutablePos));
                 mutablePos.move(Direction.DOWN);
-                setBlock(world, mutablePos, config.state);
-                mutablePos.move(Direction.DOWN);
-                setBlock(world, mutablePos, config.state);
+                final BlockState stateAt = world.getBlockState(mutablePos);
+                final BlockState placementState = config.getState(stateAt);
+                if (placementState != null)
+                {
+                    setBlock(world, mutablePos, placementState);
+                    mutablePos.move(Direction.DOWN);
+                    setBlock(world, mutablePos, placementState);
+                }
             }
             return true;
         }

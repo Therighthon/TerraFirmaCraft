@@ -1,0 +1,66 @@
+{
+  "__comment__": "This file was automatically created by mcresources",
+  "name": "Рыбалка",
+  "category": "tfc:food",
+  "icon": "tfc:metal/fishing_rod/copper",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(thing)Рыбалка$() — это способ охоты на рыб, плавающих в реках, озёрах и океанах. Удочки должны быть заброшены с наживкой. Рыбы пытаются съесть наживку, и иногда это им удается. Поднять рыбу на поверхность — это работа, которая становится легче с крючками из металла более высокого уровня."
+    },
+    {
+      "type": "tfc:anvil_recipe",
+      "recipe": "tfc:anvil/metal/fish_hook/bismuth_bronze",
+      "text": "Сначала вы должны выковать рыболовный крючок на $(l:metalworking/anvils)наковальне$()."
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "tfc:crafting/metal/fishing_rod/bismuth_bronze",
+      "title": "Удочка",
+      "text": "Удочка изготавливается с рыболовным крючком."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "Fishing rods are not useful without bait. Bait can be added to rods in a crafting table. To catch normal fish, you need $(thing)Seeds$() or $(thing)Shellfish$(). To catch larger fish, such as $(thing)Dolphins$() and $(thing)Orcas$(), you need raw fish."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "Чтобы выпустить поплавок, нажмите $(item)$(k:key.use)$(). Подождите, пока рыба заметит наживку и клюнет. Затем нажмите $(item)$(k:key.use)$(), чтобы подтянуть её. При этом на вашей панели инструментов будет заполняться индикатор. Тяните слишком быстро, и рыба уйдет вместе с наживкой. Каждый раз, когда вы ловите рыбу, у рыбы есть шанс съесть наживку. Чтобы поймать рыбу, подтяните её на берег и убейте инструментом. Вы можете держать удочку в свободной руке, чтобы это было проще."
+    },
+    {
+      "type": "patchouli:image",
+      "images": [
+        "tfc:textures/gui/book/tutorial/fishing.png"
+      ],
+      "text": "Индикатор рыбалки заменяет индикатор опыта, когда он активен.",
+      "border": true
+    },
+    {
+      "type": "patchouli:crafting",
+      "anchor": "trapping",
+      "recipe": "tfc:crafting/lobster_trap",
+      "title": "Trapping",
+      "text": "The $(thing)Lobster Trap$() catches $(thing)Lobsters$(), $(thing)Crayfish$(), $(thing)Isopods$(), and $(thing)Horseshoe Crabs$()."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "Place a trap underwater and $(item)$(k:key.use)$() it with $(thing)raw fish$() or $(thing)mussels$() to bait it. Nearby critters will crawl in and be caught. One bait lasts for three catches. When it is full or out of bait, the trap closes.$(br2)$(item)$(k:key.use)$() with an empty hand to collect the catch. A trap must be emptied before it can be baited again."
+    },
+    {
+      "type": "patchouli:crafting",
+      "anchor": "buoys",
+      "recipe": "tfc:crafting/buoy/red",
+      "title": "Buoys",
+      "text": "A $(thing)Buoy$() floats on the surface of water, and can be used to lower traps into deep water."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(item)$(k:key.use)$() a buoy with a lobster trap to place the trap in the water below it. Then $(item)$(k:key.use)$() the buoy with $(thing)Rope$() to sink the trap one block per rope. $(item)$(k:key.use)$() the buoy with an empty hand to pull the trap back up and recover the rope."
+    }
+  ],
+  "read_by_default": true,
+  "sortnum": 18,
+  "extra_recipe_mappings": {
+    "tag:c:tools/fishing_rod": 0
+  }
+}

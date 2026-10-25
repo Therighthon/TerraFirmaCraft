@@ -103,6 +103,21 @@ public record ItemStackProvider(
     }
 
     /**
+     * @param input An input stack, as matched by the ingredient of a recipe using this provider.
+     * @return The stacks to display in place of {@code input}, which may be empty if this provider produces no output for it.
+     * @see ItemStackModifier#displayInputs(ItemStack)
+     */
+    public List<ItemStack> displayInputs(ItemStack input)
+    {
+        List<ItemStack> inputs = List.of(input);
+        for (ItemStackModifier modifier : modifiers)
+        {
+            inputs = inputs.stream().flatMap(stack -> modifier.displayInputs(stack).stream()).toList();
+        }
+        return inputs;
+    }
+
+    /**
      * Gets the output stack from this provider, without taking into consideration the input
      *
      * @return A new stack, possibly invalid if the provider is dependent on the input stack.
@@ -126,6 +141,14 @@ public record ItemStackProvider(
     }
 
     /**
+     * {@link ItemStackProvider#getStack(ItemStack)} but for JEI
+     */
+    public ItemStack getStackDisplayOnly(ItemStack input)
+    {
+        return getStack(input, ItemStackModifier.Context.NO_RANDOM_CHANCE);
+    }
+
+    /**
      * Gets the output stack from this provider, for the given input stack, and allows providing a non-typical
      * context to the provider.
      * @return A new stack, possibly dependent on the input stack
@@ -133,6 +156,13 @@ public record ItemStackProvider(
     public ItemStack getStack(ItemStack input, ItemStackModifier.Context context)
     {
         ItemStack output = stack.copy();
+
+        // Since we might need to be able to apply modifiers to the entire output at once, set the count here.
+        if (!input.isEmpty())
+        {
+            output.setCount(output.getCount() * input.getCount());
+        }
+
         for (ItemStackModifier modifier : modifiers)
         {
             output = modifier.apply(output, input, context);

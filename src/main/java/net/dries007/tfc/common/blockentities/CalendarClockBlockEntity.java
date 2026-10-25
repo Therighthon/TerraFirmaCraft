@@ -7,16 +7,18 @@
 package net.dries007.tfc.common.blockentities;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import net.dries007.tfc.common.blocks.TFCBlockStateProperties;
-import net.dries007.tfc.util.calendar.Calendar;
+import net.dries007.tfc.common.blocks.devices.CalendarClockBlock;
 import net.dries007.tfc.util.calendar.Calendars;
 
 import static net.dries007.tfc.util.calendar.ICalendar.*;
@@ -28,6 +30,7 @@ public class CalendarClockBlockEntity extends TickableBlockEntity
     private float hourAngle;
     private int hour;
     private int month;
+    private int timer;
     private boolean needsUpdate = false;
 
     protected CalendarClockBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state)
@@ -47,22 +50,59 @@ public class CalendarClockBlockEntity extends TickableBlockEntity
             clock.markForSync();
             clock.needsUpdate = false;
         }
-        if (Calendars.SERVER.getCalendarTicks() % 60 == 0)
+        //Made it update faster just for timed devices otherwise it still only updates redstone values every 3 seconds
+        if (Calendars.SERVER.getCalendarTicks() % 20 == 0)
         {
-            int signal = clock.getRedstoneSignal();
-            if (Calendars.SERVER.getAbsoluteCalendarMonthOfYear().ordinal() != clock.month)
+            if (state.getValue(CalendarClockBlock.MODE).equals(CalendarClockBlock.Mode.TIMER))
             {
-                clock.month = Calendars.SERVER.getAbsoluteCalendarMonthOfYear().ordinal();
+                final int signal = clock.getRedstoneSignal();
+                int recipeDuration = 0;
+                long remainingTime = 0;
+                // checks for block entities behind it
+                final Direction facing = state.getValue(CalendarClockBlock.FACING);
+                BlockEntity attachedTo = level.getBlockEntity(pos.relative(facing.getOpposite()));
+                // if there is none it checks for the one behind that
+                if (attachedTo == null)
+                {
+                    attachedTo = level.getBlockEntity(pos.relative(facing.getOpposite()).relative(facing.getOpposite()));
+                }
+                if (attachedTo instanceof IRecipeTimer attachedTimer)
+                {
+                    recipeDuration = attachedTimer.getRecipeDuration();
+                    remainingTime = attachedTimer.getRemainingTime();
+                }
+                // if there is still no block entity it boots out of timer mode
+                else
+                {
+                    level.setBlockAndUpdate(pos, state.setValue(CalendarClockBlock.MODE, CalendarClockBlock.Mode.HOUR));
+                }
+                clock.timer = recipeDuration != 0 && remainingTime != 0 ? (int) Math.ceilDiv(remainingTime * 15, recipeDuration) : 0;
+                if (signal != clock.getRedstoneSignal())
+                {
+                    level.updateNeighborsAt(pos, state.getBlock());
+                    if (attachedTo != null)
+                    {
+                        level.updateNeighborsAt(attachedTo.getBlockPos(), state.getBlock());
+                    }
+                }
             }
-            if (getHourOfDay(Calendars.SERVER.getCalendarTicks()) != clock.hour)
+            else if (Calendars.SERVER.getCalendarTicks() % 60 == 0)
             {
-                clock.hour = getHourOfDay(Calendars.SERVER.getCalendarTicks());
-            }
-            // only needs to update blocks when the signal strength has changed
-            if (signal != clock.getRedstoneSignal())
-            {
-                level.updateNeighborsAt(pos, state.getBlock());
-                level.updateNeighborsAt(pos.relative(state.getValue(BlockStateProperties.FACING).getOpposite()), state.getBlock());
+                int signal = clock.getRedstoneSignal();
+                if (Calendars.SERVER.getAbsoluteCalendarMonthOfYear().ordinal() != clock.month)
+                {
+                    clock.month = Calendars.SERVER.getAbsoluteCalendarMonthOfYear().ordinal();
+                }
+                if (getHourOfDay(Calendars.SERVER.getCalendarTicks()) != clock.hour)
+                {
+                    clock.hour = getHourOfDay(Calendars.SERVER.getCalendarTicks());
+                }
+                // only needs to update blocks when the signal strength has changed
+                if (signal != clock.getRedstoneSignal())
+                {
+                    level.updateNeighborsAt(pos, state.getBlock());
+                    level.updateNeighborsAt(pos.relative(state.getValue(BlockStateProperties.FACING).getOpposite()), state.getBlock());
+                }
             }
         }
         clientTick(level, pos, state, clock);
@@ -94,13 +134,13 @@ public class CalendarClockBlockEntity extends TickableBlockEntity
 
     public int getRedstoneSignal()
     {
-        if (this.getBlockState().getValue(TFCBlockStateProperties.CLOCK_MONTH_MODE))
+        CalendarClockBlock.Mode mode = this.getBlockState().getValue(TFCBlockStateProperties.CLOCK_MODE);
+        return switch (mode)
         {
-            return month;
-        }
-        return hour > 11
-            ? hour - 12
-            : hour;
+            case HOUR -> hour % 12;
+            case MONTH -> month;
+            case TIMER -> timer;
+        };
     }
 
     @Override

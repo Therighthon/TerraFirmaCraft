@@ -15,12 +15,12 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.fluids.crafting.CompoundFluidIngredient;
 import net.neoforged.neoforge.fluids.crafting.FluidIngredient;
@@ -28,7 +28,9 @@ import net.neoforged.neoforge.fluids.crafting.SingleFluidIngredient;
 import net.neoforged.neoforge.fluids.crafting.TagFluidIngredient;
 
 import net.dries007.tfc.TerraFirmaCraft;
+import net.dries007.tfc.common.fluids.Alcohol;
 import net.dries007.tfc.common.fluids.FluidHolder;
+import net.dries007.tfc.common.fluids.SimpleFluid;
 import net.dries007.tfc.common.fluids.TFCFluids;
 import net.dries007.tfc.data.Accessors;
 import net.dries007.tfc.util.Metal;
@@ -56,6 +58,122 @@ public class BuiltinFluidTags extends TagsProvider<Fluid> implements Accessors
     @Override
     protected void addTags(HolderLookup.Provider provider)
     {
+        //=====Common Tags=====//
+
+        //Alcohols
+
+        final var alcoholsTag = tag(commonTagOf(Registries.FLUID, "alcohols"));
+        for (Alcohol alcohol : Alcohol.values())
+        {
+            final String name = alcohol.getId();
+            final FluidHolder<?> holder = TFCFluids.SIMPLE_FLUIDS.get(SimpleFluid.valueOf(alcohol.name()));
+            alcoholsTag.addTag(commonTagOf(Registries.FLUID, "alcohols/" + name));
+            tag(commonTagOf(Registries.FLUID, "alcohols/" + name))
+                .add(holder.getSource(), holder.getFlowing());
+        }
+
+        //Crafting Fluids
+
+        tag(commonTagOf(Registries.FLUID, "brine")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(BRINE).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(BRINE).getFlowing()
+        );
+        tag(commonTagOf(Registries.FLUID, "limewater")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(LIMEWATER).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(LIMEWATER).getFlowing()
+        );
+        tag(commonTagOf(Registries.FLUID, "lye")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(LYE).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(LYE).getFlowing()
+        );
+        tag(commonTagOf(Registries.FLUID, "tallow")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(TALLOW).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(TALLOW).getFlowing()
+        );
+        tag(commonTagOf(Registries.FLUID, "tannin")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(TANNIN).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(TANNIN).getFlowing()
+        );
+        tag(commonTagOf(Registries.FLUID, "vinegar")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(VINEGAR).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(VINEGAR).getFlowing()
+        );
+
+        //Dyes
+
+        final var dyesTag = tag(commonTagOf(Registries.FLUID, "dyes"));
+        for (DyeColor color : DyeColor.values())
+        {
+            dyesTag.addTag(commonTagOf(Registries.FLUID, "dyes/" + color.getSerializedName()));
+            tag(commonTagOf(Registries.FLUID, "dyes/" + color.getSerializedName()))
+                .add(TFCFluids.COLORED_FLUIDS.get(color).getSource())
+                .add(TFCFluids.COLORED_FLUIDS.get(color).getFlowing());
+            tag(commonTagOf(Registries.FLUID, color.getSerializedName() + "_dye"))
+                .add(TFCFluids.COLORED_FLUIDS.get(color).getSource())
+                .add(TFCFluids.COLORED_FLUIDS.get(color).getFlowing());
+        }
+
+        //Metals
+
+        TFCFluids.METALS.forEach((metal, fluid) -> {
+            tag(commonTagOf(Registries.FLUID, "molten_" + metal.getSerializedName()))
+                .add(fluid.getSource())
+                .add(fluid.getFlowing());
+            tag(commonTagOf(Registries.FLUID, "molten_metal"))
+                .add(fluid.getSource())
+                .add(fluid.getFlowing());
+        });
+
+        //Milks
+
+        tag(commonTagOf(Registries.FLUID, "milks"))
+            .addTag(commonTagOf(Registries.FLUID, "milks/curdled"))
+            .addTag(commonTagOf(Registries.FLUID, "milks/vinegar"));
+
+        tag(commonTagOf(Registries.FLUID, "curdled_milk")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(CURDLED_MILK).getFlowing(),
+            TFCFluids.SIMPLE_FLUIDS.get(CURDLED_MILK).getSource()
+        );
+        tag(commonTagOf(Registries.FLUID, "milks/curdled")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(CURDLED_MILK).getFlowing(),
+            TFCFluids.SIMPLE_FLUIDS.get(CURDLED_MILK).getSource()
+        );
+
+        tag(commonTagOf(Registries.FLUID, "milk_vinegar")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(MILK_VINEGAR).getFlowing(),
+            TFCFluids.SIMPLE_FLUIDS.get(MILK_VINEGAR).getSource()
+        );
+        tag(commonTagOf(Registries.FLUID, "milks/vinegar")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(MILK_VINEGAR).getFlowing(),
+            TFCFluids.SIMPLE_FLUIDS.get(MILK_VINEGAR).getSource()
+        );
+
+        //Plant Oils
+
+        tag(commonTagOf(Registries.FLUID, "plantoil")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(CANOLA_OIL).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(CANOLA_OIL).getFlowing(),
+            TFCFluids.SIMPLE_FLUIDS.get(OLIVE_OIL).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(OLIVE_OIL).getFlowing()
+        );
+        tag(commonTagOf(Registries.FLUID, "canola_oil")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(CANOLA_OIL).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(CANOLA_OIL).getFlowing()
+        );
+        tag(commonTagOf(Registries.FLUID, "olive_oil")).add(
+            TFCFluids.SIMPLE_FLUIDS.get(OLIVE_OIL).getSource(),
+            TFCFluids.SIMPLE_FLUIDS.get(OLIVE_OIL).getFlowing()
+        );
+
+        //Waters
+
+        tag(commonTagOf(Registries.FLUID, "salt_water")).add(
+            TFCFluids.SALT_WATER.getSource(),
+            TFCFluids.SALT_WATER.getFlowing()
+        );
+
+        //=====TFC Tags=====//
+
         // Any = including flowing
         // Fresh = Only fresh water
         // Infinite = All infinite water fluids
@@ -127,9 +245,20 @@ public class BuiltinFluidTags extends TagsProvider<Fluid> implements Accessors
             super(builder);
         }
 
-        FluidTagAppender add(Fluid... fluids) { return add(Arrays.stream(fluids)); }
-        FluidTagAppender add(Stream<Fluid> fluids) { fluids.forEach(b -> add(key(b))); return this; }
-        FluidTagAppender add(Map<?, ? extends FluidHolder<? extends Fluid>> fluids) { fluids.values().forEach(v -> add(v.getSource())); return this; }
+        FluidTagAppender add(Fluid... fluids) {return add(Arrays.stream(fluids));}
+
+        FluidTagAppender add(Stream<Fluid> fluids)
+        {
+            fluids.forEach(b -> add(key(b)));
+            return this;
+        }
+
+        FluidTagAppender add(Map<?, ? extends FluidHolder<? extends Fluid>> fluids)
+        {
+            fluids.values().forEach(v -> add(v.getSource()));
+            return this;
+        }
+
         FluidTagAppender add(FluidIngredient ingredient)
         {
             switch (ingredient)
@@ -142,7 +271,8 @@ public class BuiltinFluidTags extends TagsProvider<Fluid> implements Accessors
             return this;
         }
 
-        @Override public FluidTagAppender addTag(TagKey<Fluid> tag) { return (FluidTagAppender) super.addTag(tag); }
+        @Override
+        public FluidTagAppender addTag(TagKey<Fluid> tag) {return (FluidTagAppender) super.addTag(tag);}
 
         private ResourceKey<Fluid> key(Fluid fluid)
         {

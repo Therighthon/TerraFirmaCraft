@@ -1,30 +1,32 @@
 ### Changes
-- Add EMI support, special thanks to Charnuz to his hard work on this
-- Update Russian localization
-- Made tree selection in forests respect rainfall variance and elevation
-- Made wooden door and trapdoor recipes more logical
-- Renamed alabaster blocks to plaster to be more consistent with the crafting recipes
-- Removed snow speedup from composters
-- Removed drops from snow blocks
 
-### Bug Fixes
-- Fixed Kaolin Clay generation, especially in finite continents (closes #3058)
-- Fixed adding water to pots with soup in them (closes #3287)
-- Fixed sewing recipes not being repeatable without relog (closes #3273)
-- Fixed field guide showing incorrect nutrient values for cover crops (closes #3269)
-- Fixed dyeing with barrels. Dying with barrels unchanged. Dieing with barrels not planned. (closes #3288)
-- Fixed missing lang key for fruit tree temperature (closes #3278)
-- Fixed animal familiarity shift overlay (closes #3285)
-- Fixed issues with pot recipes and jars (closes #3284) (closes #3283)
-- Fixed the inventory/capability model for Mold Tables (closes #3260)
-- Fixed the twig model (closes #3265)
-- Fixed some landslide recipes (closes #3262) (closes #3263)
-- Fixed some compost items having both green and brown tags (closes #3267)
-- Fixed bubble columns and particles 
-- Fixed some floating river terrain (closes #3176)
-- Remove ocean features from freshwater biomes (closes #3115)
-- Fixed table and basin pours not working with weathered brass blocks
-- Fixed fissures intersecting rivers and caves (closes #3092)
-- Fixed fissures from generating lava exposed to seawater (closes #3149)
-- Fixed lakes generating in bamboo (closes #3194)
-- Fixed stars rendering in front of the sun and moon
+- Added Buoys and Lobster Traps. Bait traps with raw fish or mussels to catch lobsters and other critters. Buoys lower traps into deep water using rope.
+- Seaweed found on beaches can now be heated into soda ash.
+- When a pot holds ingredients that match both soup and another recipe, it now makes the other recipe.
+- Tool racks can now be waterlogged in all fluids.
+- Scraping no longer damages the knife when you click a spot that's already scraped, and Jade now shows what's being scraped. (#3753)
+- Mobs no longer spawn on thatch. (#3682)
+- Below y=0, temperature now gets warmer as you approach lava level. No more ice in lava caves...
+- Updated hoe climate tooltip styling.
+- Lobsters now look for traps in a smaller range (16 blocks, was 20).
+- Updated the Simplified Chinese localization.
+- You can take items off of querns while they're grinding something else.
+
+### Fixes
+
+- Fixed several kiln issues. (#3293)
+- Fixes to tamed animal AI. (#3325)
+- Fixed mold tables sometimes not rendering correctly after a chunk reloads. (#3598)
+- Fixed rope anchors visually rotating with the placed rope (#3640), and rock rope anchors showing an extra rope while being thrown.
+- Fixed water at the surface of enclosed atolls. (#3719)
+- Fixed a missing texture on TFC armor with vanilla trim materials. (#3748)
+- Fixed NeoForge block entity data not being saved. (#3754)
+- Fixed advanced shapeless recipes in JEI. (#3755)
+- Fixed a rare scraping crash. (#3758)
+- Fixed the farmland temperature tooltip showing "null" below 0.
+- Fixed a crash with banana plants.
+- Fixed possible crashes when a firepit, forge, bloomery, blast furnace or firebox block was replaced.
+- Fixed issues with underwater berry bushes.
+- Fixed error when attempting to spawn squids, possibly.
+- Fixed typo in Russian translation.
+- Fixed some rare dupes/block interaction bugs.

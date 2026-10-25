@@ -1,0 +1,7 @@
+{
+  "__comment__": "This file was automatically created by mcresources",
+  "name": "食物与农业",
+  "description": "介绍作物种植和动物养殖。",
+  "icon": "tfc:food/maize_bread_jam_sandwich",
+  "sortnum": 4
+}

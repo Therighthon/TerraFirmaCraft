@@ -1,4 +1,7 @@
 {
+  "remove": [
+    "tfc:jar/peanut"
+  ],
   "values": [
     "tfc:jar/blackberry",
     "tfc:jar/blueberry",
@@ -20,7 +23,6 @@
     "tfc:jar/peach",
     "tfc:jar/plum",
     "tfc:jar/red_apple",
-    "tfc:jar/pumpkin_chunks",
     "tfc:jar/melon_slice",
     "tfc:jar/peanut"
   ]

@@ -13,11 +13,12 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.TutorialToast;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.resources.sounds.AmbientSoundHandler;
@@ -69,12 +70,11 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.Nullable;
-import vazkii.patchouli.api.BookDrawScreenEvent;
 
 import net.dries007.tfc.TerraFirmaCraft;
 import net.dries007.tfc.client.particle.TFCParticles;
-import net.dries007.tfc.client.screen.TFCContainerScreen;
 import net.dries007.tfc.client.screen.button.PlayerInventoryTabButton;
+import net.dries007.tfc.common.TFCTags;
 import net.dries007.tfc.common.blockentities.SluiceBlockEntity;
 import net.dries007.tfc.common.blocks.devices.SluiceBlock;
 import net.dries007.tfc.common.component.EggComponent;
@@ -89,6 +89,7 @@ import net.dries007.tfc.common.component.item.ItemListComponent;
 import net.dries007.tfc.common.component.size.ItemSizeManager;
 import net.dries007.tfc.common.items.EmptyPanItem;
 import net.dries007.tfc.common.items.PanItem;
+import net.dries007.tfc.common.items.PlantableInfo;
 import net.dries007.tfc.common.recipes.ChiselRecipe;
 import net.dries007.tfc.common.recipes.HeatingRecipe;
 import net.dries007.tfc.compat.patchouli.PatchouliIntegration;
@@ -98,7 +99,6 @@ import net.dries007.tfc.network.CycleChiselModePacket;
 import net.dries007.tfc.network.PlaceBlockSpecialPacket;
 import net.dries007.tfc.network.RequestClimateModelPacket;
 import net.dries007.tfc.network.StackFoodPacket;
-import net.dries007.tfc.network.SwitchInventoryTabPacket;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.PhysicalDamageType;
 import net.dries007.tfc.util.calendar.Calendars;
@@ -138,7 +138,7 @@ public class ClientForgeEventHandler
         bus.addListener(ClientForgeEventHandler::onEffectRender);
         bus.addListener(ClientForgeEventHandler::onRecipesUpdated);
         bus.addListener(IngameOverlays::checkGuiOverlays);
-
+        bus.addListener(ClientForgeEventHandler::onScreenOpen);
     }
 
 
@@ -164,17 +164,17 @@ public class ClientForgeEventHandler
                 tooltip.add("Temperature: Sea Level Avg: %.3f Avg: %.3f Now: %.3f".formatted(
                     ClimateRenderCache.INSTANCE.getAverageSeaLevelTemperature(),
                     ClimateRenderCache.INSTANCE.getAverageTemperature(),
-                    ClimateRenderCache.INSTANCE.getTemperature()
+                    ClimateRenderCache.INSTANCE.getInstantTemperature()
                 ));
                 tooltip.add("Rain: Avg: %.3f Var: %.3f Now: %.3f".formatted(
                     ClimateRenderCache.INSTANCE.getAverageRainfall(),
                     ClimateRenderCache.INSTANCE.getRainVariance(),
-                    ClimateRenderCache.INSTANCE.getRainfall()
+                    ClimateRenderCache.INSTANCE.getInstantRainfall()
                 ));
                 tooltip.add("Water: Avg: %.3f Base: %.3f Now: %.3f".formatted(
                     ClimateRenderCache.INSTANCE.getAverageGroundwater(),
                     ClimateRenderCache.INSTANCE.getBaseGroundwater(),
-                    ClimateRenderCache.INSTANCE.getGroundwater()
+                    ClimateRenderCache.INSTANCE.getInstantGroundwater()
                 ));
                 final Vec2 wind = ClimateRenderCache.INSTANCE.getWind();
                 tooltip.add(Component.translatable("tfc.tooltip.wind_speed",
@@ -221,6 +221,15 @@ public class ClientForgeEventHandler
             if (event.getName() == VanillaGuiLayers.CROSSHAIR && holdingHoe && (!TFCConfig.CLIENT.showHoeOverlaysOnlyWhenShifting.get() || player.isShiftKeyDown()))
             {
                 HoeOverlays.render(minecraft, graphics);
+            }
+            final boolean holdingGlassBlowpipe = Helpers.isItem(player.getMainHandItem().getItem(), TFCTags.Items.GLASS_BLOWPIPES) || Helpers.isItem(player.getOffhandItem().getItem(), TFCTags.Items.GLASS_BLOWPIPES);
+            if (event.getName() == VanillaGuiLayers.CROSSHAIR && holdingGlassBlowpipe)
+            {
+                GlassblowingOverlays.render(minecraft, graphics);
+            }
+            if (event.getName() == VanillaGuiLayers.CROSSHAIR)
+            {
+                CrateOverlays.render(minecraft, graphics);
             }
         }
     }
@@ -275,6 +284,7 @@ public class ClientForgeEventHandler
                 if (k != 0)
                     tooltip.add(Component.translatable("tfc.tooltip.fertilizer.potassium", String.format("%.1f", k * 100)));
             }
+            PlantableInfo.addTooltipInfo(stack, tooltip::add);
 
             // Metal content, inferred from a matching heat recipe.
             final HeatingRecipe recipe = HeatingRecipe.getRecipe(stack);
@@ -327,7 +337,7 @@ public class ClientForgeEventHandler
 
                 final String itemTags = listOfTags(stack.getItem().builtInRegistryHolder());
                 final String blockTags = stack.getItem() instanceof BlockItem blockItem
-                    ? listOfTags(blockItem.builtInRegistryHolder())
+                    ? listOfTags(blockItem.getBlock().builtInRegistryHolder())
                     : "";
 
                 if (!itemTags.isEmpty()) tooltip.add(Component.literal(DARK_GRAY + "[Debug] Item Tags: " + itemTags));
@@ -372,6 +382,17 @@ public class ClientForgeEventHandler
             event.addListener(new PlayerInventoryTabButton(guiLeft, guiTop, false, false, PlayerInventoryTabButton.Tab.CLIMATE).setRecipeBookCallback(screen));
             PatchouliIntegration.ifEnabled(() -> event.addListener(new PlayerInventoryTabButton(guiLeft, guiTop, false, false, PlayerInventoryTabButton.Tab.BOOK).setRecipeBookCallback(screen)));
         }
+        else if (event.getScreen() instanceof CreativeModeInventoryScreen screen && player != null && TFCConfig.CLIENT.enableTabsInCreative.get())
+        {
+            int guiLeft = screen.getGuiLeft() + (195 - 176);
+            int guiTop = screen.getGuiTop();
+
+            event.addListener(new PlayerInventoryTabButton(guiLeft, guiTop, true, false, PlayerInventoryTabButton.Tab.INVENTORY, button -> {}));
+            event.addListener(new PlayerInventoryTabButton(guiLeft, guiTop, false, false, PlayerInventoryTabButton.Tab.CALENDAR));
+            event.addListener(new PlayerInventoryTabButton(guiLeft, guiTop, false, false, PlayerInventoryTabButton.Tab.NUTRITION));
+            event.addListener(new PlayerInventoryTabButton(guiLeft, guiTop, false, false, PlayerInventoryTabButton.Tab.CLIMATE));
+            PatchouliIntegration.ifEnabled(() -> event.addListener(new PlayerInventoryTabButton(guiLeft, guiTop, false, false, PlayerInventoryTabButton.Tab.BOOK)));
+        }
     }
 
     public static void onClientPlayerLoggedIn(ClientPlayerNetworkEvent.LoggingIn event)
@@ -395,7 +416,6 @@ public class ClientForgeEventHandler
         if (event.getPlayer() != null)
         {
             Calendars.CLIENT.resetToDefault();
-            IndirectHashCollection.clearAllCaches();
         }
     }
 
@@ -436,9 +456,9 @@ public class ClientForgeEventHandler
             final double zBias = wind.y > 0 ? 6 : -6;
 
             // don't spawn wind particles in rain
-            if (!(ClimateRenderCache.INSTANCE.getTemperature() > 0f && level.getRainLevel(0) > 0))
+            if (!(ClimateRenderCache.INSTANCE.getInstantTemperature() > 0f && level.getRainLevel(0) > 0))
             {
-                final ParticleOptions particle = ClimateRenderCache.INSTANCE.getTemperature() < 0f && level.getRainLevel(0) > 0 ? TFCParticles.SNOWFLAKE.get() : TFCParticles.WIND.get();
+                final ParticleOptions particle = ClimateRenderCache.INSTANCE.getInstantTemperature() < 0f && level.getRainLevel(0) > 0 ? TFCParticles.SNOWFLAKE.get() : TFCParticles.WIND.get();
                 for (int i = 0; i < count; i++)
                 {
                     final double x = pos.getX() + Mth.nextDouble(level.random, -12 - xBias, 12 - xBias);
@@ -625,5 +645,13 @@ public class ClientForgeEventHandler
     public static void onRecipesUpdated(RecipesUpdatedEvent event)
     {
         Helpers.updateReloadableData(ClientHelpers.getLevelOrThrow().registryAccess(), event.getRecipeManager());
+    }
+
+    private static void onScreenOpen(ScreenEvent.Opening event)
+    {
+        if (event.getScreen() instanceof TitleScreen || event.getScreen() instanceof JoinMultiplayerScreen)
+        {
+            IndirectHashCollection.clearAllCaches();
+        }
     }
 }

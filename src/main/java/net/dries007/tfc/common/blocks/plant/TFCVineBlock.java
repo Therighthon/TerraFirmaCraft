@@ -14,6 +14,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import net.dries007.tfc.common.blocks.ExtendedProperties;
 import net.dries007.tfc.common.blocks.IForgeBlockExtension;
+import net.dries007.tfc.common.blocks.ISlowEntities;
+import net.dries007.tfc.config.TFCConfig;
+import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.climate.Climate;
 
 public class TFCVineBlock extends VineBlock implements IForgeBlockExtension
@@ -29,7 +32,7 @@ public class TFCVineBlock extends VineBlock implements IForgeBlockExtension
     @Override
     protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random)
     {
-        if (Climate.getTemperature(level, pos) > 0f)
+        if (Climate.getInstantTemperature(level, pos) > 0f)
         {
             super.randomTick(state, level, pos, random);
         }
@@ -40,4 +43,5 @@ public class TFCVineBlock extends VineBlock implements IForgeBlockExtension
     {
         return properties;
     }
+
 }

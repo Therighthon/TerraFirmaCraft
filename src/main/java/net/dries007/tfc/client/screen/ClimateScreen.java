@@ -8,7 +8,9 @@ package net.dries007.tfc.client.screen;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,7 +22,7 @@ import net.dries007.tfc.client.screen.button.PlayerInventoryTabButton;
 import net.dries007.tfc.common.container.Container;
 import net.dries007.tfc.compat.patchouli.PatchouliIntegration;
 import net.dries007.tfc.config.TFCConfig;
-import net.dries007.tfc.config.TemperatureDisplayStyle;
+import net.dries007.tfc.config.ClimateTemperatureDisplayStyle;
 import net.dries007.tfc.network.SwitchInventoryTabPacket;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.climate.KoppenClimateClassification;
@@ -43,7 +45,15 @@ public class ClimateScreen extends TFCContainerScreen<Container>
 
         addRenderableWidget(new PlayerInventoryTabButton(leftPos, topPos, false, false, PlayerInventoryTabButton.Tab.INVENTORY, button -> {
             playerInventory.player.containerMenu = playerInventory.player.inventoryMenu;
-            Minecraft.getInstance().setScreen(new InventoryScreen(playerInventory.player));
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.gameMode != null && mc.gameMode.isServerControlledInventory() && mc.player != null && TFCConfig.CLIENT.enableTabsInCreative.get())
+            {
+                mc.setScreen(new CreativeModeInventoryScreen((LocalPlayer) playerInventory.player, mc.player.connection.enabledFeatures(), mc.options.operatorItemsTab().get()));
+            }
+            else
+            {
+                mc.setScreen(new InventoryScreen(playerInventory.player));
+            }
             PacketDistributor.sendToServer(new SwitchInventoryTabPacket(PlayerInventoryTabButton.Tab.INVENTORY));
         }));
         addRenderableWidget(new PlayerInventoryTabButton(leftPos, topPos, false, false, PlayerInventoryTabButton.Tab.CALENDAR));
@@ -61,10 +71,10 @@ public class ClimateScreen extends TFCContainerScreen<Container>
         final float averageTemp = ClimateRenderCache.INSTANCE.getAverageTemperature();
         final float averageRainfall = ClimateRenderCache.INSTANCE.getAverageRainfall();
         final float rainVar = ClimateRenderCache.INSTANCE.getRainVariance();
-        final float currentTemp = ClimateRenderCache.INSTANCE.getTemperature();
-        final float currentRainfall = ClimateRenderCache.INSTANCE.getRainfall();
+        final float currentTemp = ClimateRenderCache.INSTANCE.getInstantTemperature();
+        final float currentRainfall = ClimateRenderCache.INSTANCE.getInstantRainfall();
 
-        final TemperatureDisplayStyle style = TFCConfig.CLIENT.climateTooltipStyle.get();
+        final ClimateTemperatureDisplayStyle style = TFCConfig.CLIENT.climateTooltipStyle.get();
 
         drawLine(stack, Helpers.translateEnum(KoppenClimateClassification.classify(averageTemp, averageRainfall, rainVar, ClientHelpers.inNorthernHemisphere())), CENTER, 18);
 

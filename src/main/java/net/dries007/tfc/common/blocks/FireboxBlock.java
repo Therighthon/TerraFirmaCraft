@@ -6,12 +6,14 @@
 
 package net.dries007.tfc.common.blocks;
 
+import net.dries007.tfc.config.TFCConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.ParticleUtils;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
@@ -28,14 +30,12 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
 import net.dries007.tfc.common.blockentities.FireboxBlockEntity;
 import net.dries007.tfc.common.blocks.devices.DeviceBlock;
 import net.dries007.tfc.common.blocks.devices.IBellowsConsumer;
-import net.dries007.tfc.common.capabilities.BlockCapabilities;
 import net.dries007.tfc.util.Helpers;
 
 public class FireboxBlock extends DeviceBlock implements IBellowsConsumer
@@ -69,7 +69,7 @@ public class FireboxBlock extends DeviceBlock implements IBellowsConsumer
             }
             else if (stack.isEmpty() && player.isShiftKeyDown() && !inv.getStackInSlot(0).isEmpty())
             {
-                ItemHandlerHelper.giveItemToPlayer(player, inv.getStackInSlot(0));
+                ItemHandlerHelper.giveItemToPlayer(player, Helpers.removeStack(inv, 0));
                 return ItemInteractionResult.SUCCESS;
             }
             else if (player instanceof ServerPlayer serverPlayer)
@@ -91,6 +91,32 @@ public class FireboxBlock extends DeviceBlock implements IBellowsConsumer
         super.stepOn(level, pos, state, entity);
     }
 
+    @Override
+    protected boolean hasAnalogOutputSignal(BlockState state)
+    {
+        return TFCConfig.SERVER.fireboxEnableAutomation.get();
+    }
+
+    @Override
+    protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos)
+    {
+        if (level.getBlockEntity(pos) instanceof FireboxBlockEntity firebox)
+        {
+            if (!firebox.getInventory().getStackInSlot(0).isEmpty())
+            {
+                int maxSlot = FireboxBlockEntity.SLOTS;
+                for (int i = 0; i < maxSlot; i++)
+                {
+                    if (firebox.getInventory().getStackInSlot(i).isEmpty())
+                    {
+                        return Mth.clamp(i * 15 / (maxSlot), 1, 15);
+                    }
+                }
+                return 15;
+            }
+        }
+        return 0;
+    }
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random)

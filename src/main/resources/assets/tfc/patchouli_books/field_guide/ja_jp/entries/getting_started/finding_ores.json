@@ -50,7 +50,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "これらの小さな鉱石片は2つの目的に役立ちます。1つは溶かして金属の供給源となること、そしてより重要なこととして、近くのどこか (おそらく地下や地表近く) に鉱脈が存在することを示すことです。 鉱脈の位置は、後の $(l:mechanics/prospecting)探鉱$()で特定できます。$(br2) 12 種類の小さな鉱石と、そこから取り出せる金属・溶け込むものは次のページにリストされています。"
+      "text": "これらの小さな鉱石片は2つの目的に役立ちます。1つは溶かして金属の供給源となること、そしてより重要なこととして、近くのどこか (おそらく地下や地表近く) に鉱脈が存在することを示すことです。 鉱脈の位置は、後の $(l:metalworking/prospecting)探鉱$()で特定できます。$(br2) 12 種類の小さな鉱石と、そこから取り出せる金属・溶け込むものは次のページにリストされています。"
     },
     {
       "type": "patchouli:text",
@@ -65,7 +65,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "必要なもの:$(br)$(li)$(l:getting_started/pottery#vessel)小さな壺$()$(li)$(l:getting_started/pit_kiln)穴窯$()に必要な材料。 $(li)溶融金属を鋳造するための 1 つ以上の $(l:getting_started/pottery#mold)鋳造型。$(li)鋳造に適した合計 100 mB 以上の金属 : $(thing)銅$()、その 3 つの鉱石形態のうちの 1 つまたは複数。$(br2)$(br)$(italic)注: 鋳造は、一部の $(l:getting_started/primitive_alloys) 合金 $()でも行うことができます。"
+      "text": "必要なもの:$(br)$(li)$(l:getting_started/pottery#vessel)小さな壺$()$(li)$(l:getting_started/pit_kiln)穴窯$()に必要な材料。 $(li)溶融金属を鋳造するための 1 つ以上の $(l:getting_started/pottery#mold)鋳造型$()。$(li)鋳造に適した合計 100 mB 以上の金属 : $(thing)銅$()、その 3 つの鉱石形態のうちの 1 つまたは複数。$(br2)$(br)$(italic)注: 鋳造は、一部の $(l:getting_started/primitive_alloys) 合金 $()でも行うことができます。"
     },
     {
       "type": "patchouli:text",

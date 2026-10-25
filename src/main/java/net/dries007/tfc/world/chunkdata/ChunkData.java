@@ -6,9 +6,6 @@
 
 package net.dries007.tfc.world.chunkdata;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -24,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 
 import net.dries007.tfc.common.TFCAttachments;
 import net.dries007.tfc.network.ChunkWatchPacket;
+import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.climate.ClimateModel;
 
 import static net.dries007.tfc.world.TFCChunkGenerator.*;
@@ -100,7 +98,7 @@ public sealed class ChunkData
     private ForestType forestType;
     private final byte[] shuffledBlockPositions = getShuffledByteArray();
 
-    private long lastRandomTick;
+    private long lastRandomTick; //The name no longer makes sense, as the weather catchup function no longer uses random ticks but standard ticking. TODO: Change name to reflect new usage
     private byte nextSnowPosition;
 
     public ChunkData(ChunkPos pos)
@@ -115,7 +113,7 @@ public sealed class ChunkData
         this.status = Status.EMPTY;
         this.rockData = new RockData(generator);
         this.forestType = ForestType.GRASSLAND;
-        this.lastRandomTick = -1;
+        this.lastRandomTick = Integer.MIN_VALUE;
         this.nextSnowPosition = 0;
     }
 
@@ -142,9 +140,9 @@ public sealed class ChunkData
     public float getMinRainfallHydration(BlockPos pos)
     {
         final int x = pos.getX();
-        final int y = pos.getY();
-        final float rainfall = getRainfall(x, y);
-        final float rainVar = Math.abs(getRainVariance(x, y));
+        final int z = pos.getZ();
+        final float rainfall = getAverageRainfall(x, z);
+        final float rainVar = Math.abs(getRainVariance(x, z));
         // Max instantaneous rainfall value is actually double the max rainfall, this caps rainfall contribution at the max average rainfall
         return rainfall * (1 - rainVar) * (MAX_RAINFALL_CONTRIBUTION / ClimateModel.MAX_CROP_RAINFALL);
     }
@@ -153,9 +151,9 @@ public sealed class ChunkData
     public float getMaxRainfallHydration(BlockPos pos)
     {
         final int x = pos.getX();
-        final int y = pos.getY();
-        final float rainfall = getRainfall(x, y);
-        final float rainVar = Math.abs(getRainVariance(x, y));
+        final int z = pos.getZ();
+        final float rainfall = getAverageRainfall(x, z);
+        final float rainVar = Math.abs(getRainVariance(x, z));
         // Max instantaneous rainfall value is actually double the max rainfall, this caps rainfall contribution at the max average rainfall
         return Math.min(rainfall * (1 + rainVar) * (MAX_RAINFALL_CONTRIBUTION / ClimateModel.MAX_CROP_RAINFALL), MAX_RAINFALL_CONTRIBUTION);
     }
@@ -163,15 +161,15 @@ public sealed class ChunkData
     /**
      * Returns the time-invariant rainfall for this position.
      */
-    public float getRainfall(BlockPos pos)
+    public float getAverageRainfall(BlockPos pos)
     {
-        return getRainfall(pos.getX(), pos.getZ());
+        return getAverageRainfall(pos.getX(), pos.getZ());
     }
 
     /**
      * Returns the time-invariant rainfall for this position.
      */
-    public float getRainfall(int x, int z)
+    public float getAverageRainfall(int x, int z)
     {
         return rainfallLayer == null ? UNKNOWN_RAINFALL : rainfallLayer.getValue((x & 15) / 16f, (z & 15) / 16f);
     }
@@ -199,17 +197,17 @@ public sealed class ChunkData
     /**
      * Returns the time-invariant total groundwater (rivers + rainfall) for this position.
      */
-    public float getGroundwater(BlockPos pos)
+    public float getAverageGroundwater(BlockPos pos)
     {
-        return getGroundwater(pos.getX(), pos.getZ());
+        return getAverageGroundwater(pos.getX(), pos.getZ());
     }
 
     /**
      * Returns the time-invariant total groundwater (rivers + rainfall) for this position.
      */
-    public float getGroundwater(int x, int z)
+    public float getAverageGroundwater(int x, int z)
     {
-        return Math.min(getBaseGroundwater(x, z) + getRainfall(x, z), 500f);
+        return Math.min(getBaseGroundwater(x, z) + getAverageRainfall(x, z), 500f);
     }
 
     public float getAverageSeaLevelTemp(BlockPos pos)
@@ -237,9 +235,9 @@ public sealed class ChunkData
         return lastRandomTick;
     }
 
-    public void setLastRandomTick(ChunkAccess chunk, long lastRandomTick)
+    public void setLastRandomTick(ChunkAccess chunk, long tick)
     {
-        this.lastRandomTick = lastRandomTick;
+        this.lastRandomTick = tick;
         chunk.setUnsaved(true); // Flag the chunk, since we need to re-save the data
     }
 
@@ -354,6 +352,7 @@ public sealed class ChunkData
             nbt.put("temperature", temperatureLayer.write());
             nbt.putByte("forestType", (byte) forestType.ordinal());
             nbt.putLong("lastRandomTick", lastRandomTick);
+            nbt.putByte("nextSnowPosition", nextSnowPosition);
         }
         return nbt;
     }
@@ -376,6 +375,7 @@ public sealed class ChunkData
             temperatureLayer = new LerpFloatLayer(nbt.getCompound("temperature"));
             forestType = ForestType.valueOf(nbt.getByte("forestType"));
             lastRandomTick = nbt.getLong("lastRandomTick");
+            nextSnowPosition = nbt.getByte("nextSnowPosition");
         }
     }
 
@@ -409,7 +409,7 @@ public sealed class ChunkData
     {
         private Immutable()
         {
-            super(new ChunkPos(ChunkPos.INVALID_CHUNK_POS));
+            super(Helpers.chunkPos(ChunkPos.INVALID_CHUNK_POS));
         }
 
         @Override

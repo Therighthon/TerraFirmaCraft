@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import com.google.common.base.CaseFormat;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -41,6 +40,7 @@ import net.dries007.tfc.common.blockentities.SluiceBlockEntity;
 import net.dries007.tfc.common.blockentities.TFCBlockEntities;
 import net.dries007.tfc.common.blockentities.rotation.WaterWheelBlockEntity;
 import net.dries007.tfc.common.blockentities.rotation.WindmillBlockEntity;
+import net.dries007.tfc.common.blocks.CrateBlock;
 import net.dries007.tfc.common.blocks.ExtendedBlock;
 import net.dries007.tfc.common.blocks.ExtendedProperties;
 import net.dries007.tfc.common.blocks.GroundcoverBlock;
@@ -69,31 +69,32 @@ import net.dries007.tfc.util.registry.RegistryWood;
  */
 public enum Wood implements RegistryWood
 {
-    ACACIA(false, MapColor.TERRACOTTA_ORANGE, MapColor.TERRACOTTA_LIGHT_GRAY, 11, 210),
-    ASH(false, MapColor.TERRACOTTA_PINK, MapColor.TERRACOTTA_ORANGE, 7, 10),
-    ASPEN(false, MapColor.TERRACOTTA_GREEN, MapColor.TERRACOTTA_WHITE, 8, 250),
-    BIRCH(false, MapColor.COLOR_BROWN, MapColor.TERRACOTTA_WHITE, 7, 145),
-    BLACKWOOD(false, MapColor.COLOR_BLACK, MapColor.COLOR_BROWN, 8, 80),
-    CHESTNUT(false, MapColor.TERRACOTTA_RED, MapColor.COLOR_LIGHT_GREEN, 7, 40),
-    DOUGLAS_FIR(true, MapColor.TERRACOTTA_YELLOW, MapColor.TERRACOTTA_BROWN, 7, 0),
-    HICKORY(false, MapColor.TERRACOTTA_BROWN, MapColor.COLOR_GRAY, 10, 230),
-    KAPOK(false, MapColor.COLOR_PURPLE, MapColor.COLOR_BROWN, 7, 30),
-    MANGROVE(false, MapColor.COLOR_RED, MapColor.COLOR_BROWN, 8, 100),
-    MAPLE(false, MapColor.COLOR_ORANGE, MapColor.TERRACOTTA_GRAY, 7, 0),
-    OAK(false, MapColor.WOOD, MapColor.COLOR_BROWN, 10, 120),
-    PALM(false, MapColor.COLOR_ORANGE, MapColor.COLOR_BROWN, 7, 255),
-    PINE(true, MapColor.TERRACOTTA_GRAY, MapColor.COLOR_GRAY, 7, 0),
-    ROSEWOOD(false, MapColor.COLOR_RED, MapColor.TERRACOTTA_LIGHT_GRAY, 8, 170),
-    SEQUOIA(true, MapColor.TERRACOTTA_RED, MapColor.TERRACOTTA_RED, 18, 0),
-    SPRUCE(true, MapColor.TERRACOTTA_PINK, MapColor.TERRACOTTA_BLACK, 7, 0),
-    SYCAMORE(false, MapColor.COLOR_YELLOW, MapColor.TERRACOTTA_LIGHT_GREEN, 8, 200),
-    WHITE_CEDAR(true, MapColor.TERRACOTTA_WHITE, MapColor.TERRACOTTA_LIGHT_GRAY, 7, 0),
-    WILLOW(false, MapColor.COLOR_GREEN, MapColor.TERRACOTTA_BROWN, 11, 225);
+    ACACIA(false, 0f, MapColor.TERRACOTTA_ORANGE, MapColor.TERRACOTTA_LIGHT_GRAY, 11, 210),
+    ASH(false, 0.08f, MapColor.TERRACOTTA_PINK, MapColor.TERRACOTTA_ORANGE, 7, 10),
+    ASPEN(false, 0, MapColor.TERRACOTTA_GREEN, MapColor.TERRACOTTA_WHITE, 8, 250),
+    BIRCH(false, 0, MapColor.COLOR_BROWN, MapColor.TERRACOTTA_WHITE, 7, 145),
+    BLACKWOOD(false, 0.2f, MapColor.COLOR_BLACK, MapColor.COLOR_BROWN, 8, 80),
+    CHESTNUT(false, 0.25f, MapColor.TERRACOTTA_RED, MapColor.COLOR_LIGHT_GREEN, 7, 40),
+    DOUGLAS_FIR(true, 0.32f, MapColor.TERRACOTTA_YELLOW, MapColor.TERRACOTTA_BROWN, 7, 0),
+    HICKORY(false, 0.08f, MapColor.TERRACOTTA_BROWN, MapColor.COLOR_GRAY, 10, 230),
+    KAPOK(false, 0f, MapColor.COLOR_PURPLE, MapColor.COLOR_BROWN, 7, 30),
+    MANGROVE(false, 0.18f, MapColor.COLOR_RED, MapColor.COLOR_BROWN, 8, 100),
+    MAPLE(false, 0f, MapColor.COLOR_ORANGE, MapColor.TERRACOTTA_GRAY, 7, 0),
+    OAK(false, 0.04f, MapColor.WOOD, MapColor.COLOR_BROWN, 10, 120),
+    PALM(false, 0f, MapColor.COLOR_ORANGE, MapColor.COLOR_BROWN, 7, 255),
+    PINE(true, 0.33f, MapColor.TERRACOTTA_GRAY, MapColor.COLOR_GRAY, 7, 0),
+    ROSEWOOD(false, 0f, MapColor.COLOR_RED, MapColor.TERRACOTTA_LIGHT_GRAY, 8, 170),
+    SEQUOIA(true, 0.33f, MapColor.TERRACOTTA_RED, MapColor.TERRACOTTA_RED, 18, 0),
+    SPRUCE(true, 0.33f, MapColor.TERRACOTTA_PINK, MapColor.TERRACOTTA_BLACK, 7, 0),
+    SYCAMORE(false, 0.16f, MapColor.COLOR_YELLOW, MapColor.TERRACOTTA_LIGHT_GREEN, 8, 200),
+    WHITE_CEDAR(true, 0.33f, MapColor.TERRACOTTA_WHITE, MapColor.TERRACOTTA_LIGHT_GRAY, 7, 0),
+    WILLOW(false, 0f, MapColor.COLOR_GREEN, MapColor.TERRACOTTA_BROWN, 11, 225);
 
     public static final Wood[] VALUES = values();
 
     private final String serializedName;
     private final boolean conifer;
+    private final float flowerOffset;
     private final MapColor woodColor;
     private final MapColor barkColor;
     private final TreeGrower tree;
@@ -102,10 +103,11 @@ public enum Wood implements RegistryWood
     private final WoodType woodType;
     private final int autumnIndex;
 
-    Wood(boolean conifer, MapColor woodColor, MapColor barkColor, int daysToGrow, int autumnIndex)
+    Wood(boolean conifer, float flowerOffset, MapColor woodColor, MapColor barkColor, int daysToGrow, int autumnIndex)
     {
         this.serializedName = name().toLowerCase(Locale.ROOT);
         this.conifer = conifer;
+        this.flowerOffset = flowerOffset;
         this.woodColor = woodColor;
         this.barkColor = barkColor;
         this.tree = new TreeGrower(
@@ -126,9 +128,16 @@ public enum Wood implements RegistryWood
         return serializedName;
     }
 
+    @Override
     public boolean isConifer()
     {
         return conifer;
+    }
+
+    @Override
+    public float getFlowerOffset()
+    {
+        return flowerOffset;
     }
 
     @Override
@@ -190,9 +199,9 @@ public enum Wood implements RegistryWood
         STRIPPED_LOG(wood -> new LogBlock(ExtendedProperties.of(state -> state.getValue(RotatedPillarBlock.AXIS) == Direction.Axis.Y ? wood.woodColor() : wood.barkColor()).strength(7.5f).sound(SoundType.WOOD).requiresCorrectToolForDrops().flammableLikeLogs(), null)),
         WOOD((self, wood) -> new LogBlock(properties(wood).strength(8f).requiresCorrectToolForDrops().flammableLikeLogs(), wood.getBlock(self.stripped()))),
         STRIPPED_WOOD(wood -> new LogBlock(properties(wood).strength(7.5f).requiresCorrectToolForDrops().flammableLikeLogs(), null)),
-        LEAVES((self, wood) -> new TFCLeavesBlock(ExtendedProperties.of().mapColor(MapColor.PLANT).strength(0.5F).sound(SoundType.GRASS).defaultInstrument().randomTicks().noOcclusion().isViewBlocking(TFCBlocks::never).flammableLikeLeaves(), wood.autumnIndex(), wood.getBlock(self.fallenLeaves()), wood.getBlock(self.twig()))),
+        LEAVES((self, wood) -> new TFCLeavesBlock(ExtendedProperties.of().mapColor(MapColor.PLANT).strength(0.5F).sound(SoundType.GRASS).defaultInstrument().randomTicks().noOcclusion().isViewBlocking(TFCBlocks::never).flammableLikeLeaves(), wood, wood.getBlock(self.fallenLeaves()), wood.getBlock(self.twig()))),
         PLANKS(wood -> new ExtendedBlock(properties(wood).strength(1.5f, 3.0F).flammableLikePlanks())),
-        SAPLING(wood -> new TFCSaplingBlock(wood.tree(), ExtendedProperties.of(MapColor.PLANT).noCollission().randomTicks().strength(0).sound(SoundType.GRASS).flammableLikeLeaves().blockEntity(TFCBlockEntities.TICK_COUNTER), wood.ticksToGrow(), wood == Wood.PALM)),
+        SAPLING((self, wood) -> new TFCSaplingBlock(wood.tree(), ExtendedProperties.of(MapColor.PLANT).noCollission().randomTicks().strength(0).sound(SoundType.GRASS).flammableLikeLeaves().blockEntity(TFCBlockEntities.TICK_COUNTER), wood.ticksToGrow(), wood == Wood.PALM), TFCSaplingBlock.TFCSaplingBlockItem::new),
         POTTED_SAPLING(wood -> new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, wood.getBlock(SAPLING), BlockBehaviour.Properties.ofFullCopy(Blocks.POTTED_ACACIA_SAPLING))),
         BOOKSHELF(wood -> new BookshelfBlock(properties(wood).strength(2.0F, 3.0F).flammable(20, 30).enchantPower(BookshelfBlock::getEnchantPower).blockEntity(TFCBlockEntities.BOOKSHELF))),
         DOOR(wood -> new TFCDoorBlock(properties(wood).strength(3.0F).noOcclusion().flammableLikePlanks(), wood.getBlockSet())),
@@ -227,8 +236,8 @@ public enum Wood implements RegistryWood
         CLUTCH((self, wood) -> new ClutchBlock(properties(wood).strength(2.5F).flammableLikeLogs().pushReaction(PushReaction.DESTROY).blockEntity(TFCBlockEntities.CLUTCH), getBlock(wood, self.axle()))),
         GEAR_BOX((self, wood) -> new GearBoxBlock(properties(wood).strength(2f).noOcclusion().blockEntity(TFCBlockEntities.GEAR_BOX), getBlock(wood, self.axle()))),
         WINDMILL((self, wood) -> new WindmillBlock(properties(wood).strength(9f).noOcclusion().blockEntity(TFCBlockEntities.WINDMILL).ticks(WindmillBlockEntity::serverTick, WindmillBlockEntity::clientTick), getBlock(wood, self.axle()))),
-        WATER_WHEEL((self, wood) -> new WaterWheelBlock(properties(wood).strength(9f).noOcclusion().blockEntity(TFCBlockEntities.WATER_WHEEL).ticks(WaterWheelBlockEntity::serverTick, WaterWheelBlockEntity::clientTick), getBlock(wood, self.axle()), self.waterWheelTexture(wood)))
-        ;
+        WATER_WHEEL((self, wood) -> new WaterWheelBlock(properties(wood).strength(9f).noOcclusion().blockEntity(TFCBlockEntities.WATER_WHEEL).ticks(WaterWheelBlockEntity::serverTick, WaterWheelBlockEntity::clientTick), getBlock(wood, self.axle()), self.waterWheelTexture(wood))),
+        CRATE((self, wood) -> new CrateBlock(properties(wood).strength(9f).noOcclusion().blockEntity(TFCBlockEntities.CRATE)));
 
         private static ExtendedProperties properties(RegistryWood wood)
         {
@@ -273,7 +282,7 @@ public enum Wood implements RegistryWood
 
         public String nameFor(RegistryWood wood)
         {
-            return switch(this)
+            return switch (this)
             {
                 // N.B. Only stairs and slabs use the variant of planks, this is consistent with stairs + slabs in the rest of the mod
                 // and also with that these stair and slabs are based on the planks block
@@ -285,21 +294,21 @@ public enum Wood implements RegistryWood
 
         public boolean needsItem()
         {
-            return switch(this)
-                {
-                    case VERTICAL_SUPPORT, HORIZONTAL_SUPPORT, SIGN, WALL_SIGN, POTTED_SAPLING, WINDMILL -> false;
-                    default -> true;
-                };
+            return switch (this)
+            {
+                case VERTICAL_SUPPORT, HORIZONTAL_SUPPORT, SIGN, WALL_SIGN, POTTED_SAPLING, WINDMILL -> false;
+                default -> true;
+            };
         }
 
         private BlockType stripped()
         {
             return switch (this)
-                {
-                    case LOG -> STRIPPED_LOG;
-                    case WOOD -> STRIPPED_WOOD;
-                    default -> throw new IllegalStateException("Block type " + name() + " does not have a stripped variant");
-                };
+            {
+                case LOG -> STRIPPED_LOG;
+                case WOOD -> STRIPPED_WOOD;
+                default -> throw new IllegalStateException("Block type " + name() + " does not have a stripped variant");
+            };
         }
 
         private ResourceLocation planksTexture(RegistryWood wood)
@@ -312,11 +321,15 @@ public enum Wood implements RegistryWood
             return Helpers.identifier("textures/entity/water_wheel/" + wood.getSerializedName() + ".png");
         }
 
-        private BlockType twig() { return TWIG; }
-        private BlockType fallenLeaves() { return FALLEN_LEAVES; }
-        private BlockType leaves() { return LEAVES; }
-        private BlockType axle() { return AXLE; }
-        private BlockType windmill() { return WINDMILL; }
+        private BlockType twig() {return TWIG;}
+
+        private BlockType fallenLeaves() {return FALLEN_LEAVES;}
+
+        private BlockType leaves() {return LEAVES;}
+
+        private BlockType axle() {return AXLE;}
+
+        private BlockType windmill() {return WINDMILL;}
 
         public Supplier<Block> create(RegistryWood wood)
         {

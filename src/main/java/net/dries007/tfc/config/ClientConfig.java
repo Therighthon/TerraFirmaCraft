@@ -33,8 +33,8 @@ public class ClientConfig extends BaseConfig
     public final Supplier<HealthDisplayStyle> healthDisplayStyle;
     public final Supplier<FoodExpiryTooltipStyle> foodExpiryTooltipStyle;
     public final Supplier<Integer> foodExpiryOverlayColor;
-    public final Supplier<TemperatureDisplayStyle> heatTooltipStyle;
-    public final Supplier<TemperatureDisplayStyle> climateTooltipStyle;
+    public final Supplier<ItemTemperatureDisplayStyle> heatTooltipStyle;
+    public final Supplier<ClimateTemperatureDisplayStyle> climateTooltipStyle;
     public final Supplier<TimeDeltaTooltipStyle> timeDeltaTooltipStyle;
     public final Supplier<DisabledExperienceBarStyle> disabledExperienceBarStyle;
     public final Supplier<Boolean> sendProspectResultsToActionbar;
@@ -47,6 +47,7 @@ public class ClientConfig extends BaseConfig
     public final Supplier<Boolean> displayItemHeatBars;
     public final Supplier<Boolean> enableWindParticles;
     public final Supplier<RotationDisplayStyle> rotationDisplayStyle;
+    public final Supplier<Boolean> enableTabsInCreative;
 
     // Compatibility
     public final Supplier<List<String>> additionalSpecialModels;
@@ -91,7 +92,7 @@ public class ClientConfig extends BaseConfig
         ).define("foodExpiryTooltipStyle", FoodExpiryTooltipStyle.BOTH);
         foodExpiryOverlayColor = builder
             .comment("The overlay color to indicate rotten foods, in ARGB. Default = 0xFF88CC33")
-            .define("foodExpiryOverlayColor", 0xFF88CC33);
+            .define("foodExpiryOverlayColor1", 0xFF88CC33);
 
         final var temperatureDisplayStyle = new String[] {
             "  COLOR = Approximate, color based tooltips (like Very Hot**, Brilliant White)",
@@ -101,8 +102,8 @@ public class ClientConfig extends BaseConfig
             "  RANKINE = Exact degrees Rankine"
         };
 
-        heatTooltipStyle = builder.comment("The style to display all heat tooltips in.").comment(temperatureDisplayStyle).define("heatTooltipStyle", TemperatureDisplayStyle.COLOR);
-        climateTooltipStyle = builder.comment("The style to display all external (i.e. climate) temperature in.").comment(temperatureDisplayStyle).define("climateTooltipStyle", TemperatureDisplayStyle.CELSIUS);
+        heatTooltipStyle = builder.comment("The style to display all heat tooltips in.").comment(temperatureDisplayStyle).define("heatTooltipStyle", ItemTemperatureDisplayStyle.COLOR);
+        climateTooltipStyle = builder.comment("The style to display all external (i.e. climate) temperature in.").comment(temperatureDisplayStyle).define("climateTooltipStyle", ClimateTemperatureDisplayStyle.CELSIUS);
 
         timeDeltaTooltipStyle = builder.comment(
             "The style to display all time delta / duration tooltips in.",
@@ -133,8 +134,10 @@ public class ClientConfig extends BaseConfig
 
         displayFamiliarityAsPercent = builder.comment("If familiarity is displayed as a percent rather than a heart").define("displayFamiliarityAsPercent", false);
 
-        showGuideBookLinksAlways = builder.comment("If, when hovering over an item in the inventory, or looking at a block in the world that has a linked page in the guide book, should it display a tooltip along with allowing you to hold Ctrl/Cmd to quickly navigate to that page in the book.").define("showGuideBookLinksAlways", true);
+        showGuideBookLinksAlways = builder.comment("If, when hovering over an item in the inventory, or looking at a block in the world that has a linked page in the guide book, it should display a tooltip along with allowing you to hold Ctrl/Cmd to quickly navigate to that page in the book.").define("showGuideBookLinksAlways", true);
         showGuideBookTabInInventory = builder.comment("If a button linking to the TFC Field Guide should be added to the inventory, climate, nutrition, and calendar screens?").define("showGuideBookTabInInventory", true);
+
+        enableTabsInCreative = builder.comment("If the inventory, climate, nutrition, and calendar tabs should display while in creative.").define("enableTabsInCreative", true);
 
         displayItemContentsAsImages = builder.comment("For items like bundles, their contents inside will be rendered using Bundle Technology to show their items.").define("displayItemContentsAsImages", true);
         displayItemHeatBars = builder.comment("If true, for items that are hot, they will show a bar on the item like a durability bar").define("displayItemHeatBars", true);

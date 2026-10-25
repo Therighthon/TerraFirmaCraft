@@ -11,7 +11,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -42,10 +41,9 @@ import net.dries007.tfc.common.recipes.HeatingRecipe;
 import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.SyncableContainerData;
+import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.ICalendarTickable;
 import net.dries007.tfc.util.data.Fuel;
-
-import static net.dries007.tfc.TerraFirmaCraft.*;
 
 public class CharcoalForgeBlockEntity extends TickableInventoryBlockEntity<ItemStackHandler> implements ICalendarTickable, MenuProvider
 {
@@ -64,6 +62,8 @@ public class CharcoalForgeBlockEntity extends TickableInventoryBlockEntity<ItemS
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CharcoalForgeBlockEntity forge)
     {
+        final boolean calendarAdvanced = forge.lastPlayerTick != Calendars.SERVER.getTicks();
+
         forge.checkForLastTickSync();
         forge.checkForCalendarUpdate();
 
@@ -80,7 +80,10 @@ public class CharcoalForgeBlockEntity extends TickableInventoryBlockEntity<ItemS
             Helpers.gatherAndConsumeItems(level, bounds, forge.inventory, SLOT_FUEL_MIN, SLOT_FUEL_MAX);
         }
 
-        boolean isRaining = level.isRainingAt(pos);
+        // Note that, if the block above the forge is not in the `#tfc:charcoal_forge_invisible` block tag (i.e. is not air or a crucible), the forge will extinguish.
+        // As this sets the `HEAT` BlockState property and the burnTemperature to 0, we do not need to check if the block above the forge has this tag,
+        // since all uses of the following variable depends on either of these being non-zero
+        boolean isRaining = level.isRainingAt(pos.above()) || level.isRainingAt(pos.above(2));
         if (state.getValue(CharcoalForgeBlock.HEAT) > 0)
         {
             if (isRaining && level.random.nextFloat() < 0.15F)
@@ -95,13 +98,16 @@ public class CharcoalForgeBlockEntity extends TickableInventoryBlockEntity<ItemS
             }
 
             // Update fuel
-            if (forge.burnTicks > 0)
+            if (calendarAdvanced)
             {
-                forge.burnTicks -= forge.airTicks > 0 || isRaining ? 2 : 1; // Fuel burns twice as fast using bellows, or in the rain
-            }
-            if (forge.burnTicks <= 0 && !forge.consumeFuel())
-            {
-                forge.extinguish(state);
+                if (forge.burnTicks > 0)
+                {
+                    forge.burnTicks -= forge.airTicks > 0 || isRaining ? 2 : 1; // Fuel burns twice as fast using bellows, or in the rain
+                }
+                if (forge.burnTicks <= 0 && !forge.consumeFuel())
+                {
+                    forge.extinguish(state);
+                }
             }
         }
         else if (forge.burnTemperature > 0)
@@ -189,8 +195,13 @@ public class CharcoalForgeBlockEntity extends TickableInventoryBlockEntity<ItemS
     public void onCalendarUpdate(long ticks)
     {
         assert level != null;
+        if (ticks <= 0)
+        {
+            return; // The calendar is paused, so no time has passed - see the note in serverTick()
+        }
+
         final BlockState state = level.getBlockState(worldPosition);
-        if (state.getValue(CharcoalForgeBlock.HEAT) != 0)
+        if (state.hasProperty(CharcoalForgeBlock.HEAT) && state.getValue(CharcoalForgeBlock.HEAT) != 0)
         {
             HeatCapability.Remainder remainder = HeatCapability.consumeFuelForTicks(ticks, inventory, burnTicks, burnTemperature, SLOT_FUEL_MIN, SLOT_FUEL_MAX);
 

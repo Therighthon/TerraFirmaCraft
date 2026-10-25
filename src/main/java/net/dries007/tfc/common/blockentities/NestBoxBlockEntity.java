@@ -8,7 +8,6 @@ package net.dries007.tfc.common.blockentities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
@@ -23,13 +22,12 @@ import org.jetbrains.annotations.Nullable;
 import net.dries007.tfc.common.capabilities.PartialItemHandler;
 import net.dries007.tfc.common.component.EggComponent;
 import net.dries007.tfc.common.component.TFCComponents;
+import net.dries007.tfc.common.component.food.FoodCapability;
 import net.dries007.tfc.common.container.NestBoxContainer;
 import net.dries007.tfc.common.entities.livestock.OviparousAnimal;
 import net.dries007.tfc.common.entities.misc.Seat;
 import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
-
-import static net.dries007.tfc.TerraFirmaCraft.*;
 
 public class NestBoxBlockEntity extends TickableInventoryBlockEntity<ItemStackHandler>
 {
@@ -47,13 +45,25 @@ public class NestBoxBlockEntity extends TickableInventoryBlockEntity<ItemStackHa
                 {
                     if (bird.getRandom().nextInt(7) == 0)
                     {
-                        Helpers.playSound(level, pos, SoundEvents.CHICKEN_EGG);
-                        if (Helpers.insertOne(nest, bird.makeEgg()))
+                        if (Helpers.hasOpenSlot(nest))
                         {
+                            Helpers.playSound(level, pos, SoundEvents.CHICKEN_EGG);
+                            ItemStack egg = bird.makeEgg();
+                            if (!Helpers.insertOne(nest, egg))
+                            {
+                                // Nest somehow got full or the produce item is not valid for insertion into the nest?
+                                // Just spawn an egg so that the bird's wear and tear isn't completely wasted
+                                Helpers.spawnItem(level, pos, egg, 0.3f);
+                            }
                             bird.setFertilized(false);
                             bird.setProductsCooldown();
                             bird.stopRiding();
                             nest.markForSync();
+                        }
+                        else
+                        {
+                            // Nest is full, try another to lay in
+                            bird.stopRiding();
                         }
                     }
                 }
@@ -67,7 +77,7 @@ public class NestBoxBlockEntity extends TickableInventoryBlockEntity<ItemStackHa
             {
                 final ItemStack stack = nest.inventory.getStackInSlot(slot);
                 final @Nullable EggComponent egg = stack.get(TFCComponents.EGG);
-                if (egg != null && egg.canHatch())
+                if (egg != null && egg.canHatch(stack))
                 {
                     egg.hatch(level).ifPresent(entity -> {
                         entity.moveTo(pos, 0f, 0f);
@@ -98,7 +108,7 @@ public class NestBoxBlockEntity extends TickableInventoryBlockEntity<ItemStackHa
     @Override
     public boolean isItemValid(int slot, ItemStack stack)
     {
-        return stack.has(TFCComponents.EGG);
+        return stack.has(TFCComponents.EGG) && !FoodCapability.isRotten(stack);
     }
 
     @Override

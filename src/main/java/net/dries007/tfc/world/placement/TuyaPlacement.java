@@ -10,15 +10,16 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.world.level.levelgen.placement.PlacementModifierType;
 
 import net.dries007.tfc.world.Seed;
-import net.dries007.tfc.world.biome.TuyaNoise;
+import net.dries007.tfc.world.volcano.CenteredFeatureNoise;
+import net.dries007.tfc.world.volcano.CenteredFeatureNoiseSampler;
 
-public class TuyaPlacement extends CenterOrDistanceToPlacement<TuyaNoise>
+public class TuyaPlacement extends CenterOrDistanceToPlacement<CenteredFeatureNoiseSampler>
 {
     public static final MapCodec<TuyaPlacement> CODEC = codec(TuyaPlacement::new);
 
-    public TuyaPlacement(boolean center, float distance)
+    public TuyaPlacement(boolean center, float minEasing, float maxEasing)
     {
-        super(center, distance);
+        super(center, minEasing, maxEasing);
     }
 
     @Override
@@ -28,8 +29,8 @@ public class TuyaPlacement extends CenterOrDistanceToPlacement<TuyaNoise>
     }
 
     @Override
-    protected TuyaNoise createContext(Seed seed)
+    protected CenteredFeatureNoiseSampler createContext(Seed seed)
     {
-        return new TuyaNoise(seed);
+        return CenteredFeatureNoise.tuya(seed);
     }
 }

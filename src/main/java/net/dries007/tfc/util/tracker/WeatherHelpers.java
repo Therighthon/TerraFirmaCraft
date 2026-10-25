@@ -17,6 +17,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
+import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
@@ -28,8 +29,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec2;
@@ -44,6 +47,7 @@ import net.dries007.tfc.common.blocks.TFCBlocks;
 import net.dries007.tfc.common.blocks.ThinSpikeBlock;
 import net.dries007.tfc.common.blocks.plant.KrummholzBlock;
 import net.dries007.tfc.config.TFCConfig;
+import net.dries007.tfc.mixin.accessor.ChunkMapAccessor;
 import net.dries007.tfc.mixin.accessor.PoiSectionAccessor;
 import net.dries007.tfc.mixin.accessor.SectionStorageAccessor;
 import net.dries007.tfc.util.Helpers;
@@ -75,6 +79,8 @@ public final class WeatherHelpers
     // The maximum number of single tick updates that can be scheduled to happen
     private static final int MAX_UPDATES_PER_TICK = TFCConfig.SERVER.snowMaxAccumulationOnUpdate.get();
 
+    private static final int CATCH_UP_THRESHOLD_TICKS = 4_000;
+
     /**
      * Replaces a call to {@link Biome#getPrecipitationAt(BlockPos)} with one that is aware of both the local climate,
      * and the local rainfall. Note that of all the biome climate based methods, this is the only one we need to
@@ -96,10 +102,10 @@ public final class WeatherHelpers
 
         final long calendarTicks = Calendars.get(level).getCalendarTicks();
         final float rainIntensity = tracker.isWeatherEnabled() ? model.getRain(calendarTicks) : -1;
-        final float rainValue = model.getRainfall(level, pos);
+        final float rainValue = model.getInstantRainfall(level, pos);
 
         return isPrecipitating(rainIntensity, rainValue)
-            ? model.getTemperature(level, pos) > 0f
+            ? model.getInstantTemperature(level, pos) > 0f
             ? Biome.Precipitation.RAIN
             : Biome.Precipitation.SNOW
             : Biome.Precipitation.NONE;
@@ -107,7 +113,7 @@ public final class WeatherHelpers
 
     /**
      * @param rainIntensity The rainfall intensity, i.e. {@link ClimateModel#getRain}
-     * @param rainfall      The time-variant average rainfall, i.e. {@link ClimateModel#getRainfall}
+     * @param rainfall      The time-variant average rainfall, i.e. {@link ClimateModel#getInstantRainfall}
      * @return {@code true} if it is precipitating (rain or snow) with the provided values.
      */
     public static boolean isPrecipitating(float rainIntensity, float rainfall)
@@ -117,7 +123,7 @@ public final class WeatherHelpers
 
     public static float calculateRealRainIntensity(float rainIntensity, float rainfall)
     {
-        return rainIntensity - Mth.clampedMap(rainfall, ClimateModel.MIN_RAINFALL, ClimateModel.MAX_RAINFALL, 1, 0);
+        return rainIntensity - Mth.clampedMap(rainfall, ClimateModel.MIN_AVERAGE_RAINFALL, ClimateModel.MAX_AVERAGE_RAINFALL, 1, 0);
     }
 
     /**
@@ -183,24 +189,6 @@ public final class WeatherHelpers
      * Handles chunk ticking. This occurs on chunks that are within a radius of the player (128 blocks), which is notably smaller
      * than chunks that are loaded. We need this to be *accurate*, and *fast*. We handle a number of possible mechanics in order
      * to try and keep the effects of weather (snow, ice, and icicles), up-to-date.
-     *
-     * <h3>Simulation</h3>
-     * In order to properly handle simulation of chunks that have not been random ticked in a while, we support multiple methods of
-     * "simulating" if snow should have accumulated, or melted. By default, vanilla will do snow proportional to {@code randomTickSpeed / 48}
-     * blocks per tick, or once every 16 ticks, per chunk. We start with a baseline of half that speed (snow every 50 ticks).
-     * <p>
-     * Snow melting happens slower, since it's always happening, at a rate of roughly 1 per 200 ticks.
-     * <ul>
-     *     <li>Over short times, such as less than 1000 ticks, we do basic "catch-up". We calculate some number of additional chunk
-     *     ticks to run, and execute them based on historical data for rainfall/temperature.</li>
-     *     <li>Over longer times, we do a less accurate simulation of the weather, which tries to extrapolate how much the chunk should
-     *     be melted, or covered in snow. This then does the same "catch-up", but with a specific end-goal in mind.</li>
-     * </ul>
-     *
-     * <h3>Snow Accumulation and Melting</h3>
-     * We use the POI system for snow, in order to have an accurate and fast count of the amount of snow (or ice or icicles) in a chunk, and
-     * we do a very basic counting of previous ticks, how many times we should have been raining (accumulating snow), or positive temperature
-     * (melting). Note that we do melting much slower than we do accumulation, which affects how we simulate.
      */
     public static void onTickChunk(ServerLevel level, ChunkAccess chunk)
     {
@@ -222,13 +210,98 @@ public final class WeatherHelpers
         final long lastRandomTick = data.getLastRandomTick();
         final long timeSinceTick = currentTick - lastRandomTick;
 
+        if (timeSinceTick > CATCH_UP_THRESHOLD_TICKS)
+        {
+            return;
+        }
+
         final ChunkPos chunkPos = chunk.getPos();
-        final BlockPos surfacePos = getSequentialSurfacePos(level, chunkPos, chunk, data, false);
-        final float rainfall = model.getRainfall(level, surfacePos, lastRandomTick, currentTick, Calendars.SERVER.getCalendarDaysInMonth());
+        final BlockPos snowPlacementSurfacePos = getSequentialSurfacePos(level, chunkPos, chunk, data, false);
+        final BlockPos climateCheckSurfacePos = getRandomSurfacePos(level, chunkPos);
+
+        final float rainfall = model.getTimeAverageRainfall(level, climateCheckSurfacePos, lastRandomTick, currentTick, Calendars.SERVER.getCalendarDaysInMonth());
+        if (level.random.nextInt(TICKS_PER_SNOW_ACCUMULATION) == 0)
+        {
+            // Trigger either accumulation event or snow melt
+            final float realTemperature = model.getInstantTemperature(level, snowPlacementSurfacePos);
+            // Use the actual temperature for accumulation to avoid placing snow somewhere too warm
+            if (realTemperature < -2f && isPrecipitating(model.getRain(currentCalendarTick), rainfall))
+            {
+                // Trigger accumulation
+                handleSnowAccumulation(level, snowPlacementSurfacePos);
+                // We delay iterating the position until we know whether snow will actually get placed
+                data.iterateSnowPos(chunk);
+            }
+            // Use the random surface pos for melting to avoid getting stuck on a block
+            else if (model.getInstantTemperature(level, climateCheckSurfacePos) > 2f && level.random.nextInt(TICKS_PER_SNOW_MELT_PER_SNOW_ACCUMULATION) == 0)
+            {
+                // Trigger melting
+                handleSnowMelting(level, chunkPos, 1);
+            }
+        }
+
+        data.setLastRandomTick(chunk, currentTick);
+    }
+
+    /**
+     * Handles loaded chunks that couldnt be random ticked.
+     *
+     * <h3>Simulation</h3>
+     * In order to properly handle simulation of chunks that have not been random ticked in a while, we support multiple methods of
+     * "simulating" if snow should have accumulated, or melted. By default, vanilla will do snow proportional to {@code randomTickSpeed / 48}
+     * blocks per tick, or once every 16 ticks, per chunk. We start with a baseline of half that speed (snow every 50 ticks).
+     * <p>
+     * Snow melting happens slower, since it's always happening, at a rate of roughly 1 per 200 ticks.
+     * <ul>
+     *     <li>Over short times, such as less than 1000 ticks, we do basic "catch-up". We calculate some number of additional chunk
+     *     ticks to run, and execute them based on historical data for rainfall/temperature.</li>
+     *     <li>Over longer times, we do a less accurate simulation of the weather, which tries to extrapolate how much the chunk should
+     *     be melted, or covered in snow. This then does the same "catch-up", but with a specific end-goal in mind.</li>
+     * </ul>
+     *
+     * <h3>Snow Accumulation and Melting</h3>
+     * We use the POI system for snow, in order to have an accurate and fast count of the amount of snow (or ice or icicles) in a chunk, and
+     * we do a very basic counting of previous ticks, how many times we should have been raining (accumulating snow), or positive temperature
+     * (melting). Note that we do melting much slower than we do accumulation, which affects how we simulate.
+     */
+    public static void tickCatchUp(ServerLevel level)
+    {
+        final WorldTracker tracker = WorldTracker.get(level);
+        final ClimateModel model = tracker.getClimateModel();
+        final long currentTick = Calendars.SERVER.getTicks();
+
+        if (!tracker.isWeatherEnabled() || !model.supportsRain())
+        {
+            return;
+        }
+
+        final int maxStaleChunks = TFCConfig.SERVER.snowMaxCatchUpChunksPerTick.get();
+        final List<LevelChunk> staleChunks = new ArrayList<>();
+        for (ChunkHolder holder : ((ChunkMapAccessor) level.getChunkSource().chunkMap).invoke$getChunks())
+        {
+            final LevelChunk chunk = holder.getTickingChunk();
+            if (chunk != null && currentTick - ChunkData.get(chunk).getLastRandomTick() > CATCH_UP_THRESHOLD_TICKS)
+            {
+                staleChunks.add(chunk);
+                if (staleChunks.size() >= maxStaleChunks) break;
+            }
+        }
+
+        final long currentCalendarTick = Calendars.SERVER.getCalendarTicks();
         final int daysInMonth = Calendars.SERVER.getCalendarDaysInMonth();
 
-        if (timeSinceTick > 4_000)
+        for(LevelChunk chunk : staleChunks)
         {
+            final ChunkData data = ChunkData.get(chunk);
+            final long lastRandomTick = data.getLastRandomTick();
+            final long timeSinceTick = currentTick - lastRandomTick;
+
+            final ChunkPos chunkPos = chunk.getPos();
+            final BlockPos snowPlacementSurfacePos = getSequentialSurfacePos(level, chunkPos, chunk, data, false);
+            final BlockPos climateCheckSurfacePos = getRandomSurfacePos(level, chunkPos);
+            
+            final float rainfall = model.getTimeAverageRainfall(level, climateCheckSurfacePos, lastRandomTick, currentTick, daysInMonth);
+
             // We have not ticked this chunk in a short while, so run catch-up ticks to see if we missed anything
             // First, we need to check for what we might've missed
 
@@ -239,7 +312,9 @@ public final class WeatherHelpers
             while (calendarTick < currentCalendarTick)
             {
                 calendarTick += 4_000;
-                final float estimatedTemperature = model.getTemperature(level, surfacePos, calendarTick, daysInMonth);
+                // Take the max of the two temperatures to ensure that snow will not accumulate in too-warm spots in the autumn
+                final float estimatedTemperature = Math.max(model.getInstantTemperature(level, climateCheckSurfacePos, calendarTick, daysInMonth),
+                    model.getInstantTemperature(level, snowPlacementSurfacePos, calendarTick, daysInMonth));
                 if (estimatedTemperature > 2f)
                 {
                     netChangeInSnow = netChangeInSnow - UPDATES_PER_SNOW_MELT_SKIP;
@@ -271,26 +346,8 @@ public final class WeatherHelpers
                 netChangeInSnow = Math.min(MAX_UPDATES_PER_TICK, -netChangeInSnow * meltFactor);
                 handleSnowMelting(level, chunkPos, netChangeInSnow);
             }
+            data.setLastRandomTick(chunk, currentTick);
         }
-        else if (level.random.nextInt(TICKS_PER_SNOW_ACCUMULATION) == 0)
-        {
-            // Trigger either snow melting, or accumulation event
-            final float realTemperature = model.getTemperature(level, surfacePos);
-            if (realTemperature > 2f && level.random.nextInt(TICKS_PER_SNOW_MELT_PER_SNOW_ACCUMULATION) == 0)
-            {
-                // Trigger melting
-                handleSnowMelting(level, chunkPos, 1);
-            }
-            else if (realTemperature < -2f && isPrecipitating(model.getRain(currentCalendarTick), rainfall))
-            {
-                // Trigger accumulation
-                handleSnowAccumulation(level, surfacePos);
-                // We delay iterating the position until we know whether snow will actually get placed
-                data.iterateSnowPos(chunk);
-            }
-        }
-
-        data.setLastRandomTick(chunk, currentTick);
     }
 
     private static BlockPos getSequentialSurfacePos(ServerLevel level, ChunkPos chunkPos, ChunkAccess access, ChunkData data, boolean updateChunk)
@@ -301,6 +358,12 @@ public final class WeatherHelpers
             data.iterateSnowPos(access);
         }
         return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos);
+    }
+
+    private static BlockPos getRandomSurfacePos(ServerLevel level, ChunkPos chunkPos)
+    {
+        final BlockPos randomPos = level.getBlockRandomPos(chunkPos.getMinBlockX(), 0, chunkPos.getMinBlockZ(), 15);
+        return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, randomPos);
     }
 
     private static int countExistingSnowInChunk(ServerLevel level, ChunkPos chunkPos)
@@ -382,8 +445,7 @@ public final class WeatherHelpers
 
     private static void handleSnowAccumulation(ServerLevel level, BlockPos surfacePos)
     {
-        // Handle smoother snow placement: if there's an adjacent position with less snow, switch to that position instead
-        // Additionally, handle up to two block tall plants if they can be piled
+        // Handle up to two block tall plants if they can be piled
         // This means we need to check three levels deep
         BlockPos groundPos, belowGroundPos;
 
@@ -393,7 +455,7 @@ public final class WeatherHelpers
 
         // Otherwise, try placing an ice pile
         // First, since we want to handle water with a single block above, if we find no water, but we find one below, we choose that instead
-        // However, we have to also exclude ice here, since we don't intend to freeze two layers down
+        // However, we have to also exclude ice here, since we don't intend to freeze two layers down, or under other fluids like rivers
         BlockState groundState = level.getBlockState(groundPos);
         if (isIce(groundState))
         {
@@ -401,6 +463,10 @@ public final class WeatherHelpers
         }
         if (groundState.getFluidState().getType() != Fluids.WATER)
         {
+            if (groundState.getBlock() instanceof LiquidBlock)
+            {
+                return;
+            }
             groundPos = belowGroundPos;
             groundState = level.getBlockState(groundPos);
         }
@@ -416,7 +482,7 @@ public final class WeatherHelpers
             {
                 BlockPos posAbove = iciclePos.above();
                 BlockState stateAbove = level.getBlockState(posAbove);
-                if (Helpers.isBlock(stateAbove, BlockTags.ICE))
+                if (Helpers.isBlock(stateAbove, BlockTags.ICE) || Helpers.isBlock(stateAbove, TFCTags.Blocks.NO_ICICLE_GENERATION))
                 {
                     return;
                 }
@@ -743,7 +809,8 @@ public final class WeatherHelpers
     {
         final float angle = wrappedPositiveAngle((float) Mth.atan2(wind.y, wind.x));
         int direction = granularCardinalIntFromAngle(angle);
-        switch (direction) {
+        switch (direction)
+        {
             case 0 -> {return Helpers.translateEnum(Direction.NORTH);}
             case 1 -> {return Component.translatable("tfc.direction.cardinal_granular", Helpers.translateEnum(Direction.NORTH), Component.translatable("tfc.direction.cardinal_northeast"));}
             case 2 -> {return Component.translatable("tfc.direction.cardinal_northeast");}

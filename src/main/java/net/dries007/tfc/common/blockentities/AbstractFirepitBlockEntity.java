@@ -35,6 +35,7 @@ import net.dries007.tfc.common.items.Powder;
 import net.dries007.tfc.common.items.TFCItems;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.SyncableContainerData;
+import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.ICalendarTickable;
 import net.dries007.tfc.util.data.Fuel;
 
@@ -67,6 +68,8 @@ public abstract class AbstractFirepitBlockEntity<C extends IItemHandlerModifiabl
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, AbstractFirepitBlockEntity<?> firepit)
     {
+        final boolean calendarAdvanced = firepit.lastPlayerTick != Calendars.SERVER.getTicks();
+
         firepit.checkForLastTickSync();
         firepit.checkForCalendarUpdate();
 
@@ -83,7 +86,7 @@ public abstract class AbstractFirepitBlockEntity<C extends IItemHandlerModifiabl
         }
 
         boolean isRaining = level.isRainingAt(pos);
-        if (state.getValue(FirepitBlock.LIT))
+        if (state.getValue(FirepitBlock.LIT) && calendarAdvanced)
         {
             // Update fuel
             if (firepit.burnTicks > 0)
@@ -215,7 +218,13 @@ public abstract class AbstractFirepitBlockEntity<C extends IItemHandlerModifiabl
     public void onCalendarUpdate(long ticks)
     {
         assert level != null;
-        if (level.getBlockState(worldPosition).getValue(FirepitBlock.LIT))
+        if (ticks <= 0)
+        {
+            return; // The calendar is paused, so no time has passed - see the note in serverTick()
+        }
+        // The block entity may outlive its block if something replaced it without removing the block entity
+        final BlockState state = level.getBlockState(worldPosition);
+        if (state.hasProperty(FirepitBlock.LIT) && state.getValue(FirepitBlock.LIT))
         {
             final HeatCapability.Remainder remainder = HeatCapability.consumeFuelForTicks(ticks, inventory, burnTicks, burnTemperature, SLOT_FUEL_CONSUME, SLOT_FUEL_INPUT);
 
@@ -224,7 +233,7 @@ public abstract class AbstractFirepitBlockEntity<C extends IItemHandlerModifiabl
             needsSlotUpdate = true;
             if (remainder.ticks() > 0) // Consumed all fuel, so extinguish and cool instantly
             {
-                extinguish(level.getBlockState(worldPosition));
+                extinguish(state);
                 coolInstantly();
             }
         }
@@ -253,6 +262,11 @@ public abstract class AbstractFirepitBlockEntity<C extends IItemHandlerModifiabl
         {
             level.setBlockAndUpdate(worldPosition, state.setValue(FirepitBlock.SMOKE_LEVEL, wantedSmokeLevel));
         }
+    }
+
+    public int getAirTicks()
+    {
+        return airTicks;
     }
 
     public void intakeAir(int amount)
@@ -455,7 +469,7 @@ public abstract class AbstractFirepitBlockEntity<C extends IItemHandlerModifiabl
 
     public void addAsh(int ash)
     {
-        this.ash = Math.min(8, ash);
+        this.ash = Math.min(8, this.ash + ash);
     }
 
     @Override

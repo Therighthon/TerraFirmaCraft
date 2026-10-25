@@ -6,7 +6,6 @@
 
 package net.dries007.tfc.util.registry;
 
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,6 +61,11 @@ public interface RegistryPlant
      * The year fraction after the start of blooming to stop displaying sprouting model and start displaying budding model
      */
     float getSproutingEnd();
+
+    /**
+     * The speed factor for TFC's custom entity-slowing behavior
+     */
+    float getSpeedFactor();
 
     @Nullable
     IntegerProperty getAgeProperty();

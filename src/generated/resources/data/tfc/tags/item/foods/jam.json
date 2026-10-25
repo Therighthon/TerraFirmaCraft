@@ -1,4 +1,7 @@
 {
+  "remove": [
+    "tfc:peanut_jam"
+  ],
   "values": [
     "tfc:blackberry_jam",
     "tfc:blueberry_jam",
@@ -20,7 +23,6 @@
     "tfc:peach_jam",
     "tfc:plum_jam",
     "tfc:red_apple_jam",
-    "tfc:pumpkin_chunks_jam",
     "tfc:melon_slice_jam",
     "tfc:peanut_jam"
   ]

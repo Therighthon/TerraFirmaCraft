@@ -14,14 +14,14 @@
     },
     {
       "type": "patchouli:text",
-      "text": "たとえば、1000 mB の $(thing)青銅$() (右の図) を作成するには、880 ～ 920 mB の $(thing)銅$() と、80 ～ 120 mB の $( thing)錫$()を混合します。$(br2)次の 3 ページには、3種類の青銅のレシピが表示されます。 それぞれのタイプの青銅は、ツール、$(l:mechanics/armor)防具$()、およびその他の金属アイテムの作成に使用できます。 それらはわずかに性能が異なるため、結果として得られるツールの耐久性、効率、攻撃ダメージは異なります。"
+      "text": "たとえば、1000 mB の $(thing)青銅$() (右の図) を作成するには、880 ～ 920 mB の $(thing)銅$() と、80 ～ 120 mB の $(thing)錫$()を混合します。$(br2)次の 3 ページには、3種類の青銅のレシピが表示されます。 それぞれのタイプの青銅は、ツール、$(l:mechanics/armor)防具$()、およびその他の金属アイテムの作成に使用できます。 それらはわずかに性能が異なるため、結果として得られるツールの耐久性、効率、攻撃ダメージは異なります。"
     },
     {
       "type": "patchouli:spotlight",
       "item": "tfc:metal/ingot/bronze",
       "title": "青銅",
       "link_recipes": false,
-      "text": "$(br)$(bold)必要:$()$(br)$(li)88 - 92 % : $(thing)銅$()$(li)8 - 12 % : $(thing)錫$( )$(br2)"
+      "text": "$(br)$(bold)必要:$()$(br)$(li)88 - 92 % : $(thing)銅$()$(li)8 - 12 % : $(thing)錫$()$(br2)"
     },
     {
       "type": "patchouli:spotlight",
@@ -39,7 +39,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "Other alloys are not suitable for creating tools. These are $(thing)Brass$(), $(thing)Rose Gold$(), and $(thing)Sterling Silver$().$(br2)$(thing)Brass$() is a useful alloy for all sorts of contraptions, including $(l:mechanics/mechanical_power)Mechanical Power$().$(br2)$(thing)Rose Gold$() and $(thing)Sterling Silver$() are used for crafting $(l:mechanics/steel#red_steel)Red Steel$() and $(l:mechanics/steel#blue_steel)Blue Steel$().",
+      "text": "Other alloys are not suitable for creating tools. These are $(thing)Brass$(), $(thing)Rose Gold$(), and $(thing)Sterling Silver$().$(br2)$(thing)Brass$() is a useful alloy for all sorts of contraptions, including $(l:mechanics/mechanical_power)Mechanical Power$().$(br2)$(thing)Rose Gold$() and $(thing)Sterling Silver$() are used for crafting $(l:metalworking/steel#red_steel)Red Steel$() and $(l:metalworking/steel#blue_steel)Blue Steel$().",
       "title": "Utility Alloys"
     },
     {
@@ -48,7 +48,7 @@
       "item": "tfc:metal/ingot/brass",
       "title": "Brass",
       "link_recipes": false,
-      "text": "$(br)$(bold)必要:$()$(br)$(li)88 - 92 % : $(thing)銅$()$(li)8 - 12 % : $(thing)錫$( )$(br2)"
+      "text": "$(br)$(bold)必要:$()$(br)$(li)88 - 92 % : $(thing)銅$()$(li)8 - 12 % : $(thing)錫$()$(br2)"
     },
     {
       "type": "patchouli:spotlight",
@@ -66,7 +66,7 @@
     }
   ],
   "read_by_default": true,
-  "sortnum": 5,
+  "sortnum": 6,
   "extra_recipe_mappings": {
     "tfc:metal/ingot/bronze": 3,
     "tfc:metal/ingot/bismuth_bronze": 4,

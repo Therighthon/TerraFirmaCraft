@@ -33,6 +33,7 @@ public class ItemStackModifiers
     public static final Id<CopyForgingBonusModifier> COPY_FORGING_BONUS = register("copy_forging_bonus", CopyForgingBonusModifier.INSTANCE);
     public static final Id<ResetFoodModifier> RESET_FOOD = register("reset_food", ResetFoodModifier.INSTANCE);
     public static final Id<EmptyBowlModifier> EMPTY_BOWL = register("empty_bowl", EmptyBowlModifier.INSTANCE);
+    public static final Id<FlowerCuttingModifier> FLOWER_CUTTING = register("flower_cutting", FlowerCuttingModifier.INSTANCE);
     public static final Id<AddBaitToRodModifier> ADD_BAIT_TO_ROD = register("add_bait_to_rod", AddBaitToRodModifier.INSTANCE);
     public static final Id<AddGlassModifier> ADD_GLASS = register("add_glass", AddGlassModifier.INSTANCE);
     public static final Id<AddPowderModifier> ADD_POWDER = register("add_powder", AddPowderModifier.INSTANCE);
@@ -41,6 +42,7 @@ public class ItemStackModifiers
 
     public static final Id<AddTraitModifier> ADD_TRAIT = register("add_trait", AddTraitModifier.CODEC, AddTraitModifier.STREAM_CODEC);
     public static final Id<RemoveTraitModifier> REMOVE_TRAIT = register("remove_trait", RemoveTraitModifier.CODEC, RemoveTraitModifier.STREAM_CODEC);
+    public static final Id<RoundCreationDateModifier> ROUND_CREATION_DATE = register("round_creation_date", RoundCreationDateModifier.INSTANCE);
     public static final Id<AddHeatModifier> ADD_HEAT = register("add_heat", AddHeatModifier.CODEC, AddHeatModifier.STREAM_CODEC);
     public static final Id<DyeLeatherModifier> DYE_LEATHER = register("dye_leather", DyeLeatherModifier.CODEC, DyeLeatherModifier.STREAM_CODEC);
     public static final Id<RemoveDyeModifier> REMOVE_DYE = register("remove_dye", RemoveDyeModifier.INSTANCE);

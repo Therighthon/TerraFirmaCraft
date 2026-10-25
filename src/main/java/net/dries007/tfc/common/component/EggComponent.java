@@ -6,12 +6,10 @@
 
 package net.dries007.tfc.common.component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -19,8 +17,10 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
+import net.dries007.tfc.common.component.food.FoodCapability;
 import net.dries007.tfc.common.entities.livestock.OviparousAnimal;
 import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.ICalendar;
@@ -28,7 +28,7 @@ import net.dries007.tfc.util.calendar.ICalendar;
 /**
  *
  * @param fertilized Is this egg fertilized?
- * @param hatchDay The day it will hatch, as per {@link ICalendar#getTotalDays()}
+ * @param hatchDay The day it will hatch, as per {@link ICalendar#getTotalCalendarDays()}
  * @param entity The saved NBT of the entity that it will hatch into
  */
 public record EggComponent(
@@ -63,7 +63,7 @@ public record EggComponent(
     {
         if (fertilized())
         {
-            final long remainingDays = hatchDay() - Calendars.CLIENT.getTotalDays();
+            final long remainingDays = hatchDay() - Calendars.CLIENT.getTotalCalendarDays();
             text.accept(Component.translatable("tfc.tooltip.fertilized"));
             if (remainingDays > 0)
             {
@@ -78,11 +78,12 @@ public record EggComponent(
 
     /**
      * Should only be invoked on logical server
-     * @return {@code true} if the egg is fertilized and is able to hatch today.
+     * @return {@code true} if the egg is fertilized and is able to hatch today. An egg that rotted before reaching its hatch day
+     * will never hatch, as the nest box would have hatched it on the day it was due, had it still been viable.
      */
-    public boolean canHatch()
+    public boolean canHatch(ItemStack stack)
     {
-        return fertilized && hatchDay <= Calendars.SERVER.getTotalDays();
+        return fertilized && hatchDay <= Calendars.SERVER.getTotalCalendarDays() && !FoodCapability.isRotten(stack);
     }
 
     /**

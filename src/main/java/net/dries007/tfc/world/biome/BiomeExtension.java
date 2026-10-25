@@ -7,7 +7,6 @@
 package net.dries007.tfc.world.biome;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,13 +39,15 @@ public final class BiomeExtension
     private final RiverBlendType riverBlendType;
     private final ShoreBlendType shoreBlendType;
     private final boolean salty;
-    private final boolean volcanic;
+    private final boolean hasCinderCones;
     private final boolean hasTuffCones;
     private final boolean hasTuyas;
-    private final int volcanoRarity;
-    private final int tuffRingRarity;
-    private final int tuyaRarity;
-    private final int volcanoBasaltHeight;
+    private final boolean hasStratovolcanoes;
+    private final boolean hasAtolls;
+    private final float centeredFeatureFrequency;
+    private final int centeredFeatureBaseHeight;
+    private final int centeredFeatureScaleHeight;
+    private final boolean centeredFeatureIce;
     private final boolean spawnable;
     private final boolean rivers;
     private final boolean shore;
@@ -57,7 +58,7 @@ public final class BiomeExtension
     @Nullable private Set<PlacedFeature> flattenedFeatureSet;
     @Nullable private Biome prevBiome;
 
-    BiomeExtension(ResourceKey<Biome> key, @Nullable Function<Seed, BiomeNoiseSampler> noiseFactory, SurfaceBuilderFactory surfaceBuilderFactory, AquiferLookahead aquiferSurfaceHeight, BiomeBlendType biomeBlendType, RiverBlendType riverBlendType, ShoreBlendType shoreBlendType, boolean salty, boolean volcanic, boolean hasTuffCones, boolean hasTuyas, int volcanoRarity, int volcanoBasaltHeight, int tuffRingRarity, int tuyaRarity, boolean spawnable, boolean rivers, boolean shore, int shoreBaseHeight, boolean sandyRiverShores)
+    BiomeExtension(ResourceKey<Biome> key, @Nullable Function<Seed, BiomeNoiseSampler> noiseFactory, SurfaceBuilderFactory surfaceBuilderFactory, AquiferLookahead aquiferSurfaceHeight, BiomeBlendType biomeBlendType, RiverBlendType riverBlendType, ShoreBlendType shoreBlendType, boolean salty, boolean hasCinderCones, boolean hasTuffCones, boolean hasTuyas, boolean hasAtolls, boolean hasStratovolcanoes, float centeredFeatureFrequency, int centeredFeatureBaseHeight, int centeredFeatureScaleHeight, boolean centeredFeatureIce, boolean spawnable, boolean rivers, boolean shore, int shoreBaseHeight, boolean sandyRiverShores)
     {
         this.key = key;
         this.noiseFactory = noiseFactory;
@@ -67,13 +68,15 @@ public final class BiomeExtension
         this.riverBlendType = riverBlendType;
         this.shoreBlendType = shoreBlendType;
         this.salty = salty;
-        this.volcanic = volcanic;
+        this.hasCinderCones = hasCinderCones;
         this.hasTuffCones = hasTuffCones;
         this.hasTuyas = hasTuyas;
-        this.volcanoRarity = volcanoRarity;
-        this.volcanoBasaltHeight = volcanoBasaltHeight;
-        this.tuffRingRarity = tuffRingRarity;
-        this.tuyaRarity = tuyaRarity;
+        this.hasAtolls = hasAtolls;
+        this.hasStratovolcanoes = hasStratovolcanoes;
+        this.centeredFeatureFrequency = centeredFeatureFrequency;
+        this.centeredFeatureBaseHeight = centeredFeatureBaseHeight;
+        this.centeredFeatureScaleHeight = centeredFeatureScaleHeight;
+        this.centeredFeatureIce = centeredFeatureIce;
         this.spawnable = spawnable;
         this.rivers = rivers;
         this.shore = shore;
@@ -111,9 +114,9 @@ public final class BiomeExtension
         return salty;
     }
 
-    public boolean isVolcanic()
+    public boolean hasCinderCones()
     {
-        return volcanic;
+        return hasCinderCones;
     }
 
     public boolean hasTuffRings()
@@ -124,6 +127,16 @@ public final class BiomeExtension
     public boolean hasTuyas()
     {
         return hasTuyas;
+    }
+
+    public boolean hasAtolls()
+    {
+        return hasAtolls;
+    }
+
+    public boolean hasStratovolcanoes()
+    {
+        return hasStratovolcanoes;
     }
 
     public boolean isSpawnable()
@@ -146,24 +159,24 @@ public final class BiomeExtension
         return shoreBaseHeight;
     }
 
-    public int getVolcanoRarity()
+    public float getCenteredFeatureFrequency()
     {
-        return volcanoRarity;
+        return centeredFeatureFrequency;
     }
 
-    public int getTuffRingRarity()
+    public int getCenteredFeatureScaleHeight()
     {
-        return tuffRingRarity;
+        return centeredFeatureScaleHeight;
     }
 
-    public int getTuyaRarity()
+    public int getCenteredFeatureBaseHeight()
     {
-        return tuyaRarity;
+        return centeredFeatureBaseHeight;
     }
 
-    public int getVolcanoBasaltHeight()
+    public boolean getCenteredFeatureIce()
     {
-        return volcanoBasaltHeight;
+        return centeredFeatureIce;
     }
 
     public double getAquiferSurfaceHeight(BiomeNoiseSampler sampler, int x, int z)
@@ -200,9 +213,4 @@ public final class BiomeExtension
         return flattenedFeatures;
     }
 
-    public Set<PlacedFeature> getFlattenedFeatureSet(Biome biome)
-    {
-        getFlattenedFeatures(biome);
-        return Objects.requireNonNull(flattenedFeatureSet);
-    }
 }

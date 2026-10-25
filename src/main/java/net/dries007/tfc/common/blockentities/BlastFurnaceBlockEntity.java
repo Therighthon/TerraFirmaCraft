@@ -7,7 +7,6 @@
 package net.dries007.tfc.common.blockentities;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -16,7 +15,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -52,15 +50,16 @@ import net.dries007.tfc.common.recipes.HeatingRecipe;
 import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.SyncableContainerData;
+import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.ICalendarTickable;
 import net.dries007.tfc.util.data.Fuel;
-
-import static net.dries007.tfc.TerraFirmaCraft.*;
 
 public class BlastFurnaceBlockEntity extends TickableInventoryBlockEntity<BlastFurnaceBlockEntity.BlastFurnaceInventory> implements ICalendarTickable, IHeatable
 {
     public static void serverTick(Level level, BlockPos pos, BlockState state, BlastFurnaceBlockEntity entity)
     {
+        final boolean calendarAdvanced = entity.lastPlayerTick != Calendars.SERVER.getTicks();
+
         entity.checkForLastTickSync();
         entity.checkForCalendarUpdate();
 
@@ -99,13 +98,16 @@ public class BlastFurnaceBlockEntity extends TickableInventoryBlockEntity<BlastF
         if (state.getValue(BlastFurnaceBlock.LIT))
         {
             // Update fuel
-            if (entity.burnTicks > 0)
+            if (calendarAdvanced)
             {
-                entity.burnTicks -= TFCConfig.SERVER.blastFurnaceFuelConsumptionMultiplier.get() * (entity.airTicks > 0 ? 2 : 1); // Fuel burns twice as fast using bellows
-            }
-            if (entity.burnTicks <= 0 && !entity.consumeFuel())
-            {
-                entity.extinguish(state);
+                if (entity.burnTicks > 0)
+                {
+                    entity.burnTicks -= TFCConfig.SERVER.blastFurnaceFuelConsumptionMultiplier.get() * (entity.airTicks > 0 ? 2 : 1); // Fuel burns twice as fast using bellows
+                }
+                if (entity.burnTicks <= 0 && !entity.consumeFuel())
+                {
+                    entity.extinguish(state);
+                }
             }
         }
         else if (entity.burnTemperature > 0)
@@ -365,19 +367,26 @@ public class BlastFurnaceBlockEntity extends TickableInventoryBlockEntity<BlastF
     public void onCalendarUpdate(long ticks)
     {
         assert level != null;
-
-        final HeatCapability.Remainder remainder = HeatCapability.consumeFuelForTicks(ticks, burnTicks, burnTemperature, fuelStacks);
-
-        burnTicks = remainder.burnTicks();
-        burnTemperature = remainder.burnTemperature();
-
-        if (remainder.ticks() > 0)
+        if (ticks <= 0)
         {
-            // Consumed all fuel, so extinguish and cool instantly
-            extinguish(getBlockState());
-            for (ItemStack stack : inputStacks)
+            return; // The calendar is paused, so no time has passed - see the note in serverTick()
+        }
+        final BlockState state = level.getBlockState(worldPosition);
+        if (state.hasProperty(BlastFurnaceBlock.LIT) && state.getValue(BlastFurnaceBlock.LIT))
+        {
+            final HeatCapability.Remainder remainder = HeatCapability.consumeFuelForTicks(ticks, burnTicks, burnTemperature, fuelStacks);
+
+            burnTicks = remainder.burnTicks();
+            burnTemperature = remainder.burnTemperature();
+
+            if (remainder.ticks() > 0)
             {
-                HeatCapability.setTemperature(stack, 0);
+                // Consumed all fuel, so extinguish and cool instantly
+                extinguish(state);
+                for (ItemStack stack : inputStacks)
+                {
+                    HeatCapability.setTemperature(stack, 0);
+                }
             }
         }
     }

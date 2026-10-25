@@ -6,6 +6,8 @@
 
 package net.dries007.tfc.data;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -15,6 +17,7 @@ import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.DamageTypeTags;
@@ -22,11 +25,14 @@ import net.minecraft.tags.PaintingVariantTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.tags.WorldPresetTags;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.dries007.tfc.common.TFCDamageTypes;
+import net.dries007.tfc.common.TFCTags;
+import net.dries007.tfc.data.providers.BuiltinBiomeTags;
 import net.dries007.tfc.data.providers.BuiltinBlockTags;
 import net.dries007.tfc.data.providers.BuiltinClimateRanges;
 import net.dries007.tfc.data.providers.BuiltinDamageTypes;
@@ -35,9 +41,11 @@ import net.dries007.tfc.data.providers.BuiltinDensityFunctions;
 import net.dries007.tfc.data.providers.BuiltinDeposits;
 import net.dries007.tfc.data.providers.BuiltinDrinkables;
 import net.dries007.tfc.data.providers.BuiltinEntityDamageResist;
+import net.dries007.tfc.data.providers.BuiltinEntityLoot;
 import net.dries007.tfc.data.providers.BuiltinEntityTags;
 import net.dries007.tfc.data.providers.BuiltinFauna;
 import net.dries007.tfc.data.providers.BuiltinFertilizers;
+import net.dries007.tfc.data.providers.BuiltinFieldGuideConfig;
 import net.dries007.tfc.data.providers.BuiltinFluidHeat;
 import net.dries007.tfc.data.providers.BuiltinFluidTags;
 import net.dries007.tfc.data.providers.BuiltinFoods;
@@ -50,9 +58,11 @@ import net.dries007.tfc.data.providers.BuiltinKnappingTypes;
 import net.dries007.tfc.data.providers.BuiltinLampFuels;
 import net.dries007.tfc.data.providers.BuiltinPaintings;
 import net.dries007.tfc.data.providers.BuiltinRecipes;
+import net.dries007.tfc.data.providers.BuiltinRockSettings;
 import net.dries007.tfc.data.providers.BuiltinSupports;
 import net.dries007.tfc.data.providers.BuiltinWorldPreset;
 import net.dries007.tfc.util.PhysicalDamageType;
+import net.dries007.tfc.world.settings.RockSettings;
 
 import static net.dries007.tfc.TerraFirmaCraft.*;
 
@@ -68,6 +78,7 @@ public final class DataEntryPoint
             event.getGenerator().getPackOutput(), event.getLookupProvider(),
             new RegistrySetBuilder()
                 .add(Registries.DENSITY_FUNCTION, BuiltinDensityFunctions::load)
+                .add(RockSettings.KEY, BuiltinRockSettings::new)
                 .add(Registries.WORLD_PRESET, BuiltinWorldPreset::load)
                 .add(Registries.PAINTING_VARIANT, BuiltinPaintings::new)
                 .add(Registries.DAMAGE_TYPE, BuiltinDamageTypes::new)
@@ -85,6 +96,7 @@ public final class DataEntryPoint
         add(event, new BuiltinItemTags(event, lookup, blockTags));
         add(event, new BuiltinFluidTags(event, lookup, drinkables));
         add(event, new BuiltinEntityTags(event, lookup));
+        add(event, new BuiltinBiomeTags(event, lookup));
         tags(event, Registries.PAINTING_VARIANT, lookup, (provider, tags) -> tags.tag(PaintingVariantTags.PLACEABLE).add(
             BuiltinPaintings.GOLDEN_FIELD,
             BuiltinPaintings.HOT_SPRING,
@@ -94,12 +106,13 @@ public final class DataEntryPoint
         ));
         tags(event, Registries.DAMAGE_TYPE, lookup, (provider, tags) -> {
             tags.tag(DamageTypeTags.NO_KNOCKBACK).add(
-                TFCDamageTypes.CORAL,
                 TFCDamageTypes.DEHYDRATION,
                 TFCDamageTypes.GRILL,
                 TFCDamageTypes.PLUCK,
-                TFCDamageTypes.POT
+                TFCDamageTypes.POT,
+                TFCDamageTypes.LOBSTER_TRAP
             );
+            tags.tag(TFCTags.DamageTypes.COUNTS_AS_PLAYER_KILL).add(TFCDamageTypes.LOBSTER_TRAP);
             tags.tag(PhysicalDamageType.IS_CRUSHING).add(
                 DamageTypes.IN_WALL,
                 DamageTypes.CRAMMING,
@@ -132,8 +145,20 @@ public final class DataEntryPoint
         add(event, new BuiltinSupports(output, lookup));
         add(event, new BuiltinClimateRanges(output, lookup));
         add(event, new BuiltinFauna(output, lookup));
+        add(event, new BuiltinFieldGuideConfig(output));
 
         add(event, new BuiltinDataMaps(output, lookup));
+
+        add(event,
+            new LootTableProvider(
+                output,
+                Collections.emptySet(),
+                List.of(
+                    new LootTableProvider.SubProviderEntry(BuiltinEntityLoot::new, LootContextParamSets.ENTITY)
+                ),
+                lookup
+            )
+        );
     }
 
     private static <T extends DataProvider> T add(GatherDataEvent event, T provider)

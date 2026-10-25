@@ -1,0 +1,7 @@
+{
+  "__comment__": "This file was automatically created by mcresources",
+  "name": "制作系统",
+  "description": "介绍群峦传说中的各种制作系统。",
+  "icon": "tfc:wood/workbench/sequoia",
+  "sortnum": 5
+}

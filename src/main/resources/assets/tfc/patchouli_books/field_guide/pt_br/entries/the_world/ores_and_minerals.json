@@ -6,7 +6,7 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "Os minérios e minerais em Terrafirmacraft são raros - ao contrário da baunilha, os minérios são encontrados em veias maciças, escassas e raras que requerem algumas $(l:mechanics/prospecting)prospecção$() localizar. Minérios diferentes também aparecerão em diferentes tipos de rochas e em diferentes elevações, o que significa encontrar o tipo de rocha certo na altitude certa é a chave para localizar o minério que você está procurando."
+      "text": "Os minérios e minerais em Terrafirmacraft são raros - ao contrário da baunilha, os minérios são encontrados em veias maciças, escassas e raras que requerem algumas $(l:metalworking/prospecting)prospecção$() localizar. Minérios diferentes também aparecerão em diferentes tipos de rochas e em diferentes elevações, o que significa encontrar o tipo de rocha certo na altitude certa é a chave para localizar o minério que você está procurando."
     },
     {
       "type": "patchouli:text",
@@ -15,7 +15,7 @@
     {
       "type": "patchouli:text",
       "anchor": "native_copper",
-      "text": "Native Copper is an ore of $(thing)Copper$() metal. It can be found in $(l:the_world/geology#igneous_extrusive)Igneous Extrusive$() rocks, at elevations above y=40.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:mechanics/panning)panned$().",
+      "text": "Native Copper is an ore of $(thing)Copper$() metal. It can be found in $(l:the_world/geology#igneous_extrusive)Igneous Extrusive$() rocks, at elevations above y=40.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:getting_started/panning)panned$().",
       "title": "Cobre nativo"
     },
     {
@@ -66,7 +66,7 @@
     {
       "type": "patchouli:text",
       "anchor": "native_gold",
-      "text": "Native Gold is an ore of $(thing)Gold$() metal. It can be found at elevations below y=70, but deeper veins are larger and richer. It can be found in $(l:the_world/geology#igneous_extrusive)Igneous Extrusive$() and $(l:the_world/geology#igneous_intrusive)Igneous Intrusive$() rocks.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:mechanics/panning)panned$().",
+      "text": "Native Gold is an ore of $(thing)Gold$() metal. It can be found at elevations below y=70, but deeper veins are larger and richer. It can be found in $(l:the_world/geology#igneous_extrusive)Igneous Extrusive$() and $(l:the_world/geology#igneous_intrusive)Igneous Intrusive$() rocks.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:getting_started/panning)panned$().",
       "title": "Ouro nativo"
     },
     {
@@ -117,7 +117,7 @@
     {
       "type": "patchouli:text",
       "anchor": "native_silver",
-      "text": "Native Silver is an ore of $(thing)Silver$() metal. Small poor veins can be found in $(thing)Granite$() or $(thing)Diorite$() in uplift regions, above y=90. Larger and richer veins can be found in $(thing)Granite$(), $(thing)Diorite$(), $(thing)Schist$(), and $(thing)Gneiss$() deep underground below y=20.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:mechanics/panning)panned$().",
+      "text": "Native Silver is an ore of $(thing)Silver$() metal. Small poor veins can be found in $(thing)Granite$() or $(thing)Diorite$() in uplift regions, above y=90. Larger and richer veins can be found in $(thing)Granite$(), $(thing)Diorite$(), $(thing)Schist$(), and $(thing)Gneiss$() deep underground below y=20.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:getting_started/panning)panned$().",
       "title": "Prata nativa"
     },
     {
@@ -270,7 +270,7 @@
     {
       "type": "patchouli:text",
       "anchor": "cassiterite",
-      "text": "Cassiterite is an ore of $(thing)Tin$() metal. It can be found in $(l:the_world/geology#igneous_intrusive)Igneous Intrusive$() rocks at high elevation, above y=80 in uplift regions or in dikes.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:mechanics/panning)panned$().",
+      "text": "Cassiterite is an ore of $(thing)Tin$() metal. It can be found in $(l:the_world/geology#igneous_intrusive)Igneous Intrusive$() rocks at high elevation, above y=80 in uplift regions or in dikes.$(br2)It can also be found in deposits in $(thing)rivers$(), which can be $(l:getting_started/panning)panned$().",
       "title": "Cassiterito"
     },
     {
@@ -648,7 +648,7 @@
         }
       },
       "name": "",
-      "text": "Lignite",
+      "text": "Lignite.",
       "enable_visualize": false
     },
     {
@@ -684,7 +684,7 @@
       "item": "tfc:kaolin_clay",
       "title": "Caulinita",
       "link_recipes": false,
-      "text": "Kaolinite is a soft $(thing)Mineral$() which is used in the construction of $(l:mechanics/fire_clay)Fire Clay$(). It can be found spawning at high altitudes in Plateaus, Old Mountains, Rolling Hills, and Highlands, at a $(l:the_world/climate#temperature)temperature$() of at least 18°C, with a $(l:the_world/climate#rainfall)rainfall$() of at least 300mm. The $(thing)Blood Lily$() flower grows on Kaolin clay."
+      "text": "Kaolinite is a soft $(thing)Mineral$() which is used in the construction of $(l:metalworking/fire_clay)Fire Clay$(). It can be found spawning at high altitudes in Plateaus, Old Mountains, Rolling Hills, and Highlands, at a $(l:core_mechanics/climate#temperature)temperature$() of at least $(cfg:temperature:18), with a $(l:core_mechanics/climate#rainfall)rainfall$() of at least 300mm. The $(thing)Blood Lily$() flower grows on Kaolin clay."
     },
     {
       "type": "tfc:multimultiblock",
@@ -766,7 +766,7 @@
       "item": "tfc:ore/graphite",
       "title": "Grafite",
       "link_recipes": false,
-      "text": "Graphite is a $(thing)Mineral$() which is used in the construction of $(l:mechanics/fire_clay)Fire Clay$(). It can be found in $(thing)Gneiss$(), $(thing)Marble$(), $(thing)Quartzite$(), and $(thing)Schist$() rocks, in elevations below y=60."
+      "text": "Graphite is a $(thing)Mineral$() which is used in the construction of $(l:metalworking/fire_clay)Fire Clay$(). It can be found in $(thing)Gneiss$(), $(thing)Marble$(), $(thing)Quartzite$(), and $(thing)Schist$() rocks, in elevations below y=60."
     },
     {
       "type": "patchouli:multiblock",
@@ -793,7 +793,7 @@
       "item": "tfc:ore/cinnabar",
       "title": "Cinnabar",
       "link_recipes": false,
-      "text": "Cinnabar is a $(thing)Mineral$() which can be ground in the $(l:mechanics/quern)Quern$() to obtain $(thing)Redstone Dust$(). It can be found in veins deep underground, in $(thing)Quartzite$(), $(thing)Granite$(), $(thing)Phyllite$(), and $(thing)Schist$()."
+      "text": "Cinnabar is a $(thing)Mineral$() which can be ground in the $(l:crafting/quern)Quern$() to obtain $(thing)Redstone Dust$(). It can be found in veins deep underground or high in mountains, in $(thing)Quartzite$(), $(thing)Granite$(), $(thing)Phyllite$(), $(thing)Schist$(), and $(thing)Gneiss$()."
     },
     {
       "type": "patchouli:multiblock",
@@ -820,7 +820,7 @@
       "item": "tfc:ore/cryolite",
       "title": "Criolito",
       "link_recipes": false,
-      "text": "Cryolite is a $(thing)Mineral$() which can be ground in the $(l:mechanics/quern)Quern$() to obtain $(thing)Redstone Dust$(). It can be found in veins deep underground, in $(thing)Granite$(), and $(thing)Diorite$()."
+      "text": "Cryolite is a $(thing)Mineral$() which can be ground in the $(l:crafting/quern)Quern$() to obtain $(thing)Redstone Dust$(). It can be found in veins deep underground, in $(thing)Granite$(), and $(thing)Diorite$()."
     },
     {
       "type": "patchouli:multiblock",
@@ -847,7 +847,7 @@
       "item": "tfc:ore/saltpeter",
       "title": "Salitre",
       "link_recipes": false,
-      "text": "Saltpeter is a $(thing)Mineral$() which can be ground in the $(l:mechanics/quern)Quern$(), and then used in the crafting of $(thing)Gunpowder$(). It can be found in very large flat deposits near the surface in $(l:the_world/geology#sedimentary)Sedimentary$() rocks."
+      "text": "Saltpeter is a $(thing)Mineral$() which can be ground in the $(l:crafting/quern)Quern$(), and then used in the crafting of $(thing)Gunpowder$(). It can be found in very large flat deposits near the surface in $(l:the_world/geology#sedimentary)Sedimentary$() rocks."
     },
     {
       "type": "patchouli:multiblock",
@@ -874,7 +874,7 @@
       "item": "tfc:ore/sulfur",
       "title": "Enxofre",
       "link_recipes": false,
-      "text": "Sulfur is a $(thing)Mineral$() which can be ground in the $(l:mechanics/quern)Quern$(), and then used in the crafting of $(thing)Gunpowder$(). It is found near lava level deep underground, in sparse but large and plentiful veins, in any $(l:the_world/geology#metamorphic)Metamorphic$() or $(l:the_world/geology#igneous_intrusive)Igneous Intrusive$() rock."
+      "text": "Sulfur is a $(thing)Mineral$() which can be ground in the $(l:crafting/quern)Quern$(), and then used in the crafting of $(thing)Gunpowder$(). It is found near lava level deep underground, in sparse but large and plentiful veins, in any $(l:the_world/geology#metamorphic)Metamorphic$() or $(l:the_world/geology#igneous_intrusive)Igneous Intrusive$() rock."
     },
     {
       "type": "patchouli:multiblock",
@@ -901,7 +901,7 @@
       "item": "tfc:ore/sylvite",
       "title": "Sylvite",
       "link_recipes": false,
-      "text": "Sylvite is a $(thing)Mineral$() which can be ground in the $(l:mechanics/quern)Quern$(), and then used as a $(l:mechanics/fertilizers)Fertilizer$(). It can be found in very large flat deposits near the surface in $(thing)Shale$(), $(thing)Claystone$() and $(thing)Chert$()."
+      "text": "Sylvite is a $(thing)Mineral$() which can be ground in the $(l:crafting/quern)Quern$(), and then used as a $(l:food/fertilizers)Fertilizer$(). It can be found in very large flat deposits near the surface in $(thing)Shale$(), $(thing)Claystone$() and $(thing)Chert$()."
     },
     {
       "type": "patchouli:multiblock",
@@ -928,7 +928,7 @@
       "item": "tfc:ore/borax",
       "title": "Borax",
       "link_recipes": false,
-      "text": "Borax is a $(thing)Mineral$() which can be ground in the $(l:mechanics/quern)Quern$() to produce $(l:mechanics/flux)Flux$(). It can be found in very large flat deposits near the surface in $(thing)Claystone$(), $(thing)Limestone$(), and $(thing)Shale$()."
+      "text": "Borax is a $(thing)Mineral$() which can be ground in the $(l:crafting/quern)Quern$() to produce $(l:metalworking/flux)Flux$(). It can be found in very large flat deposits near the surface in $(thing)Claystone$(), $(thing)Limestone$(), and $(thing)Shale$()."
     },
     {
       "type": "patchouli:multiblock",
@@ -982,7 +982,7 @@
       "item": "tfc:ore/halite",
       "title": "Halita",
       "link_recipes": false,
-      "text": "Halite is a $(thing)Mineral$() which can be ground in the $(l:mechanics/quern)Quern$() to make $(thing)Salt$(), which is an important $(l:mechanics/decay#salting)Preservative$(). It can be found in very large flat deposits near the surface in $(l:the_world/geology#sedimentary)Sedimentary$() rocks."
+      "text": "Halite is a $(thing)Mineral$() which can be ground in the $(l:crafting/quern)Quern$() to make $(thing)Salt$(), which is an important $(l:food/decay#salting)Preservative$(). It can be found in very large flat deposits near the surface in $(l:the_world/geology#sedimentary)Sedimentary$() rocks."
     },
     {
       "type": "patchouli:multiblock",
@@ -1009,7 +1009,7 @@
       "item": "tfc:ore/emerald",
       "title": "Esmeralda",
       "link_recipes": false,
-      "text": "Emerald é um decorativo $(l:mechanics/gems)pedra preciosa$(). Parece muito bem, talvez se você pudesse encontrar alguém neste mundo incrivelmente solitário, você poderia trocá-lo com eles...$(br2)Aparece em formações verticais finas de minério, que podem ter até 60 quarteirões de altura. Pode ser encontrado em $(l:the_world/geology#igneous_intrusive)Intrusivo ígneo$() pedras."
+      "text": "Emerald is a $(l:mechanics/gems)Gemstone$(). It looks quite pretty, maybe if you could find someone else in this incredibly lonely world you could trade it with them...$(br2)It appears in thin vertical ore formations which can be up to a hundred blocks tall. It can be found in $(l:the_world/geology#igneous_intrusive)Igneous Intrusive$() rocks, or associated with hotsprings."
     },
     {
       "type": "patchouli:multiblock",
@@ -1036,7 +1036,7 @@
       "item": "tfc:ore/diamond",
       "title": "Kimberlite",
       "link_recipes": false,
-      "text": "Kimberlite é decorativo e inestimável $(l:mechanics/gems)pedra preciosa$(). Aparece em finas formações de minério vertical chamadas $(l:https://en.wikipedia.org/wiki/Volcanic_pipe)Tubos de Kimberlite$() que pode ter até 60 quarteirões de altura. Só pode ser encontrado em $(thing)Gabro$()."
+      "text": "Kimberlite is a decorative and priceless $(l:mechanics/gems)Gemstone$(). It appears in thin vertical ore formations called $(l:https://en.wikipedia.org/wiki/Volcanic_pipe)Kimberlite Pipes$() which can be up to a hundred blocks tall. These can only be found in $(thing)Gabbro$(). Kimberlite also occurs rarely in volcanic fissures."
     },
     {
       "type": "patchouli:multiblock",
@@ -1063,7 +1063,7 @@
       "item": "tfc:ore/lapis_lazuli",
       "title": "Lapis Lazuli",
       "link_recipes": false,
-      "text": "Lapis Lazuli is a decorative $(thing)Mineral$() which can be used to make $(l:mechanics/dye)Blue Dye$(). It can be found in large, but sparse veins in $(thing)Limestone$() and $(thing)Marble$(), between y=-20 and y=80."
+      "text": "Lapis Lazuli is a decorative $(l:mechanics/gems)Gemstone$() which can be used to make $(l:mechanics/dye)Blue Dye$(). It can be found in large, but sparse veins in $(thing)Limestone$() and $(thing)Marble$(), between y=-20 and y=80."
     },
     {
       "type": "patchouli:multiblock",
@@ -1090,7 +1090,7 @@
       "item": "tfc:ore/amethyst",
       "title": "Amethyst",
       "link_recipes": false,
-      "text": "Amethyst is a decorative $(thing)Mineral$() which can be used to make $(l:mechanics/glassworking)Glass$(). It can be found in $(thing)Sedimentary$() and $(thing)Metamorphic$() rock beneath rivers above y=40."
+      "text": "Amethyst is a decorative $(l:mechanics/gems)Gemstone$() which can be used to make $(l:crafting/glassworking)Glass$(). It can be found in $(thing)Sedimentary$() and $(thing)Metamorphic$() rock beneath rivers above y=40, or in geodes below y=30."
     },
     {
       "type": "patchouli:multiblock",
@@ -1117,7 +1117,7 @@
       "item": "tfc:ore/opal",
       "title": "Opal",
       "link_recipes": false,
-      "text": "Opal is a decorative $(thing)Mineral$(). It can be found in $(thing)Sedimentary) and $(thing)Igneous Extrusive$() rock beneath rivers above y=40."
+      "text": "Opal is a decorative $(l:mechanics/gems)Gemstone$(). It can be found in $(thing)Sedimentary$() and $(thing)Igneous Extrusive$() rock beneath rivers above y=40."
     },
     {
       "type": "patchouli:multiblock",
@@ -1140,11 +1140,11 @@
     },
     {
       "type": "patchouli:spotlight",
-      "anchor": "ruby",
-      "item": "tfc:ore/ruby",
-      "title": "Ruby",
+      "anchor": "pyrite",
+      "item": "tfc:ore/pyrite",
+      "title": "Pyrite",
       "link_recipes": false,
-      "text": "Ruby is a decorative $(thing)Mineral$(). It can be found in $(thing)Schist$() and $(thing)Gneiss$() rock below y=-10."
+      "text": "Pyrite, or fool's gold, is a decorative $(l:mechanics/gems)Gemstone$(). It can be found in $(thing)Igneous Intrusive$() and $(thing)Igneous Extrusive$() below y=70."
     },
     {
       "type": "patchouli:multiblock",
@@ -1158,11 +1158,92 @@
           ]
         ],
         "mapping": {
-          "X": "tfc:ore/ruby/schist"
+          "X": "tfc:ore/pyrite/granite"
         }
       },
       "name": "",
-      "text": "Ruby in Schist.",
+      "text": "Pyrite in Granite.",
+      "enable_visualize": false
+    },
+    {
+      "type": "patchouli:spotlight",
+      "anchor": "ruby",
+      "item": "tfc:ore/ruby",
+      "title": "Ruby",
+      "link_recipes": false,
+      "text": "Ruby is a decorative $(l:mechanics/gems)Gemstone$(). It can be found rarely in $(thing)Marble$() rock below y=-10, or more commonly in veins of $(thing)Marble$() rock Collisional Mountains"
+    },
+    {
+      "type": "patchouli:multiblock",
+      "multiblock": {
+        "pattern": [
+          [
+            "X"
+          ],
+          [
+            "0"
+          ]
+        ],
+        "mapping": {
+          "X": "tfc:ore/ruby/marble"
+        }
+      },
+      "name": "",
+      "text": "Ruby in Marble.",
+      "enable_visualize": false
+    },
+    {
+      "type": "patchouli:spotlight",
+      "anchor": "sapphire",
+      "item": "tfc:ore/sapphire",
+      "title": "Sapphire",
+      "link_recipes": false,
+      "text": "Sapphire is a decorative $(l:mechanics/gems)Gemstone$(). It can be found $(thing)Hot Springs$() fissures."
+    },
+    {
+      "type": "patchouli:multiblock",
+      "multiblock": {
+        "pattern": [
+          [
+            "X"
+          ],
+          [
+            "0"
+          ]
+        ],
+        "mapping": {
+          "X": "tfc:ore/sapphire/gabbro"
+        }
+      },
+      "name": "",
+      "text": "Sapphire in Gabbro.",
+      "enable_visualize": false
+    },
+    {
+      "type": "patchouli:spotlight",
+      "anchor": "topaz",
+      "item": "tfc:ore/topaz",
+      "title": "Topaz",
+      "link_recipes": false,
+      "text": "Topaz is a decorative $(l:mechanics/gems)Gemstone$(). It can be found in the fissures of Volcanoes."
+    },
+    {
+      "type": "patchouli:multiblock",
+      "multiblock": {
+        "pattern": [
+          [
+            "X"
+          ],
+          [
+            "0"
+          ]
+        ],
+        "mapping": {
+          "X": "tfc:ore/topaz/schist"
+        }
+      },
+      "name": "",
+      "text": "Topaz in Schist.",
       "enable_visualize": false
     }
   ],
@@ -1238,6 +1319,9 @@
     "tfc:ore/lapis_lazuli": 54,
     "tfc:ore/amethyst": 56,
     "tfc:ore/opal": 58,
-    "tfc:ore/ruby": 60
+    "tfc:ore/pyrite": 60,
+    "tfc:ore/ruby": 62,
+    "tfc:ore/sapphire": 64,
+    "tfc:ore/topaz": 66
   }
 }

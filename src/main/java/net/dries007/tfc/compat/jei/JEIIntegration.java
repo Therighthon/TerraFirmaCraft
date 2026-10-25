@@ -26,6 +26,7 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.IRecipeTransferRegistration;
 import mezz.jei.api.registration.IVanillaCategoryExtensionRegistration;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -92,6 +93,7 @@ import net.dries007.tfc.compat.jei.category.InstantBarrelRecipeCategory;
 import net.dries007.tfc.compat.jei.category.InstantFluidBarrelRecipeCategory;
 import net.dries007.tfc.compat.jei.category.JamPotRecipeCategory;
 import net.dries007.tfc.compat.jei.category.KnappingRecipeCategory;
+import net.dries007.tfc.compat.jei.category.LampFuelRecipeCategory;
 import net.dries007.tfc.compat.jei.category.LoomRecipeCategory;
 import net.dries007.tfc.compat.jei.category.QuernRecipeCategory;
 import net.dries007.tfc.compat.jei.category.ScrapingRecipeCategory;
@@ -106,8 +108,11 @@ import net.dries007.tfc.compat.jei.transfer.BarrelTransferInfo;
 import net.dries007.tfc.compat.jei.transfer.FluidIgnoringRecipeTransferHandler;
 import net.dries007.tfc.compat.jei.transfer.PotTransferInfo;
 import net.dries007.tfc.compat.jei.transfer.WeldingRecipeTransferInfo;
+import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
+import net.dries007.tfc.util.Metal;
 import net.dries007.tfc.util.data.KnappingType;
+import net.dries007.tfc.util.data.LampFuel;
 
 @JeiPlugin
 public final class JEIIntegration implements IModPlugin
@@ -115,50 +120,51 @@ public final class JEIIntegration implements IModPlugin
     public static final IIngredientTypeWithSubtypes<Item, ItemStack> ITEM_STACK = VanillaTypes.ITEM_STACK;
     public static final IIngredientType<FluidStack> FLUID_STACK = NeoForgeTypes.FLUID_STACK;
 
-    public static final RecipeType<HeatingRecipe> HEATING = type("heating", HeatingRecipe.class);
-    public static final RecipeType<ScrapingRecipe> SCRAPING = type("scraping", ScrapingRecipe.class);
-    public static final RecipeType<QuernRecipe> QUERN = type("quern", QuernRecipe.class);
-    public static final RecipeType<PotRecipe> SOUP_POT = type("soup_pot", PotRecipe.class);
-    public static final RecipeType<PotRecipe> SIMPLE_POT = type("simple_pot", PotRecipe.class);
-    public static final RecipeType<PotRecipe> JAM_POT = type("jam_pot", PotRecipe.class);
-    public static final RecipeType<CastingRecipe> CASTING = type("casting", CastingRecipe.class);
-    public static final RecipeType<LoomRecipe> LOOM = type("loom", LoomRecipe.class);
-    public static final RecipeType<AlloyRecipe> ALLOYING = type("alloying", AlloyRecipe.class);
-    public static final RecipeType<SealedBarrelRecipe> SEALED_BARREL = type("sealed_barrel", SealedBarrelRecipe.class);
-    public static final RecipeType<InstantBarrelRecipe> INSTANT_BARREL = type("instant_barrel", InstantBarrelRecipe.class);
-    public static final RecipeType<InstantFluidBarrelRecipe> INSTANT_FLUID_BARREL = type("instant_fluid_barrel", InstantFluidBarrelRecipe.class);
-    public static final RecipeType<BloomeryRecipe> BLOOMERY = type("bloomery", BloomeryRecipe.class);
-    public static final RecipeType<WeldingRecipe> WELDING = type("welding", WeldingRecipe.class);
-    public static final RecipeType<AnvilRecipe> ANVIL = type("anvil", AnvilRecipe.class);
-    public static final RecipeType<ChiselRecipe> CHISEL = type("chisel", ChiselRecipe.class);
-    public static final RecipeType<GlassworkingRecipe> GLASSWORKING = type("glassworking", GlassworkingRecipe.class);
-    public static final RecipeType<BlastFurnaceRecipe> BLAST_FURNACE = type("blast_furnace", BlastFurnaceRecipe.class);
-    public static final RecipeType<SewingRecipe> SEWING = type("sewing", SewingRecipe.class);
+    public static final RecipeType<RecipeHolder<HeatingRecipe>> HEATING = type("heating", HeatingRecipe.class);
+    public static final RecipeType<RecipeHolder<ScrapingRecipe>> SCRAPING = type("scraping", ScrapingRecipe.class);
+    public static final RecipeType<RecipeHolder<QuernRecipe>> QUERN = type("quern", QuernRecipe.class);
+    public static final RecipeType<RecipeHolder<PotRecipe>> SOUP_POT = type("soup_pot", PotRecipe.class);
+    public static final RecipeType<RecipeHolder<PotRecipe>> SIMPLE_POT = type("simple_pot", PotRecipe.class);
+    public static final RecipeType<RecipeHolder<PotRecipe>> JAM_POT = type("jam_pot", PotRecipe.class);
+    public static final RecipeType<RecipeHolder<CastingRecipe>> CASTING = type("casting", CastingRecipe.class);
+    public static final RecipeType<RecipeHolder<LoomRecipe>> LOOM = type("loom", LoomRecipe.class);
+    public static final RecipeType<RecipeHolder<AlloyRecipe>> ALLOYING = type("alloying", AlloyRecipe.class);
+    public static final RecipeType<RecipeHolder<SealedBarrelRecipe>> SEALED_BARREL = type("sealed_barrel", SealedBarrelRecipe.class);
+    public static final RecipeType<RecipeHolder<InstantBarrelRecipe>> INSTANT_BARREL = type("instant_barrel", InstantBarrelRecipe.class);
+    public static final RecipeType<RecipeHolder<InstantFluidBarrelRecipe>> INSTANT_FLUID_BARREL = type("instant_fluid_barrel", InstantFluidBarrelRecipe.class);
+    public static final RecipeType<RecipeHolder<BloomeryRecipe>> BLOOMERY = type("bloomery", BloomeryRecipe.class);
+    public static final RecipeType<RecipeHolder<WeldingRecipe>> WELDING = type("welding", WeldingRecipe.class);
+    public static final RecipeType<RecipeHolder<AnvilRecipe>> ANVIL = type("anvil", AnvilRecipe.class);
+    public static final RecipeType<RecipeHolder<ChiselRecipe>> CHISEL = type("chisel", ChiselRecipe.class);
+    public static final RecipeType<RecipeHolder<GlassworkingRecipe>> GLASSWORKING = type("glassworking", GlassworkingRecipe.class);
+    public static final RecipeType<RecipeHolder<BlastFurnaceRecipe>> BLAST_FURNACE = type("blast_furnace", BlastFurnaceRecipe.class);
+    public static final RecipeType<RecipeHolder<SewingRecipe>> SEWING = type("sewing", SewingRecipe.class);
 
-    private static final Map<KnappingType, RecipeType<KnappingRecipe>> KNAPPING_TYPES = new HashMap<>();
+    public static final RecipeType<LampFuel> LAMP_FUEL = RecipeType.create(TerraFirmaCraft.MOD_ID, "lamp_fuel", LampFuel.class);
 
-    public static RecipeType<KnappingRecipe> getKnappingType(Map.Entry<ResourceLocation, KnappingType> entry)
+    private static final Map<KnappingType, RecipeType<RecipeHolder<KnappingRecipe>>> KNAPPING_TYPES = new HashMap<>();
+
+    public static RecipeType<RecipeHolder<KnappingRecipe>> getKnappingType(Map.Entry<ResourceLocation, KnappingType> entry)
     {
         return KNAPPING_TYPES.computeIfAbsent(entry.getValue(), key -> type(entry.getKey().getPath() + "_knapping", KnappingRecipe.class));
     }
 
-    private static <T> RecipeType<T> type(String name, Class<T> clazz)
+    private static <T extends Recipe<?>> RecipeType<RecipeHolder<T>> type(String name, Class<T> kind)
     {
-        return RecipeType.create(TerraFirmaCraft.MOD_ID, name, clazz);
+        return RecipeType.createRecipeHolderType(Helpers.resourceLocation(TerraFirmaCraft.MOD_ID, name));
     }
 
-    private static <C extends RecipeInput, T extends Recipe<C>> List<T> recipes(Supplier<net.minecraft.world.item.crafting.RecipeType<T>> type)
+    private static <C extends RecipeInput, T extends Recipe<C>> List<RecipeHolder<T>> recipes(Supplier<net.minecraft.world.item.crafting.RecipeType<T>> type)
     {
         return recipes(type, e -> true);
     }
 
-    private static <C extends RecipeInput, T extends Recipe<C>> List<T> recipes(Supplier<net.minecraft.world.item.crafting.RecipeType<T>> type, Predicate<T> filter)
+    private static <C extends RecipeInput, T extends Recipe<C>> List<RecipeHolder<T>> recipes(Supplier<net.minecraft.world.item.crafting.RecipeType<T>> type, Predicate<T> filter)
     {
         return ClientHelpers.getLevelOrThrow().getRecipeManager()
             .getAllRecipesFor(type.get())
             .stream()
-            .map(RecipeHolder::value)
-            .filter(filter)
+            .filter(holder -> filter.test(holder.value()))
             .toList();
     }
 
@@ -202,7 +208,8 @@ public final class JEIIntegration implements IModPlugin
             new ChiselRecipeCategory(CHISEL, gui),
             new GlassworkingRecipeCategory(GLASSWORKING, gui),
             new BlastFurnaceRecipeCategory(BLAST_FURNACE, gui),
-            new SewingRecipeCategory(SEWING, gui)
+            new SewingRecipeCategory(SEWING, gui),
+            new LampFuelRecipeCategory(LAMP_FUEL, gui)
         );
 
         for (var entry : KnappingType.MANAGER.getElements().entrySet())
@@ -233,6 +240,7 @@ public final class JEIIntegration implements IModPlugin
         registry.addRecipes(GLASSWORKING, recipes(TFCRecipeTypes.GLASSWORKING));
         registry.addRecipes(BLAST_FURNACE, recipes(TFCRecipeTypes.BLAST_FURNACE));
         registry.addRecipes(SEWING, recipes(TFCRecipeTypes.SEWING));
+        registry.addRecipes(LAMP_FUEL, LampFuel.MANAGER.getValues().stream().toList());
 
         KNAPPING_TYPES.forEach((knappingType, recipeType) -> registry.addRecipes(recipeType, recipes(TFCRecipeTypes.KNAPPING, r -> r.knappingType().get().equals(knappingType))));
     }
@@ -247,7 +255,7 @@ public final class JEIIntegration implements IModPlugin
         registry.addRecipeCatalyst(new ItemStack(TFCBlocks.CERAMIC_BOWL.get()), SOUP_POT);
         registry.addRecipeCatalyst(new ItemStack(Items.BOWL), SOUP_POT);
         registry.addRecipeCatalyst(new ItemStack(TFCItems.POT.get()), JAM_POT);
-        registry.addRecipeCatalyst(new ItemStack(TFCItems.EMPTY_JAR_WITH_LID), JAM_POT);
+        addRecipeCatalyst(registry, TFCTags.Items.EMPTY_JARS_WITH_LID, JAM_POT);
         registry.addRecipeCatalyst(new ItemStack(TFCBlocks.CRUCIBLE.get()), ALLOYING);
         registry.addRecipeCatalyst(new ItemStack(TFCItems.VESSEL.get()), ALLOYING);
         registry.addRecipeCatalyst(new ItemStack(TFCBlocks.BLOOMERY.get()), BLOOMERY);
@@ -270,13 +278,24 @@ public final class JEIIntegration implements IModPlugin
         addRecipeCatalyst(registry, TFCTags.Items.ANVILS, ANVIL);
 
         addRecipeCatalyst(registry, Wood.BlockType.LOOM, LOOM);
+        registry.addRecipeCatalyst(new ItemStack(TFCBlocks.POWER_LOOM), LOOM);
+
         addRecipeCatalyst(registry, Wood.BlockType.BARREL, SEALED_BARREL);
         addRecipeCatalyst(registry, Wood.BlockType.BARREL, INSTANT_BARREL);
         addRecipeCatalyst(registry, Wood.BlockType.BARREL, INSTANT_FLUID_BARREL);
 
+        for (var metalEntry : TFCBlocks.METALS.values())
+        {
+            var lamp = metalEntry.get(Metal.BlockType.LAMP);
+            if (lamp != null)
+            {
+                registry.addRecipeCatalyst(new ItemStack(lamp.get()), LAMP_FUEL);
+            }
+        }
+
         for (var entry : KnappingType.MANAGER.getElements().entrySet())
         {
-            final RecipeType<KnappingRecipe> recipeType = getKnappingType(entry);
+            final RecipeType<RecipeHolder<KnappingRecipe>> recipeType = getKnappingType(entry);
             for (ItemStack item : entry.getValue().inputItem().ingredient().getItems())
             {
                 registry.addRecipeCatalyst(item, recipeType);
@@ -288,7 +307,7 @@ public final class JEIIntegration implements IModPlugin
     public void registerGuiHandlers(IGuiHandlerRegistration registry)
     {
         registry.addRecipeClickArea(KnappingScreen.class, 97, 44, 22, 15, KNAPPING_TYPES.values().toArray(RecipeType[]::new));
-        registry.addRecipeClickArea(AnvilScreen.class, 26, 24, 9, 14, ANVIL, WELDING);
+        registry.addRecipeClickArea(AnvilScreen.class, 140, 40, 9, 14, ANVIL, WELDING);
         registry.addRecipeClickArea(BarrelScreen.class, 92, 21, 9, 14, SEALED_BARREL, INSTANT_BARREL, INSTANT_FLUID_BARREL);
         registry.addRecipeClickArea(CrucibleScreen.class, 82, 100, 10, 15, HEATING);
         registry.addRecipeClickArea(CrucibleScreen.class, 139, 100, 10, 15, ALLOYING, CASTING);
@@ -298,6 +317,10 @@ public final class JEIIntegration implements IModPlugin
         registry.addRecipeClickArea(SewingTableScreen.class, 125, 84, 22, 15, SEWING);
 
         // Fix inventory tab button overlap
+        if (TFCConfig.CLIENT.enableTabsInCreative.get())
+        {
+            registry.addGuiContainerHandler(CreativeModeInventoryScreen.class, new TFCInventoryGuiHandler<>());
+        }
         registry.addGuiContainerHandler(InventoryScreen.class, new TFCInventoryGuiHandler<>());
         registry.addGuiContainerHandler(CalendarScreen.class, new TFCInventoryGuiHandler<>());
         registry.addGuiContainerHandler(ClimateScreen.class, new TFCInventoryGuiHandler<>());

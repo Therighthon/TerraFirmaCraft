@@ -24,6 +24,8 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.common.Tags;
+import net.neoforged.neoforge.common.crafting.CompoundIngredient;
+
 import net.dries007.tfc.common.TFCTags;
 import net.dries007.tfc.common.blocks.plant.Plant;
 import net.dries007.tfc.common.blocks.rock.Ore;
@@ -44,6 +46,7 @@ import net.dries007.tfc.common.recipes.ingredients.AndIngredient;
 import net.dries007.tfc.common.recipes.ingredients.FluidContentIngredient;
 import net.dries007.tfc.common.recipes.ingredients.LacksTraitIngredient;
 import net.dries007.tfc.common.recipes.ingredients.NotRottenIngredient;
+import net.dries007.tfc.common.recipes.outputs.FlowerCuttingModifier;
 import net.dries007.tfc.common.recipes.outputs.MealModifier;
 import net.dries007.tfc.util.Metal;
 
@@ -68,6 +71,8 @@ public interface CraftingRecipes extends Recipes
             "bricks",
             "bucket",
             "campfire",
+            "chiseled_bookshelf",
+            "copper_door",
             "chest",
             "minecart",
             "chest_minecart",
@@ -92,6 +97,7 @@ public interface CraftingRecipes extends Recipes
             "jack_o_lantern",
             "lantern",
             "leather_boots",
+            "leather_helmet",
             "leather_chestplate",
             "leather_horse_armor",
             "leather_leggings",
@@ -118,6 +124,7 @@ public interface CraftingRecipes extends Recipes
             "soul_torch",
             "spire_armor_trim_smithing_template",
             "stone_axe",
+            "stone_pickaxe",
             "stone_hoe",
             "stone_shovel",
             "stone_sword",
@@ -138,7 +145,8 @@ public interface CraftingRecipes extends Recipes
             "wooden_pickaxe",
             "wooden_shovel",
             "wooden_sword",
-            "snow_block"
+            "snow_block",
+            "wolf_armor"
         );
         for (String material : List.of("diamond", "golden", "iron"))
             remove(
@@ -158,7 +166,8 @@ public interface CraftingRecipes extends Recipes
             remove(
                 color.getSerializedName() + "_stained_glass",
                 color.getSerializedName() + "_stained_glass_pane",
-                color.getSerializedName() + "_stained_glass_pane_from_glass_pane"
+                color.getSerializedName() + "_stained_glass_pane_from_glass_pane",
+                "dye_" + color.getSerializedName() + "_bed"
             );
         }
 
@@ -167,8 +176,6 @@ public interface CraftingRecipes extends Recipes
         add("food_combining", FoodCombiningCraftingRecipe.INSTANCE);
 
         // ===== Crafting Recipes =====
-
-        // todo: pass over new recipes from 1.21, are there any we need to nuke / replace easily?
 
         recipe("small")
             .input(TFCBlocks.HARDENED_CLAY)
@@ -186,6 +193,18 @@ public interface CraftingRecipes extends Recipes
             .inputIsPrimary(TFCItems.SANDPAPER)
             .input(TFCItems.ORES.get(gem))
             .shapeless(item));
+
+        recipe()
+            .inputIsPrimary(TFCItems.FLOWER_CUTTING)
+            .input(TFCItems.COMPOST)
+            .addOutputModifier(FlowerCuttingModifier.INSTANCE)
+            .shapeless("flower_cutting");
+        recipe()
+            .input('S', TFCItems.STRAW)
+            .input('M', TFCTags.Items.MUD)
+            .input('F', ItemTags.FLOWERS)
+            .pattern("FFF", "SMS", " S ")
+            .shaped(TFCItems.BASKET);
 
         TFCBlocks.ALABASTER_BRICKS.forEach((color, block) -> addDecorations(block, TFCBlocks.ALABASTER_BRICK_DECORATIONS.get(color)));
         TFCBlocks.POLISHED_ALABASTER.forEach((color, block) -> addDecorations(block, TFCBlocks.ALABASTER_POLISHED_DECORATIONS.get(color)));
@@ -298,7 +317,7 @@ public interface CraftingRecipes extends Recipes
                 .input('X', brick)
                 .input('M', TFCItems.MORTAR)
                 .pattern("X X", "MXM")
-                .shaped(blocks.get(Rock.BlockType.AQUEDUCT));
+                .shaped(blocks.get(Rock.BlockType.AQUEDUCT), 2);
             recipe()
                 .input(Ingredient.of(
                     blocks.get(Rock.BlockType.LOOSE),
@@ -403,6 +422,27 @@ public interface CraftingRecipes extends Recipes
         addTools(RockCategory.ItemType.KNIFE_HEAD, RockCategory.ItemType.KNIFE);
         addTools(RockCategory.ItemType.SHOVEL_HEAD, RockCategory.ItemType.SHOVEL);
 
+        addBoneHandledTool(TFCItems.OBSIDIAN_AXE_HEAD, TFCItems.OBSIDIAN_AXE);
+        addBoneHandledTool(TFCItems.OBSIDIAN_HAMMER_HEAD, TFCItems.OBSIDIAN_HAMMER);
+        addBoneHandledTool(TFCItems.OBSIDIAN_HOE_HEAD, TFCItems.OBSIDIAN_HOE);
+        addBoneHandledTool(TFCItems.OBSIDIAN_JAVELIN_HEAD, TFCItems.OBSIDIAN_JAVELIN);
+        addBoneHandledTool(TFCItems.OBSIDIAN_KNIFE_HEAD, TFCItems.OBSIDIAN_KNIFE);
+        addBoneHandledTool(TFCItems.OBSIDIAN_SHOVEL_HEAD, TFCItems.OBSIDIAN_SHOVEL);
+
+        final Ingredient handle = CompoundIngredient.of(Ingredient.of(Tags.Items.RODS_WOODEN), Ingredient.of(Items.BONE));
+        recipe()
+            .input('S', handle)
+            .input('X', TFCBlocks.GROUNDCOVER.get(GroundcoverBlockType.OBSIDIAN_SHARD))
+            .pattern("XS", "SX")
+            .shaped(TFCItems.OBSIDIAN_MACUAHUITL);
+
+        recipe()
+            .input('X', TFCBlocks.GROUNDCOVER.get(GroundcoverBlockType.OBSIDIAN_SHARD))
+            .input('S', Tags.Items.RODS_WOODEN)
+            .input('F', Tags.Items.FEATHERS)
+            .pattern("X", "S", "F")
+            .shaped(Items.ARROW, 4);
+
         for (Wood wood : Wood.values())
         {
             final var blocks = TFCBlocks.WOODS.get(wood);
@@ -438,6 +478,11 @@ public interface CraftingRecipes extends Recipes
                 .input('L', lumber)
                 .pattern("LLL", "L L", "LLL")
                 .shaped(blocks.get(Wood.BlockType.CHEST));
+            recipe()
+                .input('L', lumber)
+                .input('S', blocks.get(Wood.BlockType.STRIPPED_LOG))
+                .pattern("SLS", "L L", "SLS")
+                .shaped(blocks.get(Wood.BlockType.CRATE));
             recipe()
                 .input(blocks.get(Wood.BlockType.CHEST))
                 .input(Items.MINECART)
@@ -581,15 +626,38 @@ public interface CraftingRecipes extends Recipes
             recipe().to2x2(blocks.get(Wood.BlockType.LOG), blocks.get(Wood.BlockType.WOOD), 3);
             recipe().to2x2(planks, blocks.get(Wood.BlockType.WORKBENCH), 1);
         }
+        recipe()
+            .input('P', TFCBlocks.WOODS.get(Wood.PALM).get(Wood.BlockType.SLAB))
+            .pattern("P", "P")
+            .shaped(TFCBlocks.PALM_MOSAIC.get());
+        recipe()
+            .input('B', TFCBlocks.PALM_MOSAIC.get())
+            .pattern("B  ", "BB ", "BBB")
+            .shaped(TFCBlocks.PALM_MOSAIC_STAIRS, 8);
+        recipe()
+            .input('B', TFCBlocks.PALM_MOSAIC.get())
+            .pattern("BBB")
+            .shaped(TFCBlocks.PALM_MOSAIC_SLAB, 6);
 
         for (DyeColor color : DyeColor.values())
         {
-            replace(color.getSerializedName() + "_bed")
-                .input('D', dyeOf(color))
-                .input('H', TFCTags.Items.HIGH_QUALITY_CLOTH)
-                .input('L', TFCTags.Items.LUMBER)
-                .pattern("DDD", "HHH", "LLL")
-                .shaped(dyedOf(color, "bed"));
+            if (color == DyeColor.WHITE)
+            {
+                replace(color.getSerializedName() + "_bed")
+                    .input('H', TFCTags.Items.HIGH_QUALITY_CLOTH)
+                    .input('L', TFCTags.Items.LUMBER)
+                    .pattern("HHH", "LLL")
+                    .shaped(dyedOf(color, "bed"));
+            }
+            else
+            {
+                replace(color.getSerializedName() + "_bed")
+                    .input('D', dyeOf(color))
+                    .input('H', TFCTags.Items.HIGH_QUALITY_CLOTH)
+                    .input('L', TFCTags.Items.LUMBER)
+                    .pattern("DDD", "HHH", "LLL")
+                    .shaped(dyedOf(color, "bed"));
+            }
             replace(color.getSerializedName() + "_concrete_powder")
                 .input(Tags.Items.GRAVELS, 4)
                 .input(Tags.Items.SANDS, 4)
@@ -622,7 +690,7 @@ public interface CraftingRecipes extends Recipes
 
         TFCItems.JAM.forEach((food, item) ->
             recipe()
-                .input(TFCItems.UNSEALED_FRUIT_PRESERVES.get(food))
+                .input(notRotten(Ingredient.of(TFCItems.UNSEALED_FRUIT_PRESERVES.get(food))))
                 .shapeless(item));
 
         replace("activator_rail")
@@ -725,11 +793,11 @@ public interface CraftingRecipes extends Recipes
             .pattern("G", "P")
             .shaped(Items.STICKY_PISTON);
         replace("tripwire_hook")
-            .input('S', ingredientOf(Metal.WROUGHT_IRON, Metal.ItemType.SHEET))
+            .input('S', ingredientOf(Metal.WROUGHT_IRON, Metal.ItemType.INGOT))
             .input('L', TFCTags.Items.LUMBER)
             .input('R', Tags.Items.RODS_WOODEN)
-            .pattern("S", "L", "R")
-            .shaped(Items.TRIPWIRE_HOOK);
+            .pattern("S", "R", "L")
+            .shaped(Items.TRIPWIRE_HOOK, 2);
         replace("smithing_table")
             .input('D', Tags.Items.DYES_BLACK)
             .input('S', ingredientOf(Metal.WROUGHT_IRON, Metal.ItemType.SHEET))
@@ -783,6 +851,57 @@ public interface CraftingRecipes extends Recipes
             .input(TFCTags.Items.ROCK_KNAPPING)
             .input(TFCItems.BLANK_DISC)
             .shapeless(Items.MUSIC_DISC_11);
+        recipe()
+            .input(FluidContentIngredient.of(Fluids.LAVA, 1000))
+            .input(TFCItems.BLANK_DISC)
+            .input(TFCItems.ORE_POWDERS.get(Ore.NATIVE_GOLD))
+            .shapeless(Items.MUSIC_DISC_PIGSTEP);
+        recipe()
+            .input(TFCTags.Items.ROCK_KNAPPING)
+            .input(Items.MUSIC_DISC_11)
+            .shapeless(Items.DISC_FRAGMENT_5, 8);
+        replace("music_disc_5")
+            .input('D', TFCItems.BLANK_DISC)
+            .input('F', Items.DISC_FRAGMENT_5)
+            .pattern("FFF", "FDF", "FFF")
+            .shaped(Items.MUSIC_DISC_5);
+        recipe()
+            .input('D', TFCItems.BLANK_DISC)
+            .input('M', TFCItems.ORE_POWDERS.get(Ore.MALACHITE))
+            .pattern("MMM", "MDM", "MMM")
+            .shaped(Items.MUSIC_DISC_CREATOR);
+        recipe()
+            .input('D', TFCItems.BLANK_DISC)
+            .input('N', TFCItems.ORE_POWDERS.get(Ore.NATIVE_COPPER))
+            .pattern("NNN", "NDN", "NNN")
+            .shaped(Items.MUSIC_DISC_CREATOR_MUSIC_BOX);
+        recipe()
+            .input('D', TFCItems.BLANK_DISC)
+            .input('O', TFCItems.ORE_POWDERS.get(Ore.OPAL))
+            .pattern("OOO", "ODO", "OOO")
+            .shaped(Items.MUSIC_DISC_PRECIPICE);
+        recipe()
+            .input('D', TFCItems.BLANK_DISC)
+            .input('S', TFCItems.ORE_POWDERS.get(Ore.SAPPHIRE))
+            .pattern("SSS", "SDS", "SSS")
+            .shaped(Items.MUSIC_DISC_RELIC);
+        // For the future
+        //recipe()
+        //    .input('D', TFCItems.BLANK_DISC)
+        //    .input('L', TFCItems.ORE_POWDERS.get(Ore.LAPIS_LAZULI))
+        //    .pattern("LLL", "LDL", "LLL")
+        //    .shaped(Items.MUSIC_DISC_TEARS);
+        //recipe()
+        //    .input(FluidContentIngredient.of(Fluids.LAVA, 1000))
+        //    .input(TFCItems.BLANK_DISC)
+        //    .input(TFCItems.FOOD.get(Food.CHICKEN))
+        //    .shapeless(Items.MUSIC_DISC_LAVA_CHICKEN);
+        // Longer Future
+        //recipe()
+        //    .input('D', TFCItems.BLANK_DISC)
+        //    .input('G', TFCItems.GLUE)
+        //    .pattern("GGG", "GDG", "GGG")
+        //    .shaped(Items.MUSIC_DISC_BOUNCE);
         replace("fire_charge")
             .input(Items.GUNPOWDER)
             .input(ItemTags.COALS)
@@ -966,7 +1085,7 @@ public interface CraftingRecipes extends Recipes
             .input('M', FluidContentIngredient.of(Fluids.WATER, 100))
             .input('S', TFCTags.Items.SWEETENERS)
             .input('E', notRotten(Ingredient.of(Items.EGG)))
-            .input('F', TFCTags.Items.FLOUR)
+            .input('F', notRotten(Ingredient.of(TFCTags.Items.FLOUR)))
             .pattern(" M ", "SES", "FFF")
             .shaped(TFCBlocks.CAKE);
         recipe()
@@ -990,9 +1109,13 @@ public interface CraftingRecipes extends Recipes
             .input(Items.CLAY_BALL)
             .shapeless(TFCItems.DAUB, 2);
         recipe().bricksWithMortar(TFCItems.FIRE_BRICK, TFCBlocks.FIRE_BRICKS, 4);
-        recipe()
+        recipe("from_iron")
             .input(TFCBlocks.FIRE_BRICKS)
             .input(ingredientOf(Metal.WROUGHT_IRON, Metal.ItemType.SHEET))
+            .shapeless(TFCBlocks.REINFORCED_FIRE_BRICKS);
+        recipe("from_steel")
+            .input(TFCBlocks.FIRE_BRICKS)
+            .input(ingredientOf(Metal.STEEL, Metal.ItemType.SHEET))
             .shapeless(TFCBlocks.REINFORCED_FIRE_BRICKS);
         recipe()
             .input(TFCItems.POWDERS.get(Powder.KAOLINITE), 4)
@@ -1044,6 +1167,10 @@ public interface CraftingRecipes extends Recipes
             .input('X', TFCItems.JUTE_FIBER)
             .pattern("X X", " X ", "X X")
             .shaped(TFCItems.JUTE_NET);
+        recipe()
+            .input('X', TFCItems.JUTE_FIBER)
+            .pattern("X ", " X")
+            .shaped(TFCItems.ROPE, 2);
         replace("lead")
             .input('X', TFCItems.JUTE_FIBER)
             .pattern(" XX", " XX", "X  ")
@@ -1119,6 +1246,7 @@ public interface CraftingRecipes extends Recipes
             .input(TFCItems.POWDERS.get(Powder.SALT))
             .copyInput()
             .addTrait(FoodTraits.SALTED)
+            .roundCreationDate()
             .shapeless("salting");
         recipe()
             .input(Items.PAPER)
@@ -1128,8 +1256,8 @@ public interface CraftingRecipes extends Recipes
             .input(TFCTags.Items.GEM_POWDERS)
             .shapeless(TFCItems.SANDPAPER);
         recipe()
-            .input(TFCTags.Items.MUD_BRICK_ITEMS)
             .input(TFCItems.DAUB)
+            .input(TFCTags.Items.MUD_BRICKS)
             .shapeless(TFCBlocks.SMOOTH_MUD_BRICKS);
         recipe()
             .input(TFCItems.GLUE)
@@ -1147,6 +1275,11 @@ public interface CraftingRecipes extends Recipes
             .input('M', TFCItems.BRASS_MECHANISMS)
             .pattern("PGM", " P ")
             .shaped(TFCBlocks.STEEL_PUMP);
+        recipe()
+            .input('S', commonTagOf(Metal.STEEL, Metal.ItemType.ROD))
+            .input('G', TFCItems.GLUE)
+            .pattern("S ", "SG")
+            .shaped(TFCBlocks.STEEL_ROPE_ANCHOR);
         recipe()
             .input('X', Tags.Items.RODS_WOODEN)
             .pattern("XXX", "XXX", "XXX")
@@ -1187,6 +1320,13 @@ public interface CraftingRecipes extends Recipes
             .input('R', ingredientOf(Metal.STEEL, Metal.ItemType.ROD))
             .pattern("SMR", "SMR")
             .shaped(TFCBlocks.TRIP_HAMMER);
+        recipe()
+            .input('S', ingredientOf(Metal.STEEL, Metal.ItemType.SHEET))
+            .input('M', TFCItems.BRASS_MECHANISMS)
+            .input('R', Tags.Items.RODS_WOODEN)
+            .input('L', TFCTags.Items.LOOMS)
+            .pattern("SRS", "RMR", "MLM")
+            .shaped(TFCBlocks.POWER_LOOM);
         recipe()
             .input('X', ItemTags.LOGS)
             .pattern("X", "X")
@@ -1230,7 +1370,7 @@ public interface CraftingRecipes extends Recipes
             .input(TFCItems.CANOLA)
             .shapeless(TFCItems.STRAW);
         recipe()
-            .input('S', ingredientOf(Metal.CAST_IRON, Metal.ItemType.DOUBLE_SHEET))
+            .input('S', ingredientOf(Metal.CAST_IRON, Metal.ItemType.SHEET))
             .pattern(" S ", "S S", " S ")
             .shaped(TFCBlocks.STOVE);
         recipe()
@@ -1265,6 +1405,20 @@ public interface CraftingRecipes extends Recipes
             .input('S', TFCBlocks.SNOW_BLOCK)
             .pattern("SS ", "SS ", "   ")
             .shaped(TFCBlocks.SNOW_BRICKS);
+        for (DyeColor color : DyeColor.values())
+        {
+            recipe()
+                .input('S', Tags.Items.RODS_WOODEN)
+                .input('P', ItemTags.PLANKS)
+                .input('D', dyeOf(color))
+                .pattern("S", "P", "D")
+                .shaped(TFCBlocks.BUOYS.get(color));
+        }
+        recipe()
+            .input('M', TFCItems.BRASS_MECHANISMS)
+            .input('G', TFCTags.Items.METAL_GRATES)
+            .pattern("MGM")
+            .shaped(TFCBlocks.LOBSTER_TRAP);
     }
 
     /**
@@ -1322,7 +1476,8 @@ public interface CraftingRecipes extends Recipes
         final var meal = new MealModifier(
             FoodData.ofFood(1f, 0.5f, 4.5f),
             List.of(
-                new MealModifier.MealPortion(Optional.of(Ingredient.of(TFCItems.FOOD.get(bread))), 0.5f, 0.5f, 0.5f),
+                // For a 3-ingredient sandwich, average nutritional value is 0.75, matching salads
+                new MealModifier.MealPortion(Optional.of(Ingredient.of(TFCItems.FOOD.get(bread))), 0.675f, 0.5f, 0.5f),
                 new MealModifier.MealPortion(Optional.empty(), 0.8f, 0.8f, 0.8f)
             ));
 
@@ -1333,21 +1488,27 @@ public interface CraftingRecipes extends Recipes
             .copyFood()
             .extraProduct(TFCItems.STRAW)
             .shapeless(TFCItems.FOOD.get(grain));
-        recipe()
-            .input('K', TFCTags.Items.TOOLS_KNIFE)
-            .input('B', notRotten(bread))
-            .input('S', notRotten(Ingredient.of(TFCTags.Items.USABLE_IN_SANDWICH)))
-            .pattern("KB ", "SSS", " B ")
-            .damageInputs()
-            .addOutputModifier(meal)
-            .shaped(TFCItems.FOOD.get(sandwich), 2);
 
-        for (String pattern : List.of("JSS", "SJS", "SSJ"))
+        // Non-jam sandwiches
+        for (String pattern : List.of("SSS", "SS ", " SS", "S S", "S  ", " S ", "  S"))
+        {
+            recipe(pattern.replace(" ", "x").toLowerCase())
+                .input('K', TFCTags.Items.TOOLS_KNIFE)
+                .input('B', notRotten(bread))
+                .input('S', notRotten(Ingredient.of(TFCTags.Items.USABLE_IN_SANDWICH)))
+                .pattern("KB ", pattern, " B ")
+                .damageInputs()
+                .addOutputModifier(meal)
+                .shaped(TFCItems.FOOD.get(sandwich), 1);
+        }
+
+        // Two and three ingredient jam sandwiches
+        for (String pattern : List.of("JSS", "SJS", "SSJ", "JS ", "SJ ", " JS", " SJ", "S J", "J S"))
         {
             String variant = "_jar";
             for (TagKey<Item> tag : List.of(TFCTags.Items.PRESERVES, TFCTags.Items.JAM))
             {
-                recipe("" + pattern.indexOf('J') + variant)
+                recipe("" + pattern.replace(" ", "x").toLowerCase() + variant)
                     .input('K', TFCTags.Items.TOOLS_KNIFE)
                     .input('B', notRotten(bread))
                     .input('S', notRotten(Ingredient.of(TFCTags.Items.USABLE_IN_JAM_SANDWICH)))
@@ -1355,11 +1516,28 @@ public interface CraftingRecipes extends Recipes
                     .pattern("KB ", pattern, " B ")
                     .damageInputs()
                     .addOutputModifier(meal)
-                    .shaped(TFCItems.FOOD.get(jamSandwich), 2);
+                    .shaped(TFCItems.FOOD.get(jamSandwich));
                 variant = "_jam";
             }
         }
 
+        // One item jam sandwiches
+        for (String pattern : List.of(" J ", "J  ", "  J"))
+        {
+            String variant = "_jar";
+            for (TagKey<Item> tag : List.of(TFCTags.Items.PRESERVES, TFCTags.Items.JAM))
+            {
+                recipe("" + pattern.replace(" ", "x").toLowerCase() + variant)
+                    .input('K', TFCTags.Items.TOOLS_KNIFE)
+                    .input('B', notRotten(bread))
+                    .input('J', notRotten(Ingredient.of(tag)))
+                    .pattern("KB ", pattern, " B ")
+                    .damageInputs()
+                    .addOutputModifier(meal)
+                    .shaped(TFCItems.FOOD.get(jamSandwich));
+                variant = "_jam";
+            }
+        }
 
         for (int n = 1; n <= 8; n++)
             recipe("" + n)
@@ -1386,10 +1564,19 @@ public interface CraftingRecipes extends Recipes
     {
         for (RockCategory type : RockCategory.values())
             recipe()
-                .input('S', Tags.Items.RODS_WOODEN)
+                .input('S', CompoundIngredient.of(Ingredient.of(Tags.Items.RODS_WOODEN), Ingredient.of(Items.BONE)))
                 .input('X', TFCItems.ROCK_TOOLS.get(type).get(input))
                 .pattern("X", "S")
                 .shaped(TFCItems.ROCK_TOOLS.get(type).get(output));
+    }
+
+    private void addBoneHandledTool(ItemLike input, ItemLike output)
+    {
+        recipe()
+            .input('S', CompoundIngredient.of(Ingredient.of(Tags.Items.RODS_WOODEN), Ingredient.of(Items.BONE)))
+            .input('X', input)
+            .pattern("X", "S")
+            .shaped(output);
     }
 
     private Ingredient notRotten(Food food)

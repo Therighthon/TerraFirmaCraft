@@ -23,10 +23,10 @@ public class BuiltinDamageTypes
     {
         this.context = context;
 
-        register(TFCDamageTypes.CORAL, 0.1f, DamageEffects.HURT);
         register(TFCDamageTypes.DEHYDRATION, 0f, DamageEffects.HURT);
         register(TFCDamageTypes.GRILL, 0.1f, DamageEffects.BURNING);
         register(TFCDamageTypes.PLUCK, 0f, DamageEffects.HURT);
+        register(TFCDamageTypes.LOBSTER_TRAP, 0f, DamageEffects.HURT);
         register(TFCDamageTypes.POT, 0.1f, DamageEffects.BURNING);
     }
 

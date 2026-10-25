@@ -6,11 +6,18 @@
 
 package net.dries007.tfc.common.blocks.plant;
 
+import java.util.Comparator;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -19,23 +26,29 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.neoforged.neoforge.common.Tags;
 
 import net.dries007.tfc.client.ClientHelpers;
 import net.dries007.tfc.client.ClimateRenderCache;
+import net.dries007.tfc.client.overworld.SolarCalculator;
 import net.dries007.tfc.client.particle.Butterfly;
+import net.dries007.tfc.client.particle.Moth;
 import net.dries007.tfc.client.particle.TFCParticles;
 import net.dries007.tfc.common.TFCTags;
 import net.dries007.tfc.common.blocks.ExtendedProperties;
+import net.dries007.tfc.common.blocks.ISlowEntities;
 import net.dries007.tfc.common.blocks.TFCBlockStateProperties;
+import net.dries007.tfc.common.items.FlowerCuttingItem;
 import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
 import net.dries007.tfc.util.calendar.Calendars;
 import net.dries007.tfc.util.calendar.Season;
 import net.dries007.tfc.util.registry.RegistryPlant;
 
-public abstract class PlantBlock extends TFCBushBlock
+public abstract class PlantBlock extends TFCBushBlock implements ISlowEntities
 {
     public static final IntegerProperty AGE = TFCBlockStateProperties.AGE_3;
 
@@ -168,15 +181,27 @@ public abstract class PlantBlock extends TFCBushBlock
 
             // These two methods allow placing extra per block
             @Override
-            protected boolean canBeReplaced(BlockState state, BlockPlaceContext useContext) {
-                return !useContext.isSecondaryUseActive() && useContext.getItemInHand().is(this.asItem()) && state.getValue(AGE) < 3 || super.canBeReplaced(state, useContext);
+            protected boolean canBeReplaced(BlockState state, BlockPlaceContext useContext)
+            {
+                IntegerProperty ageProp = getPlant().getAgeProperty();
+                if (!useContext.isSecondaryUseActive() && useContext.getItemInHand().is(this.asItem()))
+                {
+                    if (ageProp != null && state.getValue(ageProp) < getMaxAgeValue())
+                    {
+                        return true;
+                    }
+                }
+                return super.canBeReplaced(state, useContext);
             }
 
             @Nullable
-            public BlockState getStateForPlacement(BlockPlaceContext context) {
+            public BlockState getStateForPlacement(BlockPlaceContext context)
+            {
                 BlockState state = context.getLevel().getBlockState(context.getClickedPos());
-                if (Helpers.isBlock(state, this)) {
-                    return state.setValue(AGE, Math.min(3, state.getValue(AGE) + 1));
+                IntegerProperty ageProp = getPlant().getAgeProperty();
+                if (ageProp != null && Helpers.isBlock(state, this))
+                {
+                    return state.setValue(ageProp, Math.min(getMaxAgeValue(), state.getValue(ageProp) + 1));
                 }
                 return super.getStateForPlacement(context);
             }
@@ -207,14 +232,46 @@ public abstract class PlantBlock extends TFCBushBlock
     }
 
     @Override
+    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hitResult)
+    {
+        if (Helpers.isItem(stack, Tags.Items.TOOLS_SHEAR) && Helpers.isBlock(state, BlockTags.FLOWERS))
+        {
+            if (!level.isClientSide)
+            {
+                Helpers.damageItem(stack, player, hand);
+                level.playSound(null, pos, SoundEvents.SHEEP_SHEAR, SoundSource.BLOCKS, 1.0f, 1.0f);
+                level.removeBlock(pos, false);
+                Block.popResource(level, pos, FlowerCuttingItem.of(new ItemStack(this)));
+            }
+            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        }
+        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+    }
+
+    @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random)
     {
-        if (random.nextInt(400) == 0 && Helpers.isBlock(state, BlockTags.FLOWERS) && Calendars.CLIENT.getHemispheralCalendarMonthOfYear(ClientHelpers.inNorthernHemisphere()).getSeason() == Season.SPRING)
+
+        if (random.nextInt(200) == 0 && Helpers.isBlock(state, BlockTags.FLOWERS) && !level.isRaining())
         {
-            final Butterfly but = Butterfly.getRandomButterfly(ClimateRenderCache.INSTANCE.getTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
-            if (but != null)
+            final int dayTime = SolarCalculator.getSunBasedDayTime(pos.getZ(), ClimateRenderCache.INSTANCE.getHemisphereScale(), Calendars.CLIENT.getCalendarFractionOfYear(), Calendars.CLIENT.getCalendarFractionOfDay());
+            if (dayTime < 12_000)
             {
-                level.addParticle(TFCParticles.BUTTERFLIES.get(but).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                // During the day, spawn butterflies
+                final Butterfly but = Butterfly.getRandomButterfly(ClimateRenderCache.INSTANCE.getInstantTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
+                if (but != null)
+                {
+                    level.addParticle(TFCParticles.BUTTERFLIES.get(but).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                }
+            }
+            else
+            {
+                // During the night, spawn moths
+                final Moth moth = Moth.getRandomMoth(ClimateRenderCache.INSTANCE.getInstantTemperature(), ClimateRenderCache.INSTANCE.getAverageGroundwater(), random);
+                if (moth != null)
+                {
+                    level.addParticle(TFCParticles.MOTHS.get(moth).get(), pos.getX() + random.nextFloat(), pos.getY() + random.nextFloat(), pos.getZ() + random.nextFloat(), 0, 0, 0);
+                }
             }
         }
     }
@@ -231,10 +288,11 @@ public abstract class PlantBlock extends TFCBushBlock
         final IntegerProperty ageProp = getPlant().getAgeProperty();
         if (ageProp != null)
         {
+            final int maxAge = getMaxAgeValue();
             final int age = state.getValue(ageProp);
-            if (random.nextDouble() < TFCConfig.SERVER.plantGrowthChance.get() && age < 3)
+            if (random.nextDouble() < TFCConfig.SERVER.plantGrowthChance.get() && age < maxAge)
             {
-                state = state.setValue(AGE, age + 1);
+                state = state.setValue(ageProp, age + 1);
                 level.setBlockAndUpdate(pos, state);
             }
         }
@@ -249,17 +307,28 @@ public abstract class PlantBlock extends TFCBushBlock
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
     {
-        if (getPlant().getAgeProperty() != null)
+        IntegerProperty ageProp = getPlant().getAgeProperty();
+        if (ageProp != null)
         {
-            builder.add(AGE);
+            builder.add(ageProp);
         }
     }
 
     @Override
-    public float getSpeedFactor()
+    public float slowEntityFactor(BlockState state)
     {
         final float modifier = TFCConfig.SERVER.plantsMovementModifier.get().floatValue(); // 0.0 = full speed factor, 1.0 = no modifier
-        return Helpers.lerp(modifier, speedFactor, 1.0f);
+        return Helpers.lerp(modifier, getPlant().getSpeedFactor(), 1.0f);
+    }
+
+    protected int getMaxAgeValue()
+    {
+        IntegerProperty ageProp = getPlant().getAgeProperty();
+        if (ageProp == null)
+        {
+            return 0;
+        }
+        return ageProp.getPossibleValues().stream().max(Comparator.naturalOrder()).orElse(0);
     }
 
 }

@@ -124,7 +124,7 @@ public abstract class TFCChestedHorse extends AbstractChestedHorse implements Ho
         super.registerGoals();
         EntityHelpers.removeGoalOfPriority(goalSelector, 3);
         goalSelector.addGoal(3, new TemptGoal(this, 1.25f, Ingredient.of(getFoodTag()), false));
-        goalSelector.addGoal(5, new TFCAvoidEntityGoal<>(this, PathfinderMob.class, 8f, 1.6f, 1.4f, TFCTags.Entities.HUNTS_LAND_PREY));
+        goalSelector.addGoal(5, new TFCAvoidEntityGoal<>(this, PathfinderMob.class, 8f, 1.6f, 1.4f, TFCTags.Entities.LAND_PREDATORS));
     }
 
     @Override
@@ -171,11 +171,11 @@ public abstract class TFCChestedHorse extends AbstractChestedHorse implements Ho
                         }
                         else
                         {
-                            final IFluidHandlerItem destFluidItemHandler = stack.getCapability(Capabilities.FluidHandler.ITEM);
+                            final IFluidHandlerItem destFluidItemHandler = stack.copy().getCapability(Capabilities.FluidHandler.ITEM);
                             final IFluidHandlerItem sourceFluidItemHandler = getChestItem().getCapability(Capabilities.FluidHandler.ITEM);
                             if (destFluidItemHandler != null && sourceFluidItemHandler != null)
                             {
-                                if (FluidHelpers.transferBetweenItemAndOther(getChestItem(), destFluidItemHandler, sourceFluidItemHandler, destFluidItemHandler, FluidHelpers.Transfer.FILL, level(), blockPosition(), FluidHelpers.with(player, hand)))
+                                if (FluidHelpers.transferBetweenItemAndOther(stack, destFluidItemHandler, sourceFluidItemHandler, destFluidItemHandler, FluidHelpers.Transfer.FILL, level(), blockPosition(), FluidHelpers.with(player, hand)))
                                 {
                                     return InteractionResult.sidedSuccess(level().isClientSide);
                                 }
@@ -205,7 +205,7 @@ public abstract class TFCChestedHorse extends AbstractChestedHorse implements Ho
 
                 if (this.getChestItem().isEmpty() && Helpers.isItem(stack, TFCTags.Items.CARRIED_BY_HORSE))
                 {
-                    this.setChestItem(stack.copy()); // set an explicit chest item
+                    this.setChestItem(stack.copyWithCount(1)); // set an explicit chest item
                     this.playChestEquipsSound();
                     if (!player.getAbilities().instabuild)
                     {

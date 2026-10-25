@@ -43,15 +43,15 @@ public class PetCommandScreen extends Screen
             {
                 MutableComponent comp = Helpers.translateEnum(command);
                 addRenderableWidget(Button.builder(comp, b -> {
-                    PacketDistributor.sendToServer(new PetCommandPacket(entity, command));
-                    Minecraft.getInstance().setScreen(null);
+                        PacketDistributor.sendToServer(new PetCommandPacket(entity, command));
+                        Minecraft.getInstance().setScreen(null);
 
-                    final Player player = ClientHelpers.getPlayer();
-                    if (player != null)
-                    {
-                        player.containerMenu = player.inventoryMenu;
-                    }
-                }).bounds(width / 2 - 100, height / 4 + y, 200, 20).build()
+                        final Player player = ClientHelpers.getPlayer();
+                        if (player != null)
+                        {
+                            player.containerMenu = player.inventoryMenu;
+                        }
+                    }).bounds(width / 2 - 100, height / 4 + y, 200, 20).build()
                 );
                 y += 24;
             }
@@ -61,13 +61,13 @@ public class PetCommandScreen extends Screen
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
     {
-        PoseStack poseStack = graphics.pose();
         graphics.fillGradient(0, 0, width, height, -1072689136, -804253680);
+        super.render(graphics, mouseX, mouseY, partialTick);
+        PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.scale(2.0F, 2.0F, 2.0F);
         graphics.drawCenteredString(font, title, width / 2 / 2, 30, 16777215);
         poseStack.popPose();
-        super.render(graphics, mouseX, mouseY, partialTick);
 
         for (Renderable widget : renderables)
         {
