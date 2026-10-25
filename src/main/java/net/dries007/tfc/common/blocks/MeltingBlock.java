@@ -29,7 +29,7 @@ public class MeltingBlock extends Block
         if (random.nextFloat() < TFCConfig.SERVER.snowBlockMeltSpeed.get())
         {
             final ClimateModel model = Climate.get(level);
-            if (model.getTemperature(level, pos) > 0)
+            if (model.getInstantTemperature(level, pos) > 0)
             {
                 level.removeBlock(pos, false);
             }
