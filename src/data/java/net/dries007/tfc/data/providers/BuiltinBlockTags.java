@@ -741,9 +741,6 @@ public class BuiltinBlockTags extends TagsProvider<Block> implements Accessors
         tag(CONSUMES_TOOL_DURABILITY).add(TFCBlocks.PLANTS.values()
             .stream()
             .filter(b -> b.get().defaultBlockState().getDestroySpeed(empty(), BlockPos.ZERO) == 0f));
-        tag(DOES_NOT_CONSUME_TOOL_DURABILITY)
-            .add(Blocks.SNOW)
-            .add(TFCBlocks.SNOW_PILE);
         tag(NATURAL_REGROWING_PLANTS).add(TFCBlocks.PLANTS);
         tag(ANIMAL_IGNORED_PLANTS).add(Arrays.stream(Plant.values()).filter(p -> p.getSpeedFactor() != 1.0f && p.getSpeedFactor() != 0.0f).map(TFCBlocks.PLANTS::get));
 

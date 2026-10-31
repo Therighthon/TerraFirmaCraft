@@ -34,13 +34,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import net.dries007.tfc.common.TFCTags;
-import net.dries007.tfc.common.blocks.SnowPileBlock;
 import net.dries007.tfc.common.blocks.ISlowEntities;
 import net.dries007.tfc.common.blocks.TFCBlocks;
 import net.dries007.tfc.common.blocks.wood.ILeavesBlock;
-import net.dries007.tfc.common.items.Powder;
-import net.dries007.tfc.common.items.TFCItems;
 import net.dries007.tfc.config.TFCConfig;
 import net.dries007.tfc.util.Helpers;
 
@@ -66,74 +62,6 @@ public abstract class SnowLayerBlockMixin extends Block implements ISlowEntities
     @Override
     public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid)
     {
-        if (!level.isClientSide())
-        {
-            float rand = level.random.nextFloat();
-
-            // if we're shoveling, stack the snow up
-            // we don't really care about searching too broadly, so we're just checking horizontally
-            // don't do this if the snow is going to drop something
-
-            if (!player.isCreative() && player.getItemInHand(InteractionHand.MAIN_HAND).is(ItemTags.SHOVELS) && getDrops(state, (ServerLevel) level, pos, null, player, player.getItemInHand(InteractionHand.MAIN_HAND)).isEmpty())
-            {
-                // we prefer to stack on top of other snow layers
-                if (rand > 0.1f)
-                {
-                    // minheap
-                    BlockPos moveToPos = pos.relative(Direction.NORTH);
-                    BlockState moveToState = level.getBlockState(moveToPos);
-                    int layers = 8;
-                    for (Direction dir : Direction.values())
-                    {
-                        if (dir.getAxis().isHorizontal())
-                        {
-                            BlockPos nextPos = pos.relative(dir);
-                            BlockState nextState = level.getBlockState(nextPos);
-                            if (nextState.getBlock() instanceof SnowLayerBlock && nextState.getValue(SnowLayerBlock.LAYERS) < layers)
-                            {
-                                layers = nextState.getValue(SnowLayerBlock.LAYERS);
-                                moveToPos = nextPos;
-                                moveToState = nextState;
-                            }
-                        }
-                    }
-                    if (moveToState.getBlock() instanceof SnowLayerBlock && moveToState.getValue(SnowLayerBlock.LAYERS) < 8)
-                    {
-                        level.setBlockAndUpdate(moveToPos, moveToState.setValue(LAYERS, moveToState.getValue(LAYERS) + 1));
-                    }
-                    // if we can't find other snow layers, make a new one somewhere (but with much reduced chances)
-                    else if (rand > 0.6f)
-                    {
-                        Direction dir = Direction.NORTH;
-                        if (level.random.nextFloat() > 0.75)
-                        {
-                            dir = Direction.SOUTH;
-                        }
-                        else if (level.random.nextFloat() > 0.5)
-                        {
-                            dir = Direction.EAST;
-                        }
-                        else if (level.random.nextFloat() > 0.25)
-                        {
-                            dir = Direction.WEST;
-                        }
-
-                        moveToPos = pos.relative(dir);
-                        moveToState = level.getBlockState(moveToPos);
-                        if (moveToState.isEmpty() && level.getBlockState(moveToPos.below()).isFaceSturdy(level, moveToPos.below(), Direction.UP))
-                        {
-                            level.setBlockAndUpdate(moveToPos, Blocks.SNOW.defaultBlockState());
-                        }
-                        else if (Helpers.isBlock(moveToState, TFCTags.Blocks.CAN_BE_SNOW_PILED))
-                        {
-                            SnowPileBlock.placeSnowPile(level, moveToPos, moveToState, true);
-                        }
-                    }
-                }
-
-            }
-        }
-
         final int prevLayers = state.getValue(SnowLayerBlock.LAYERS);
         if (prevLayers > 1 && !player.isCreative())
         {

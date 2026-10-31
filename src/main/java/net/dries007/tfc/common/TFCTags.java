@@ -308,8 +308,6 @@ public class TFCTags
          */
         public static final TagKey<Block> CONSUMES_TOOL_DURABILITY = tag("consumes_tool_durability");
 
-        /** Blocks that when broken, never consume durability (snow layers fall into this category) */
-        public static final TagKey<Block> DOES_NOT_CONSUME_TOOL_DURABILITY = tag("does_not_consume_durability");
         /**
          * Blocks that will prevent natural growth nearby. This is used to prevent an area from overpopulating itself with plants.
          *

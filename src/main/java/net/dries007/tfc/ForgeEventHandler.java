@@ -82,7 +82,6 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.ItemStackedOnOtherEvent;
@@ -134,6 +133,7 @@ import net.dries007.tfc.common.blockentities.TFCBlockEntities;
 import net.dries007.tfc.common.blockentities.TickCounterBlockEntity;
 import net.dries007.tfc.common.blocks.CharcoalPileBlock;
 import net.dries007.tfc.common.blocks.FireboxBlock;
+import net.dries007.tfc.common.blocks.SnowPileBlock;
 import net.dries007.tfc.common.blocks.TFCBlocks;
 import net.dries007.tfc.common.blocks.TFCBubbleColumnBlock;
 import net.dries007.tfc.common.blocks.TFCCandleBlock;
@@ -197,7 +197,6 @@ import net.dries007.tfc.util.tracker.WeatherHelpers;
 import net.dries007.tfc.util.tracker.WorldTracker;
 import net.dries007.tfc.world.ChunkGeneratorExtension;
 import net.dries007.tfc.world.chunkdata.ChunkData;
-
 
 public final class ForgeEventHandler
 {
@@ -1195,7 +1194,8 @@ public final class ForgeEventHandler
     public static void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event)
     {
         final Level level = event.getLevel();
-        final BlockState state = level.getBlockState(event.getPos());
+        final BlockPos pos = event.getPos();
+        final BlockState state = level.getBlockState(pos);
         final ItemStack stack = event.getItemStack();
 
         if (Helpers.isItem(stack, Items.WRITABLE_BOOK) || Helpers.isItem(stack, Items.WRITTEN_BOOK))
@@ -1205,6 +1205,73 @@ public final class ForgeEventHandler
             {
                 event.setCanceled(true);
                 event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+            }
+        }
+
+        if (Helpers.isItem(stack, ItemTags.SHOVELS) && !level.isClientSide())
+        {
+            if (state.getBlock() instanceof SnowLayerBlock)
+            {
+                level.destroyBlock(pos, false, event.getEntity());
+                float rand = level.random.nextFloat();
+
+                // if we're shoveling, stack the snow up
+                // we don't really care about searching too broadly, so we're just checking horizontally
+                // don't do this if the snow is going to drop something
+                // we prefer to stack on top of other snow layers
+                if (rand > 0.1f)
+                {
+                    // minheap
+                    BlockPos moveToPos = pos.relative(Direction.NORTH);
+                    BlockState moveToState = level.getBlockState(moveToPos);
+                    int layers = 8;
+                    for (Direction dir : Direction.values())
+                    {
+                        if (dir.getAxis().isHorizontal())
+                        {
+                            BlockPos nextPos = pos.relative(dir);
+                            BlockState nextState = level.getBlockState(nextPos);
+                            if (nextState.getBlock() instanceof SnowLayerBlock && nextState.getValue(SnowLayerBlock.LAYERS) < layers)
+                            {
+                                layers = nextState.getValue(SnowLayerBlock.LAYERS);
+                                moveToPos = nextPos;
+                                moveToState = nextState;
+                            }
+                        }
+                    }
+                    if (moveToState.getBlock() instanceof SnowLayerBlock && moveToState.getValue(SnowLayerBlock.LAYERS) < 8)
+                    {
+                        level.setBlockAndUpdate(moveToPos, moveToState.setValue(SnowLayerBlock.LAYERS, moveToState.getValue(SnowLayerBlock.LAYERS) + 1));
+                    }
+                    // if we can't find other snow layers, make a new one somewhere (but with much reduced chances)
+                    else if (rand > 0.6f)
+                    {
+                        Direction dir = Direction.NORTH;
+                        if (level.random.nextFloat() > 0.75)
+                        {
+                            dir = Direction.SOUTH;
+                        }
+                        else if (level.random.nextFloat() > 0.5)
+                        {
+                            dir = Direction.EAST;
+                        }
+                        else if (level.random.nextFloat() > 0.25)
+                        {
+                            dir = Direction.WEST;
+                        }
+
+                        moveToPos = pos.relative(dir);
+                        moveToState = level.getBlockState(moveToPos);
+                        if (moveToState.isEmpty() && level.getBlockState(moveToPos.below()).isFaceSturdy(level, moveToPos.below(), Direction.UP))
+                        {
+                            level.setBlockAndUpdate(moveToPos, Blocks.SNOW.defaultBlockState());
+                        }
+                        else if (Helpers.isBlock(moveToState, TFCTags.Blocks.CAN_BE_SNOW_PILED))
+                        {
+                            SnowPileBlock.placeSnowPile(level, moveToPos, moveToState, true);
+                        }
+                    }
+                }
             }
         }
 
